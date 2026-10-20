@@ -1,45 +1,58 @@
-# AGENTS.md — AI Composer Agent 开发约定
+# AGENTS.md — 仓库级开发 Agent 约定
 
-适用 Codex、Cursor、Claude Code 等工程 Agent。此文件约束**开发行为**；创作 Agent 规则见 docs/COMPOSITION_AGENT.md。
+本文件适用于全仓库。进入子目录必须继续读取其最近的 `AGENTS.md`；子目录规则细化全局规则，不得放宽安全、数据一致性及产品限制。若嵌套规则冲突，以用户最新明确裁决和仓库根级不变量为准，报告冲突后停止相关修改。
+
+## 产品不变量
+- 唯一主音符编辑器：Piano Roll，不引入五线谱。
+- Agent 自主生成真实、可编辑的 MIDI 音符；人工编辑与 Agent 共享 MusicProject。
+- 所有变更通过 music-core 命令执行器，`baseRevision` + 授权范围 + 锁检查 + 原子提交；AI 变更先 preview，显式批准后应用；支持撤销。
+- 外来内容与 AI 返回不可信；密钥不能放前端、仓库或日志；不得虚报已实现功能或测试。
 
 ## 权威次序
-1. 用户当前会话最新明确决定。
-2. docs/DECISIONS.md 中 accepted 决定。
-3. docs/PRODUCT.md 产品范围与 docs/DATA_AND_TOOLS.md 协议。
-4. docs/ARCHITECTURE.md 模块边界与 docs/ROADMAP.md 验收。
-遇冲突先报告，不得擅自改变产品规则。
+1. 用户最新明确裁决。
+2. `docs/DECISIONS.md` 中 accepted。
+3. `docs/PRODUCT.md` 与 `docs/DATA_AND_TOOLS.md`。
+4. 本文件的跨模块约束、`docs/ARCHITECTURE.md` 与最近子目录 `AGENTS.md`。
+5. `docs/ROADMAP.md` 和其他提议。
+架构属于工程基线；修改模块边界必须同步更新文档并说明迁移影响；不得将 proposed 事项称为用户已裁定。
 
-## 不可违反
-- Piano Roll 为唯一主音符编辑器，禁止擅自引入五线谱工作流。
-- Agent 必须从零写出真实可编辑 MIDI 音符，不能仅提供文字或音频片段。
-- 所有人工/AI 修改经过共同 MusicProject + MusicOperation 执行器；UI 和 LLM 不直接改持久状态。
-- noteId 稳定唯一；MIDI pitch 为整数 0..127；startTick >= 0；durationTicks > 0；velocity 为 1..127。
-- 锁定音符/轨道和授权 tick 范围由执行器校验；模型不能绕过。
-- AI 提议遵循 validate → preview diff → user approve → atomic commit；携带 baseRevision；过期变更拒绝或显式 rebase。
-- 批量操作全成或全回滚，支持 undo/redo，重放保持 ID/顺序。
-- 外来 MIDI、文本、LLM 输出是不可信输入，必须检查 Schema、权限、长度、边界与资源限制。
-- 服务端 API 密钥不进入 bundle、提交历史、日志。
-- 不得声称未经验证的功能、音乐质量、性能或测试结果。
+## 固定仓库边界（先建立目录协议，模块实现尚未完成）
+```text
+apps/
+  web/                 # UI 组合根、应用状态和用户工作流
+packages/
+  music-core/          # 唯一工程数据模型、命令、事务和历史
+  piano-roll/          # 编辑视图、命中检测和手势转换
+  audio-engine/        # 试听、Transport 与音源
+  midi-io/             # SMF 导入导出；项目 JSON 由 core 定义
+  composition/         # 作曲能力、生成模型适配与候选验证
+services/
+  agent-api/           # 可选服务端 LLM 网关和鉴权
+schemas/               # 跨边界交换格式及版本化 Schema
+docs/                  # 产品、设计、架构与决策文档
+tests/                 # 跨包集成、契约及端到端测试
+```
+每个一级子系统目录的 `AGENTS.md` 定义下一级模块。**禁止**将功能随意扔进 `utils/`、`common/`、`misc/`、`helpers/` 或未约定根目录；新增职责先判断所属模块再创建文件。
 
-## 开发步骤
-1. 阅读本文件、README、相关 docs，列出影响范围。
-2. 大变更先写目标、改动文件、风险、验收，再做最小可运行垂直切片。
-3. 数据模型与纯函数优先；UI 仅发命令；音频、LLM、MIDI 与编辑器分层。
-4. 加依赖先核验维护状态、体积、许可证、兼容性。
-5. 完成报告真实测试命令/结果、未执行测试与局限；协议变化同步 Schema、测试和文档。
-6. 不提前添加 VST、DAW 插件、五线谱、实时协作、音频转录等非 MVP 功能。
+## 依赖方向（仅允许显式接口）
+- `music-core` 为纯 TypeScript 领域核心，**不得依赖** React、浏览器、Tone.js、AI SDK、服务端框架或其他工作区包。
+- `piano-roll` 依赖 `music-core` 公开契约；不得直接修改工程对象，也不依赖 audio-engine、composition 或 agent-api。
+- `audio-engine` 和 `midi-io` 依赖 core 契约；互相独立，不导入 UI 或 agent SDK。
+- `composition` 依赖 core 的只读结构和变更契约；仅返回候选，不提交工程状态。
+- `services/agent-api` 可使用 composition 契约和 schemas；不得反向被 core 或 UI 的领域逻辑依赖。
+- `apps/web` 是组合根，可调度上述包和服务客户端；**不承载领域规则或模型密钥**。
+- `schemas` 是跨进程协议资产，不导入任何运行时应用代码。
+- 依赖图不得有循环；包间只通过其 `src/index.ts` 公共 API 导入，不得跨包引用 `src/internal`。
 
-## 建议结构（尚未实现）
-- packages/music-core：模型、事务、diff、undo
-- packages/piano-roll：渲染、缩放、选择、拖动
-- packages/audio-engine：播放时序和音源
-- packages/midi-io：MIDI 读写
-- packages/composition：生成器接口与音乐规则校验
-- apps/web：网页工作台
-- services/agent-api：可选密钥托管、模型路由
+## 模块内部约定
+- 一个文件有单一责任；公开 API 从 `src/index.ts` 汇出，内部实现留在其职责文件夹；测试默认与实现同层 `*.test.ts`。
+- `types/` 仅放确实跨同包子模块共享的类型，不作为业务垃圾桶。
+- core 使用整数 tick（时间）与 MIDI pitch 0..127、velocity 1..127；`startTick >= 0`、`durationTicks > 0`；稳定 note ID。
+- 每次更改接口，更新调用方、Schema（跨边界时）、相关测试和 docs。
+- UI 只生成用户意图或命令；无论来自鼠标还是 Agent，必须经过相同执行器。
+- 正式批准前的 AI 候选和预览不得改变持久工程 revision。
 
-## 最低测试
-音符边界与跨小节、多轨和弦、轨道/音符锁、越权、陈旧 revision、重复 apply、批量失败原子性、undo/redo、保存加载、MIDI 可表达信息往返、恶意/超大输入、无 API 密钥泄漏。音乐美学用固定任务和人工试听检验，不可用乐理规则检查冒充审美结论。
+## 工作与验收
+变更前阅读根文件、目标目录 `AGENTS.md`、相关 docs；大变更写目标/范围/风险/验证方案。优先 M0→M1→M2→M3→M4 的薄切片。为边界、并发 revision、锁、幂等、rollback、undo/redo、序列化和 MIDI 往返写测试；音乐审美须另行人工试听，不可用静态规则冒充审美保证。
 
-## Git 约定
-建议 Conventional Commits；PR 写清需求、变更、风险、真实验证结果和产品决策变更。无用户授权，不得擅自添加许可证或放宽锁定保护。
+提交采用 conventional commits；PR 说明产品影响、依赖变化、真实运行测试和未验证事项。未经用户同意不添加许可证、不擅自引入五线谱、DAW 插件、VST、音频转录及多人协同。

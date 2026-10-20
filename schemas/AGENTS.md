@@ -1,0 +1,2 @@
+# schemas/AGENTS.md
+这里存跨进程 JSON Schema 与版本说明。命名建议 <domain>.v<major>.schema.json；不将 UI 内部 state 暴露为外部契约。变更先确定兼容性：新增可选字段一般为兼容变化，删字段/改语义须升级 major，并同步 TypeScript 类型、迁移与正反例契约测试。现有 music-operation.schema.json 作为初始实验稿；正式升版前勿宣称完整覆盖 track/lock/事务协议。

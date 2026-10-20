@@ -1,0 +1,2 @@
+# docs/AGENTS.md
+docs 记录事实、决策和待定事项，禁止把模型建议自动标记为 accepted。产品规则改动写入 DECISIONS.md 并注明来源；架构改动同步 ARCHITECTURE.md 和目录 AGENTS.md；数据协议改动同步 DATA_AND_TOOLS.md 与 schemas；功能验收同步 ROADMAP.md。文档中的“已实现”必须有可核验的代码与测试证据。
