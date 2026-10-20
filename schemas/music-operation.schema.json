@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MusicNoteOperation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "trackId",
+        "note"
+      ],
+      "properties": {
+        "type": {
+          "const": "add_note"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "$ref": "#/$defs/note"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "trackId",
+        "noteId",
+        "changes"
+      ],
+      "properties": {
+        "type": {
+          "const": "update_note"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "noteId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "changes": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "pitch": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 127
+            },
+            "startTick": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "durationTicks": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "velocity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 127
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "trackId",
+        "noteId"
+      ],
+      "properties": {
+        "type": {
+          "const": "delete_note"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "noteId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "note": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "noteId",
+        "pitch",
+        "startTick",
+        "durationTicks",
+        "velocity"
+      ],
+      "properties": {
+        "noteId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pitch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "startTick": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "durationTicks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "velocity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 127
+        }
+      }
+    }
+  }
+}
