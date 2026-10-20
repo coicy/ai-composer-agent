@@ -5,11 +5,11 @@ const MAX_BYTES=8_000_000,MAX_TRACKS=128,MAX_NOTES=200_000;
 export function exportMidi(project:MusicProject):Uint8Array{
  if(!validateProject(project))throw new Error('invalid_project');
  if(project.tracks.length>MAX_TRACKS)throw new Error('too_many_tracks');
- const midi=new Midi();midi.header.ppq=project.ppq;
+ const midi=new Midi();const tickScale=midi.header.ppq/project.ppq;
  midi.header.setTempo(120);midi.header.update();
  for(const item of project.tracks){
   const track=midi.addTrack();track.name=item.name;
-  for(const note of item.notes)track.addNote({midi:note.pitch,ticks:note.startTick,durationTicks:note.durationTicks,velocity:note.velocity/127});
+  for(const note of item.notes)track.addNote({midi:note.pitch,ticks:Math.round(note.startTick*tickScale),durationTicks:Math.max(1,Math.round(note.durationTicks*tickScale)),velocity:note.velocity/127});
  }
  return midi.toArray();
 }
