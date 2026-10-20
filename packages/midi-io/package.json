@@ -1,1 +1,21 @@
-{"name":"@ai-composer/midi-io","version":"0.0.0","private":true,"type":"module","exports":{".":"./src/index.ts"},"scripts":{"typecheck":"tsc --noEmit"},"dependencies":{"@ai-composer/music-core":"workspace:*"},"devDependencies":{"typescript":"^5.9.3"}}
+{
+  "name": "@ai-composer/midi-io",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-composer/music-core": "workspace:*",
+    "@tonejs/midi": "^2.0.28"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

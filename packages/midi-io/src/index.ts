@@ -1,2 +1,1 @@
-// Package boundary reserved; implementation follows the roadmap.
-export {};
+export {exportMidi,importMidi} from './mapping/midi.js';

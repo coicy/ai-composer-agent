@@ -6,6 +6,11 @@ export function applyChangeSet(project:MusicProject,changeSet:ChangeSet):ApplyRe
  if(!Array.isArray(changeSet.operations)||changeSet.operations.length===0)return {ok:false,reason:'empty_changeset'};
  const tracks:MusicTrack[]=project.tracks.map(t=>({...t,notes:[...t.notes]}));
  for(const op of changeSet.operations){
+  if(op.type==='add_track'){
+   const t=op.track;
+   if(!t||!t.trackId||tracks.some(x=>x.trackId===t.trackId)||!validateProject({projectId:'validation',revision:0,ppq:project.ppq,tracks:[t]}))return {ok:false,reason:'invalid_or_duplicate_track'};
+   tracks.push({...t,notes:t.notes.map(n=>({...n}))});continue;
+  }
   const idx=tracks.findIndex(t=>t.trackId===op.trackId);
   const t=tracks[idx];if(!t)return {ok:false,reason:'track_not_found'};
   if(t.locked)return {ok:false,reason:'track_locked'};
