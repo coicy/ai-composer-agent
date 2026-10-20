@@ -1,0 +1,1 @@
+{"name":"@ai-composer/agent-api","version":"0.0.0","private":true,"type":"module","scripts":{"typecheck":"tsc --noEmit"},"dependencies":{"@ai-composer/music-core":"workspace:*","@ai-composer/composition":"workspace:*"},"devDependencies":{"typescript":"^5.9.3"}}
