@@ -1,4 +1,5 @@
-import {useRef,useState} from 'react';
+import {useRef,useState,useEffect} from 'react';
+import {playProject} from '@ai-composer/audio-engine';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {createSession,commitSession,undoSession,redoSession} from '@ai-composer/music-core';
 import type {EditSession,MidiNote,MusicProject,NoteOperation} from '@ai-composer/music-core';
@@ -10,6 +11,11 @@ export function App(){
  const [selected,setSelected]=useState<string|null>(null);
  const [error,setError]=useState('');
  const gesture=useRef<Gesture|null>(null);
+ const playback=useRef<{stop():void}|null>(null);
+ const [playing,setPlaying]=useState(false);
+ useEffect(()=>()=>playback.current?.stop(),[]);
+ function stop(){playback.current?.stop();playback.current=null;setPlaying(false);}
+ async function play(){stop();try{const handle=await playProject(session.project);playback.current=handle;setPlaying(true);setError('');}catch(e){setError(e instanceof Error?e.message:'audio_error');}}
  const [draft,setDraft]=useState<{noteId:string;startTick:number;durationTicks:number;pitch:number}|null>(null);
  const project=session.project,track=project.tracks[0],notes=track?.notes??[];
  function run(op:NoteOperation){const result=commitSession(session,{baseRevision:project.revision,operations:[op]});if(result.ok){setSession(result.session);setError('');}else setError(result.reason);}
@@ -20,8 +26,8 @@ export function App(){
   const noteId=crypto.randomUUID();
   run({type:'add_note',trackId:'melody',note:{noteId,pitch,startTick,durationTicks:480,velocity:90}});setSelected(noteId);
  }
- function onPointerDown(e:ReactPointerEvent<HTMLDivElement>,note:MidiNote,kind:'move'|'resize'){
-  e.stopPropagation();setSelected(note.noteId);gesture.current={noteId:note.noteId,kind,x:e.clientX,y:e.clientY,note};e.currentTarget.setPointerCapture(e.pointerId);
+ function onPointerDown(e:ReactPointerEvent<HTMLElement>,note:MidiNote,kind:'move'|'resize'){
+  e.stopPropagation();setSelected(note.noteId);gesture.current={noteId:note.noteId,kind,x:e.clientX,y:e.clientY,note};(e.currentTarget.closest('.note') as HTMLElement).setPointerCapture(e.pointerId);
  }
  function onPointerMove(e:ReactPointerEvent<HTMLDivElement>){
   const g=gesture.current;if(!g)return;
@@ -43,6 +49,7 @@ export function App(){
   <header><h1>AI Composer Agent</h1><p>钢琴卷帘 · 手工编辑原型 · AI 作曲尚未接入</p></header>
   <section className="toolbar">
    <button onClick={()=>{const id=crypto.randomUUID();run({type:'add_note',trackId:'melody',note:{noteId:id,pitch:72,startTick:notes.length*480,durationTicks:480,velocity:90}});setSelected(id);}}>+ 添加音符</button>
+   <button onClick={()=>{if(playing)stop();else void play();}}>{playing?'■ 停止':'▶ 试听'}</button>
    <button disabled={!session.past.length} onClick={()=>{setSession(s=>undoSession(s));setDraft(null);}}>撤销</button>
    <button disabled={!session.future.length} onClick={()=>{setSession(s=>redoSession(s));setDraft(null);}}>重做</button>
    <button disabled={!active} onClick={()=>{if(active){run({type:'delete_note',trackId:'melody',noteId:active.noteId});setSelected(null);}}}>删除所选</button>
@@ -63,6 +70,6 @@ export function App(){
   <p className="hint">双击空白钢琴卷帘新增音符；拖动音符移动音高/时间；拖动右边缘改变时值。网格吸附为 1/16 音符。</p>
   {active&&<div className="details">所选：音高 {active.pitch} · 起点 {active.startTick} tick · 时长 {active.durationTicks} tick · 力度 {active.velocity}</div>}
   {error&&<p role="alert" className="error">{error}</p>}
-  <p className="hint">当前无播放、Agent 或 MIDI 导入导出。撤销/重做采用内存快照；刷新页面不会保留编辑历史。</p>
+  <p className="hint">试听使用 Web Audio 三角波与固定 120 BPM，尚无音色、循环和 Tempo Map。当前无 Agent 或 MIDI 导入导出。撤销/重做采用内存快照；刷新页面不会保留编辑历史。</p>
  </main>;
 }

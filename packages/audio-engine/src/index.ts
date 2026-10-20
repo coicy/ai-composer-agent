@@ -1,2 +1,2 @@
-// Package boundary reserved; implementation follows the roadmap.
-export {};
+export {playProject} from './playback/preview.js';
+export type {PlaybackHandle} from './playback/preview.js';
