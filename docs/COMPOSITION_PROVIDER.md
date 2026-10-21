@@ -11,3 +11,7 @@ Current limitation: additive-only empty-scope generation; not supporting modific
 
 ## Verification
 `pnpm --filter @ai-composer/composition test`; `pnpm check`.
+
+## Second provider: ArrangementProvider (three new tracks)
+
+The original `CompositionProvider` manages note proposals on an existing track, including additive and scoped pitch-only rewrite. `ArrangementProvider` is separate: its output must contain exactly `harmony`, `bass`, `accompaniment` roles, with valid MIDI notes on new tracks only. Read-only source context, atomic `add_track`, validation, preview and approval are documented in [MULTITRACK_ARRANGEMENT.md](MULTITRACK_ARRANGEMENT.md). The original additive-only description earlier on this page is historical; the implemented composer also supports validated selection replacement and three-track arrangement.

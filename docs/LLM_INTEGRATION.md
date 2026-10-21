@@ -26,3 +26,7 @@ Choose **重写指定小节** in the Agent panel, set the first bar (1-based) an
 ## Strict pitch-only rewriting
 
 Use the Piano Roll marquee, select **仅重写框选音符**, enable **只改音高**, and request a new melody shape. The local model is asked to preserve all original onset/length values, but these constraints are independently enforced by the composition validator. If the provider changes timing or note count, the request returns a validation error instead of silently changing the music. Original note IDs, velocity and unaffected notes are preserved. Deterministic ±12-semitone transposition is available without running the model. See [MUSIC_EDIT_CONSTRAINTS.md](MUSIC_EDIT_CONSTRAINTS.md).
+
+## Three-track arrangement
+
+Select a melody track and start bar (1–64), with 1–4 bars length. Use the **多轨 AI 编配** panel to request independent harmony, bass and accompaniment. Existing track notes are read-only; the three candidate tracks are shown as overlays on the Piano Roll, can be auditioned with the melody, and are saved only after explicit confirmation. The offline rule-based demo button requires no API credentials, but does not demonstrate professional harmony quality. See [MULTITRACK_ARRANGEMENT.md](MULTITRACK_ARRANGEMENT.md).

@@ -62,3 +62,36 @@ test('marquee selection, one-transaction batch movement, undo and zoom',async({p
  expect(await notes.nth(0).evaluate(e=>(e as HTMLElement).style.left)).toBe(before0);
  expect(await notes.nth(1).evaluate(e=>(e as HTMLElement).style.left)).toBe(before1);
 });
+
+test('offline three-track arrangement is previewed, atomically approved and undone',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await expect(page.getByText(/候选：新增 3 个轨道/)).toBeVisible();
+ await expect(page.locator('.arrangement-ghost')).toHaveCount(8);
+ await page.getByRole('combobox',{name:'编配预览轨道'}).selectOption('bass');
+ await expect(page.locator('.arrangement-ghost.bass')).toHaveCount(8);
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ const tracks=page.getByRole('combobox',{name:'当前轨道'});
+ await expect(tracks.locator('option')).toHaveCount(4);
+ await expect(page.getByText(/revision 2/)).toBeVisible();
+ await tracks.selectOption('melody');
+ await expect(page.locator('.note')).toHaveCount(1);
+ await expect(page.locator('.note')).toHaveAttribute('title','pitch 72, start 0, duration 480');
+ await page.getByRole('button',{name:'撤销'}).click();
+ await expect(tracks.locator('option')).toHaveCount(1);
+ await expect(page.locator('.note')).toHaveCount(1);
+});
+
+test('untrusted AI arrangement outside scope is rejected by browser validation',async({page})=>{
+ await page.route('**/api/arrange',async route=>{
+  const tracks=['harmony','bass','accompaniment'].map(role=>({role,notes:[{pitch:60,startTick:10000,durationTicks:480,velocity:80}]}));
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({tracks})});
+ });
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'AI 多轨编配预览'}).click();
+ await expect(page.getByRole('alert')).toContainText('arrangement_note_outside_scope');
+ await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toHaveCount(0);
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(1);
+});

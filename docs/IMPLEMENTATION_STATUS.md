@@ -21,3 +21,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Added a draggable Velocity lane aligned to Piano Roll scroll and zoom. It dispatches intent to the existing `makeVelocityOperations` + Music Core transaction mechanism.
 - Added Playwright Chromium E2E scenarios for note/zoom/velocity/undo and marquee/batch movement/undo, with a dedicated GitHub Actions job. The CI outcome must be checked before claiming browser test coverage passes.
 - Full audio/visual DAW behavior, simultaneous overlapping velocity-bar disambiguation, and performance remain unverified.
+
+## Atomic AI multitrack arrangement
+- Added a second provider contract for producing three independent MIDI parts (harmony/bass/accompaniment) from one read-only source track; generated tracks are committed together as `add_track` operations.
+- Enforced structural note/role/timing bounds and source-track immutability with deterministic validators and dry-run core operations. Source can remain locked.
+- Browser now supports candidate overlays by arrangement role, temporary synthesized audio audition, offline seeded demonstration and explicit approval/undo.
+- Real-model musical quality and high-density project performance remain unverified. New Playwright tests exercise offline approvals and rejected invalid remote output. See docs/MULTITRACK_ARRANGEMENT.md.
