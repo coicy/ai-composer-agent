@@ -34,9 +34,11 @@ test('marquee selection, one-transaction batch movement, undo and zoom',async({p
  const notes=page.locator('.note');
  await expect(notes).toHaveCount(2);
  await notes.nth(0).scrollIntoViewIfNeeded();
+ await page.getByRole('button',{name:'框选音符'}).click();
+ // Toolbar focus scrolls the document; fetch fresh coordinates after restoring the note viewport.
+ await notes.nth(0).scrollIntoViewIfNeeded();
  const first=await notes.nth(0).boundingBox(),second=await notes.nth(1).boundingBox();
  if(!first||!second)throw new Error('notes are outside visible scroll region');
- await page.getByRole('button',{name:'框选音符'}).click();
  await page.mouse.move(first.x+3,first.y+3);
  await page.mouse.down();
  await page.mouse.move(second.x+second.width-3,second.y+second.height-3,{steps:6});
