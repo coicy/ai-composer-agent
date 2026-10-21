@@ -3,12 +3,13 @@ import {playProject} from '@ai-composer/audio-engine';
 import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes,tickToX,xToQuantizedTick,pitchToY,yToPitch,makeMoveOperations,makeVelocityOperations} from '@ai-composer/piano-roll';
 import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
-import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,SeededArranger,ARRANGEMENT_ROLES,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel} from '@ai-composer/composition';
+import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,SeededArranger,ARRANGEMENT_ROLES,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel,chordEventLabel,effectiveChordEvents} from '@ai-composer/composition';
 import {createRemoteProvider} from '../features/agent/remote.js';
 import {createRemoteArranger} from '../features/agent/remote-arranger.js';
 import {ArrangementDiagnostics} from '../features/agent/ArrangementDiagnostics.js';
 import {HarmonyPlanEditor} from '../features/agent/HarmonyPlanEditor.js';
 import type {HarmonyPlanDraft} from '../features/agent/HarmonyPlanEditor.js';
+import {timelineFromDegrees} from '../features/agent/HarmonyPlanEditor.js';
 import {VelocityLane} from '../features/editor/VelocityLane.js';
 import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
@@ -36,7 +37,7 @@ export function App(){
  const [arrangementView,setArrangementView]=useState<ArrangementRole>('harmony');
  const [arrangeStartBar,setArrangeStartBar]=useState(1);
  const [arrangeBars,setArrangeBars]=useState(4);
- const [harmonicPlan,setHarmonicPlan]=useState<HarmonyPlanDraft>({enabled:false,tonic:0,mode:'major',progression:'1,4,5,1',registers:DEFAULT_REGISTERS,enforcement:{scale:'hard',chords:'hard',registers:'hard'}});
+ const [harmonicPlan,setHarmonicPlan]=useState<HarmonyPlanDraft>({enabled:false,tonic:0,mode:'major',progression:'1,4,5,1',timelineEnabled:false,timeline:[],passingTones:'none',registers:DEFAULT_REGISTERS,enforcement:{scale:'hard',chords:'hard',registers:'hard',inversions:'hard'}});
  const [arrangePrompt,setArrangePrompt]=useState('基于主旋律创作具有奇幻冒险感的和声、低音与节奏性伴奏，保留主旋律的主题动机。');
  const [arrangePending,setArrangePending]=useState(false);
  const arrangeRequest=useRef<AbortController|null>(null);
@@ -117,6 +118,8 @@ export function App(){
    plan=harmonicPlan.enabled?validateHarmonyPlan({
     tonic:harmonicPlan.tonic,mode:harmonicPlan.mode,
     degrees:harmonicPlan.progression.split(',').map(x=>Number(x.trim())),
+    ...(harmonicPlan.timelineEnabled?{timeline:harmonicPlan.timeline}:{}),
+    passingTones:harmonicPlan.passingTones,
     registers:harmonicPlan.registers,enforcement:harmonicPlan.enforcement
    },arrangeBars):undefined;
   }catch(e){setError(e instanceof Error?e.message:'invalid_harmony_plan');setArrangement(null);return;}
@@ -287,7 +290,8 @@ export function App(){
   <section className="arrangement-panel" aria-label="多轨 AI 编配">
    <strong>多轨 AI 编配 · 原始旋律只读</strong>
    <label>起始小节 <input type="number" aria-label="编配起始小节" min={1} max={64} value={arrangeStartBar} onChange={e=>{setArrangeStartBar(Number(e.target.value));setArrangement(null);}}/></label>
-   <label>编配小节 <input type="number" aria-label="编配小节数" min={1} max={4} value={arrangeBars} onChange={e=>{const next=Number(e.target.value);setArrangeBars(next);setArrangement(null);if(Number.isSafeInteger(next)&&next>=1&&next<=4)setHarmonicPlan(p=>({...p,progression:Array.from({length:next},(_,i)=>p.progression.split(',')[i]??['1','4','5','1'][i]!).join(',')}));}}/></label>
+   <label>编配小节 <input type="number" aria-label="编配小节数" min={1} max={4} value={arrangeBars} onChange={e=>{const next=Number(e.target.value);setArrangeBars(next);setArrangement(null);if(Number.isSafeInteger(next)&&next>=1&&next<=4)setHarmonicPlan(p=>{const progression=Array.from({length:next},(_,i)=>p.progression.split(',')[i]??['1','4','5','1'][i]!).join(',');
+     return {...p,progression,timeline:p.timelineEnabled?timelineFromDegrees(progression,next):p.timeline};});}}/></label>
    <HarmonyPlanEditor value={harmonicPlan} barCount={arrangeBars} onChange={next=>{setHarmonicPlan(next);setArrangement(null);}}/>
    <textarea aria-label="编配要求" rows={2} maxLength={2000} value={arrangePrompt} onChange={e=>{setArrangePrompt(e.target.value);setArrangement(null);}}/>
    <button disabled={arrangePending} onClick={()=>void proposeMultiTrack(false)}>规则编配预览（离线）</button>
@@ -300,8 +304,8 @@ export function App(){
     <ArrangementDiagnostics assessment={arrangement.assessment}/>
     {arrangement.plan&&<section className="plan-review" aria-label="和声规划执行报告">
      <strong>已应用规划 · {['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'][arrangement.plan.tonic]} {arrangement.plan.mode==='major'?'大调':'自然小调'}</strong>
-     <p>和弦：{arrangement.plan.degrees.map((_,i)=>chordLabel(arrangement.plan!,i)).join(' – ')}</p>
-     <p>调内音 {arrangement.plan.enforcement.scale==='hard'?'硬约束':'风格偏好'} / 和弦音 {arrangement.plan.enforcement.chords==='hard'?'硬约束':'风格偏好'} / 音域 {arrangement.plan.enforcement.registers==='hard'?'硬约束':'风格偏好'}</p>
+     <p>和弦：{arrangement.plan.timeline?effectiveChordEvents(arrangement.plan).map(e=>`第${e.startBeat+1}拍 ${chordEventLabel(arrangement.plan!,e)}`).join(' – '):arrangement.plan.degrees.map((_,i)=>chordLabel(arrangement.plan!,i)).join(' – ')}</p>
+     <p>调内音 {arrangement.plan.enforcement.scale==='hard'?'硬约束':'风格偏好'} / 和弦音 {arrangement.plan.enforcement.chords==='hard'?'硬约束':'风格偏好'} / 音域 {arrangement.plan.enforcement.registers==='hard'?'硬约束':'风格偏好'} / 转位 {arrangement.plan.enforcement.inversions==='hard'?'硬约束':'风格偏好'} / 经过音 {arrangement.plan.passingTones==='stepwise'?'级进例外':'无例外'}</p>
      {arrangement.planFindings.length>0?<ul>{arrangement.planFindings.map(f=><li key={`${f.role}-${f.constraint}`}>{f.message}</li>)}</ul>:<p>没有检测到当前规划的软约束偏离；这不代表音乐质量已通过评测。</p>}
     </section>}
     <label>覆盖查看 <select aria-label="编配预览轨道" value={arrangementView} onChange={e=>setArrangementView(e.target.value as ArrangementRole)}>

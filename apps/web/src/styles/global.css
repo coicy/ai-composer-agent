@@ -73,3 +73,9 @@ select{background:#1e293b;color:#e5e7eb;border:1px solid #475569;padding:9px;bor
 .plan-review{width:100%;background:#122637;border:1px solid #54748a;border-radius:7px;padding:12px}
 .plan-review p{margin:6px 0}
 .plan-review ul{margin:8px 0;color:#ffc98a;padding-left:22px}
+
+.chord-timeline{width:100%;display:flex;flex-direction:column;gap:8px;background:#101c2c;border:1px solid #415777;border-radius:7px;padding:12px}
+.chord-timeline .chord-event{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:8px 2px;border-bottom:1px solid #334155}
+.chord-timeline .chord-event strong{min-width:180px;color:#d9e7fc}
+.chord-timeline .chord-event input[type=checkbox]{width:auto}
+.chord-timeline .chord-event button{padding:7px 10px}
