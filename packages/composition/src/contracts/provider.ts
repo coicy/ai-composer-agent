@@ -8,6 +8,8 @@ export interface CompositionRequest {
  readonly endTick:number;
  readonly instruction:string;
  readonly mode?:CompositionMode;
+ /** When replacing, only these stable note IDs may be removed; omitted means full tick-range replacement. */
+ readonly targetNoteIds?:readonly string[];
  readonly maxNotes?:number;
 }
 export interface ProviderContext {
@@ -16,6 +18,7 @@ export interface ProviderContext {
  readonly endTick:number;
  readonly ppq:number;
  readonly mode:CompositionMode;
+ readonly targetNoteIds?:readonly string[];
  readonly existingNotes:readonly MidiNote[];
  readonly targetNotes:readonly MidiNote[];
  readonly instruction:string;

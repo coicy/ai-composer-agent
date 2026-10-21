@@ -5,7 +5,7 @@ export function createRemoteProvider(project:CompositionRequest['project']):Comp
   let response:Response;
   try{
    response=await fetch('/api/compose',{method:'POST',headers:{'content-type':'application/json'},signal,
-    body:JSON.stringify({project,trackId:context.trackId,startTick:context.startTick,endTick:context.endTick,mode:context.mode,instruction:context.instruction})});
+    body:JSON.stringify({project,trackId:context.trackId,startTick:context.startTick,endTick:context.endTick,mode:context.mode,targetNoteIds:context.targetNoteIds,instruction:context.instruction})});
   }catch{
    if(signal?.aborted)throw new Error('generation_cancelled');
    throw new Error('agent_api_unreachable');

@@ -37,6 +37,16 @@ describe('agent API',()=>{
   const bad=await fetch(url+'/api/compose',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,mode:'replace',project:crossing})});
   expect(bad.status).toBe(422);expect((await bad.json()).error).toBe('cross_boundary_note');
  });
+ it('retains explicit selected note IDs through request validation',async()=>{
+  let targets:readonly string[]|undefined;
+  const factory=()=>({id:'fake',async generate(ctx:ProviderContext){targets=ctx.targetNoteIds;return {notes:[{pitch:70,startTick:0,durationTicks:480,velocity:88}]};}});
+  const url=await launch({apiKey:'test',providerFactory:factory});
+  const p={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'selected',pitch:60,startTick:0,durationTicks:480,velocity:80},{noteId:'other',pitch:62,startTick:0,durationTicks:480,velocity:90,locked:true}]}]};
+  const response=await fetch(url+'/api/compose',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,project:p,mode:'replace',targetNoteIds:['selected']})});
+  expect(response.status).toBe(200);expect(targets).toEqual(['selected']);
+  const invalid=await fetch(url+'/api/compose',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,project:p,mode:'replace',targetNoteIds:['missing']})});
+  expect(invalid.status).toBe(422);
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});

@@ -51,6 +51,37 @@ describe('composition provider boundary',()=>{
   await expect(proposeWithProvider(provider,{...request,project:locked,mode:'replace'})).rejects.toThrow('locked_note_in_range');
   expect(calls).toBe(0);
  });
+ it('replaces only explicitly selected note IDs while preserving other notes in the same tick scope',async()=>{
+  const first={noteId:'chosen-1',...note(1920)};
+  const second={noteId:'chosen-2',...note(2160)};
+  const untouched={noteId:'keep-me',pitch:50,startTick:1920,durationTicks:240,velocity:77,locked:true};
+  const p0:MusicProject={...project,tracks:[{...project.tracks[0]!,notes:[...project.tracks[0]!.notes,first,second,untouched]}]};
+  const candidate=await proposeWithProvider(fake({notes:[note(1920,74)]}),{...request,project:p0,mode:'replace',targetNoteIds:['chosen-1','chosen-2']});
+  expect(candidate.removedNotes.map(n=>n.noteId)).toEqual(['chosen-1','chosen-2']);
+  const result=applyChangeSet(p0,candidate.changes);
+  expect(result.ok).toBe(true);
+  if(result.ok){
+   const after=result.project.tracks[0]!.notes;
+   expect(after.find(n=>n.noteId==='keep-me')).toEqual(untouched);
+   expect(after.find(n=>n.noteId==='chosen-1')).toBeUndefined();
+   expect(after.find(n=>n.noteId==='chosen-2')).toBeUndefined();
+  }
+ });
+ it('rejects malformed, unknown, crossing, or locked explicitly selected notes before calling provider',async()=>{
+  let calls=0;
+  const spy:CompositionProvider={id:'spy',async generate(){calls++;return {notes:[note(1920)]};}};
+  const valid={noteId:'target',...note(1920)};
+  const base={...project,tracks:[{...project.tracks[0]!,notes:[valid]}]};
+  for(const ids of [['target','target'],['missing'],[],['target',8] as unknown as string[]]){
+   await expect(proposeWithProvider(spy,{...request,project:base,mode:'replace',targetNoteIds:ids})).rejects.toThrow();
+  }
+  const locked={...project,tracks:[{...project.tracks[0]!,notes:[{...valid,locked:true}]}]};
+  await expect(proposeWithProvider(spy,{...request,project:locked,mode:'replace',targetNoteIds:['target']})).rejects.toThrow('locked_note_in_range');
+  const crossing={...project,tracks:[{...project.tracks[0]!,notes:[{...valid,startTick:1800}]}]};
+  await expect(proposeWithProvider(spy,{...request,project:crossing,mode:'replace',targetNoteIds:['target']})).rejects.toThrow('cross_boundary_note');
+  await expect(proposeWithProvider(spy,{...request,project:base,mode:'append',targetNoteIds:['target']})).rejects.toThrow('invalid_note_selection');
+  expect(calls).toBe(0);
+ });
  it('rejects provider output outside scope',async()=>{
   await expect(proposeWithProvider(fake({notes:[note(0)]}),request)).rejects.toThrow('note_outside_scope');
  });

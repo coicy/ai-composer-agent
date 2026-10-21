@@ -29,13 +29,22 @@ export async function proposeWithProvider(provider:CompositionProvider,request:C
  if(!Number.isSafeInteger(startTick)||!Number.isSafeInteger(endTick)||startTick<0||endTick<=startTick||endTick-startTick>project.ppq*4*16)throw new Error('invalid_scope');
  if(typeof instruction!=='string'||!instruction.trim()||instruction.length>2000)throw new Error('invalid_instruction');
  if(request.maxNotes!==undefined&&(!Number.isSafeInteger(request.maxNotes)||request.maxNotes<1||request.maxNotes>MAX_NOTES))throw new Error('invalid_note_limit');
- const existing=track.notes.filter(n=>n.startTick<endTick&&n.startTick+n.durationTicks>startTick);
- if(mode==='append'&&existing.length)throw new Error('scope_not_empty');
+ const overlapping=track.notes.filter(n=>n.startTick<endTick&&n.startTick+n.durationTicks>startTick);
+ const targetNoteIds=request.targetNoteIds;
+ if(targetNoteIds!==undefined){
+  if(mode!=='replace'||!Array.isArray(targetNoteIds)||targetNoteIds.length===0||targetNoteIds.length>MAX_NOTES||
+   targetNoteIds.some(id=>typeof id!=='string'||!id)||new Set(targetNoteIds).size!==targetNoteIds.length)
+   throw new Error('invalid_note_selection');
+ }
+ if(mode==='append'&&overlapping.length)throw new Error('scope_not_empty');
+ const existing=targetNoteIds===undefined?overlapping:track.notes.filter(n=>targetNoteIds.includes(n.noteId));
+ if(targetNoteIds!==undefined&&existing.length!==targetNoteIds.length)throw new Error('selected_note_not_found');
  if(mode==='replace'){
   if(existing.some(n=>n.startTick<startTick||n.startTick+n.durationTicks>endTick))throw new Error('cross_boundary_note');
   if(existing.some(n=>n.locked))throw new Error('locked_note_in_range');
  }
- const context:ProviderContext={trackId,startTick,endTick,ppq:project.ppq,mode,existingNotes:track.notes.map(n=>({...n})),targetNotes:existing.map(n=>({...n})),instruction};
+ const context:ProviderContext={trackId,startTick,endTick,ppq:project.ppq,mode,targetNoteIds:targetNoteIds===undefined?undefined:[...targetNoteIds],
+  existingNotes:track.notes.map(n=>({...n})),targetNotes:existing.map(n=>({...n})),instruction};
  const raw=await provider.generate(context,signal);
  if(signal?.aborted)throw new Error('generation_cancelled');
  const notes=parseNotes(raw,request.maxNotes??MAX_NOTES).map((n,i)=>({...n,noteId:`proposal-${project.revision}-${trackId}-${startTick}-${i}`}));
