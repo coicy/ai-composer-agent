@@ -264,3 +264,65 @@ test('changing the harmony plan or selected source invalidates an earlier varian
  await page.getByRole('spinbutton',{name:'编配起始小节'}).fill('2');
  await expect(page.getByRole('region',{name:'编配候选对比'})).toHaveCount(0);
 });
+
+test('scoped seeded regeneration previews an existing harmony track and preserves melody and bass',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ const selector=page.getByRole('combobox',{name:'当前轨道'});
+ await expect(selector.locator('option')).toHaveCount(4);
+ await expect(selector).toHaveValue('arrange-1-melody-0-harmony');
+ await page.getByRole('combobox',{name:'局部重编参考轨道'}).selectOption('melody');
+ await page.getByRole('combobox',{name:'局部重编目标轨道'}).selectOption('arrange-1-melody-0-harmony');
+ await page.getByRole('combobox',{name:'局部重编目标声部'}).selectOption('harmony');
+ await page.getByRole('spinbutton',{name:'局部重编起始小节'}).fill('1');
+ await page.getByRole('spinbutton',{name:'局部重编小节数'}).fill('1');
+ await page.getByRole('spinbutton',{name:'局部重编随机种子'}).fill('19601');
+ const noteCountBefore=await page.locator('.note').count();
+ await page.getByRole('button',{name:'按种子局部重编（离线）'}).click();
+ const review=page.getByRole('region',{name:'局部重编候选'});
+ await expect(review).toContainText('2 个旧音符将替换为 2 个新音符');
+ await expect(page.locator('.region-ghost')).toHaveCount(2);
+ await expect(page.locator('.note.pending-delete')).toHaveCount(2);
+ await expect(page.locator('.note')).toHaveCount(noteCountBefore);
+ await page.getByRole('button',{name:'确认局部替换'}).click();
+ await expect(review).toHaveCount(0);
+ await expect(selector.locator('option')).toHaveCount(4);
+ await expect(page.locator('.note')).toHaveCount(noteCountBefore);
+ await page.getByRole('button',{name:'撤销'}).click();
+ await expect(selector.locator('option')).toHaveCount(4);
+ await expect(page.locator('.note')).toHaveCount(noteCountBefore);
+ await selector.selectOption('melody');
+ await expect(page.locator('.note')).toHaveCount(1);
+});
+
+test('cancelled scoped regeneration removes all ghost notes without changing the project',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.getByRole('button',{name:'按种子局部重编（离线）'}).click();
+ await expect(page.locator('.region-ghost')).toHaveCount(2);
+ await page.getByRole('button',{name:'取消局部候选'}).click();
+ await expect(page.locator('.region-ghost')).toHaveCount(0);
+ await expect(page.locator('.note.pending-delete')).toHaveCount(0);
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toHaveCount(0);
+});
+
+test('scoped remote proposal outside selected time window is rejected without mutation',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.route('**/api/arrange',async route=>{
+  const tracks=['harmony','bass','accompaniment'].map(role=>({
+   role,notes:[{pitch:60,startTick:9600,durationTicks:480,velocity:80}]
+  }));
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({tracks})});
+ });
+ await page.getByRole('button',{name:'AI 局部重编'}).click();
+ await expect(page.getByRole('alert')).toContainText('arrangement_note_outside_scope');
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toHaveCount(0);
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+});

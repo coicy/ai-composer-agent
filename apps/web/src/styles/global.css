@@ -90,3 +90,20 @@ select{background:#1e293b;color:#e5e7eb;border:1px solid #475569;padding:9px;bor
 .variant-cards button[aria-pressed="true"]{outline:2px solid #93c5fd}
 .role-mixer{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
 .role-mixer label{display:flex;align-items:center;gap:6px}
+
+/* Scoped regeneration is intentionally separate from initial three-track creation. */
+.scoped-arrangement-panel{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:12px 0;
+ padding:14px;background:#142539;border:1px solid #54758e;border-radius:8px}
+.scoped-arrangement-panel>strong{width:100%;font-size:15px}
+.scoped-arrangement-panel>p{width:100%;margin:0 0 4px;color:#a9bdd3;font-size:12px}
+.scoped-arrangement-panel label{display:flex;align-items:center;gap:7px}
+.scoped-arrangement-panel label input{min-width:73px;width:96px}
+.scoped-arrangement-panel textarea{width:100%;min-height:62px;background:#101827;
+ border:1px solid #475569;border-radius:5px;padding:9px;color:#e5e7eb;font:inherit}
+.scoped-arrangement-panel .scoped-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;width:100%}
+.scoped-review{width:100%;border:1px solid #4f88b0;background:#0d2033;border-radius:7px;
+ padding:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.scoped-review>strong,.scoped-review>p{width:100%;margin:0}
+.scoped-review>p{font-size:12px;color:#a9c0d8}
+.region-ghost{position:absolute;pointer-events:none;z-index:3;height:22px;opacity:.8;
+ border:1px dashed #83c5ff;background:#399bea8a;border-radius:3px}
