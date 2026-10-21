@@ -16,6 +16,7 @@ export interface ArrangementRequest {
  readonly endTick:number;
  readonly instruction:string;
  readonly plan?:HarmonyPlan;
+ readonly seed?:number;
 }
 export interface ArrangementContext {
  readonly sourceTrackId:string;
@@ -26,6 +27,7 @@ export interface ArrangementContext {
  readonly sourceNotes:readonly MidiNote[];
  readonly neighborNotes:readonly MidiNote[];
  readonly plan?:HarmonyPlan;
+ readonly seed?:number;
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
  readonly chordSuggestions?:readonly ChordSuggestion[];
@@ -38,6 +40,9 @@ export interface ArrangementCandidate {
  readonly providerId:string;
  readonly label:string;
  readonly sourceTrackId:string;
+ readonly startTick:number;
+ readonly endTick:number;
+ readonly seed?:number;
  readonly tracks:readonly MusicTrack[];
  readonly assessment:ArrangementAssessment;
  readonly plan?:HarmonyPlan;
@@ -79,6 +84,7 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  if(!validateProject(project))throw new Error('invalid_project');
  if(!Number.isSafeInteger(startTick)||!Number.isSafeInteger(endTick)||startTick<0||endTick<=startTick||endTick-startTick>project.ppq*4*4)throw new Error('invalid_arrangement_scope');
  if(typeof instruction!=='string'||!instruction.trim()||instruction.length>2000)throw new Error('invalid_instruction');
+ if(request.seed!==undefined&&(!Number.isSafeInteger(request.seed)||request.seed<0||request.seed>0xffffffff))throw new Error('invalid_arrangement_seed');
  // Validate before sending user-supplied planning data to any provider.
  const barTicks=project.ppq*4;
  const barCount=Math.ceil((endTick-startTick)/barTicks);
@@ -95,7 +101,7 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  const tonalProfile=analyzeTonality(selected,startTick,endTick);
  const chordSuggestions=suggestChords(selected,startTick,endTick,project.ppq);
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
-  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan};
+  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed};
  const raw=await provider.generate(context,signal);
  if(signal?.aborted)throw new Error('generation_cancelled');
  const tracks=parseArranged(raw,project,sourceTrackId,startTick,endTick);
@@ -106,5 +112,5 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  // The proposal does not write the project. Approval must still pass a revision check.
  const assessment=evaluateArrangement(selected,tracks,startTick,endTick,project.ppq);
- return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,tracks,assessment,plan,planFindings,changes};
+ return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,changes};
 }
