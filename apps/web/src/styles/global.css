@@ -27,3 +27,14 @@ select{background:#1e293b;color:#e5e7eb;border:1px solid #475569;padding:9px;bor
 .details{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .velocity-control{display:flex;gap:8px;align-items:center}
 .velocity-control input{width:70px;background:#111827;color:#e5e7eb;border:1px solid #64748b;border-radius:4px;padding:7px}
+
+/* Horizontal alignment shares Piano Roll scrollLeft and pixelsPerQuarter. */
+.velocity-lane{border:1px solid #374151;border-top:0;background:#101b2a}
+.velocity-heading{height:30px;display:flex;align-items:center;gap:12px;padding:4px 9px;font-size:12px;color:#a7bacd}
+.velocity-heading strong{color:#e5e7eb}
+.velocity-view{display:flex;width:100%;height:112px;overflow:hidden}
+.velocity-axis{width:50px;flex:0 0 50px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;padding:1px 7px 1px 0;border-right:1px solid #475569;color:#94a3b8;font-size:10px;z-index:3;background:#152338}
+.velocity-window{position:relative;flex:1;overflow:hidden}
+.velocity-plot{position:relative;touch-action:none;user-select:none;background:repeating-linear-gradient(to right,transparent 0,transparent 14px,#4755694c 15px)}
+.velocity-bar{position:absolute;bottom:0;background:#4c9f8b;border:1px solid #9de9d1;border-bottom:0;cursor:ns-resize;touch-action:none;min-height:2px}
+.velocity-bar.is-selected{background:#e8a648;border-color:#ffdda0}

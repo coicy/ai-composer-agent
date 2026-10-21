@@ -24,3 +24,8 @@
 - The browser UI interaction was not exercised in a real browser by CI; pure viewport and batch gesture logic is unit tested and TypeScript build is checked.
 
 The next UX pass should include browser Playwright E2E for drag/zoom/undo and a genuine Velocity lane before classifying this as a mature Piano Roll.
+
+## Velocity lane and browser E2E (incremental)
+The Velocity lane is placed directly under the Piano Roll, mirroring the editor's horizontal scroll position and zoom. Each note has a draggable bar; dragging one bar updates only that note unless the bar belongs to the current marquee selection, in which case all selected notes receive the same velocity in one transaction. The lane's pending drag is visual-only until pointer release. The numeric velocity input remains supported.
+
+Playwright browser scenarios cover note creation, horizontal zoom invariance, velocity gesture + undo, marquee selection, multi-note movement + undo. GitHub Actions uses a dedicated Chromium job. See the exact workflow for whether E2E has passed on a given commit; typechecking and unit tests alone do not prove real browser interactions.

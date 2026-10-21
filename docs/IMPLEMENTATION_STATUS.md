@@ -16,3 +16,8 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Selected note groups can be dragged as a single atomic change set; numeric velocity editing applies to the current or selected notes as one transaction.
 - Geometry and gesture construction have unit tests, but no real-browser Playwright E2E or performance profiling has been executed.
 - The GUI is still a DOM/CSS prototype; instrument samples, velocity lane, vertical zoom, timeline transport and full DAW interaction remain future work. See docs/PIANO_ROLL_VIEWPORT.md.
+
+## Velocity lane / browser tests
+- Added a draggable Velocity lane aligned to Piano Roll scroll and zoom. It dispatches intent to the existing `makeVelocityOperations` + Music Core transaction mechanism.
+- Added Playwright Chromium E2E scenarios for note/zoom/velocity/undo and marquee/batch movement/undo, with a dedicated GitHub Actions job. The CI outcome must be checked before claiming browser test coverage passes.
+- Full audio/visual DAW behavior, simultaneous overlapping velocity-bar disambiguation, and performance remain unverified.

@@ -5,6 +5,7 @@ import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
 import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose} from '@ai-composer/composition';
 import {createRemoteProvider} from '../features/agent/remote.js';
+import {VelocityLane} from '../features/editor/VelocityLane.js';
 import type {MelodyCandidate,MelodyStyle} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {createSession,commitSession,undoSession,redoSession} from '@ai-composer/music-core';
@@ -18,6 +19,7 @@ export function App(){
  const [selectedNoteIds,setSelectedNoteIds]=useState<string[]>([]);
  const [tool,setTool]=useState<'edit'|'select'>('edit');
  const [cell,setCell]=useState(60);
+ const [rollScrollLeft,setRollScrollLeft]=useState(0);
  const CELL=cell;
  const rollRef=useRef<HTMLDivElement|null>(null);
  const marqueeStart=useRef<GridPoint|null>(null);
@@ -101,12 +103,15 @@ export function App(){
   else setError(result.reason);
  }
  function run(op:NoteOperation){runOperations([op]);}
- function setVelocity(raw:number){
+ function commitVelocity(ids:readonly string[],raw:number){
   if(!Number.isSafeInteger(raw)||raw<1||raw>127){setError('力度需要在 1 到 127 之间');return;}
-  const ids=selectedNoteIds.length?selectedNoteIds:(selected?[selected]:[]);
   let ops:NoteOperation[];
   try{ops=makeVelocityOperations(trackId,notes,ids,raw);}catch(e){setError(e instanceof Error?e.message:'invalid_velocity');return;}
   runOperations(ops,true);
+ }
+ function setVelocity(raw:number){
+  const ids=selectedNoteIds.length?selectedNoteIds:(selected?[selected]:[]);
+  commitVelocity(ids,raw);
  }
  function addAt(clientX:number,clientY:number,target:HTMLElement){
   const rect=target.getBoundingClientRect(),x=clientX-rect.left,y=clientY-rect.top;
@@ -220,7 +225,7 @@ export function App(){
    {modelPending&&<button onClick={()=>{activeRequest.current?.abort();setModelPending(false);}}>取消请求</button>}
    <span>{aiMode==='selected'?'框选音符后只替换选中的 Note ID；其他音符即使同时发声也会保留。':aiMode==='replace'?'整小节范围替换；锁定及跨边界音符阻止重写。':'在当前轨道最后一个音符之后追加，不修改已有音符。'} 生成结果须先预览再确认。</span>
   </section>
-  <section className="roll" ref={rollRef}>
+  <section className="roll" ref={rollRef} onScroll={e=>setRollScrollLeft(e.currentTarget.scrollLeft)}>
    <div className="keys">{Array.from({length:128},(_,i)=><div key={i} className={'key'+((TOP_PITCH-i)%12===0?' octave-key':'')}>{TOP_PITCH-i}</div>)}</div>
    <div className={'grid'+(tool==='select'?' select-tool':'')} style={{minWidth:gridWidth,height:128*ROW,backgroundSize:`${CELL/4}px ${ROW}px, 100% ${ROW}px`}}
     onPointerDown={beginMarquee} onPointerMove={moveMarquee} onPointerUp={finishMarquee} onPointerCancel={cancelMarquee}
@@ -237,6 +242,8 @@ export function App(){
     </div>;})}
    </div>
   </section>
+  <VelocityLane notes={notes} selectedIds={selectedNoteIds} activeId={selected} ppq={project.ppq}
+   pixelsPerQuarter={CELL} width={gridWidth} scrollLeft={rollScrollLeft} onChange={commitVelocity}/>
   <p className="hint">可垂直滚动查看 MIDI 0–127 全音域；缩放只改变显示比例，不修改工程 Tick。框选后切换回编辑模式，拖动其中任一音符可整体移动，操作作为单次撤销记录。</p>
   <p className="hint">编辑模式：双击空白新增音符，拖动音符修改音高/时间，拖动右边缘改变时值。框选模式：按住鼠标左键拖动矩形区域，再选择“仅重写框选音符”交给 Agent。</p>
   {active&&<div className="details">所选：音高 {active.pitch} · 起点 {active.startTick} tick · 时长 {active.durationTicks} tick · 力度 {active.velocity}
