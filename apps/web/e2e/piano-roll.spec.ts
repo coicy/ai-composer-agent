@@ -1,0 +1,58 @@
+import {test,expect} from '@playwright/test';
+
+test('edit a note, change zoom, edit velocity, and undo in the browser',async({page})=>{
+ await page.goto('/');
+ await expect(page.getByRole('heading',{name:'AI Composer Agent'})).toBeVisible();
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ const note=page.locator('.note').first();
+ await expect(note).toBeVisible();
+ await expect(page.getByText(/revision 1 · 1 notes/)).toBeVisible();
+ const leftBefore=await note.evaluate(e=>(e as HTMLElement).style.left);
+ await page.getByRole('combobox',{name:'水平缩放'}).selectOption('120');
+ await expect(note).toHaveCSS('left','0px');
+ expect(await note.evaluate(e=>(e as HTMLElement).style.left)).toBe(leftBefore);
+ const bar=page.getByRole('slider',{name:/音符力度/}).first();
+ await expect(bar).toHaveAttribute('aria-valuenow','90');
+ const box=await bar.boundingBox();if(!box)throw new Error('no velocity bar');
+ await page.mouse.move(box.x+box.width/2,box.y+2);
+ await page.mouse.down();
+ await page.mouse.move(box.x+box.width/2,box.y+24,{steps:5});
+ await page.mouse.up();
+ await expect(page.getByText(/revision 2 · 1 notes/)).toBeVisible();
+ await expect(bar).not.toHaveAttribute('aria-valuenow','90');
+ await page.getByRole('button',{name:'撤销'}).click();
+ await expect(bar).toHaveAttribute('aria-valuenow','90');
+});
+
+test('marquee selection, one-transaction batch movement, undo and zoom',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ const notes=page.locator('.note');
+ await expect(notes).toHaveCount(2);
+ const first=await notes.nth(0).boundingBox(),second=await notes.nth(1).boundingBox();
+ if(!first||!second)throw new Error('notes are outside visible scroll region');
+ await page.getByRole('button',{name:'框选音符'}).click();
+ await page.mouse.move(first.x+3,first.y+3);
+ await page.mouse.down();
+ await page.mouse.move(second.x+second.width-3,second.y+second.height-3,{steps:6});
+ await page.mouse.up();
+ await expect(page.getByText('2 个已框选音符')).toBeVisible();
+ await expect(page.locator('.note.multi-selected')).toHaveCount(2);
+ await page.getByRole('button',{name:'编辑音符'}).click();
+ const before0=await notes.nth(0).evaluate(e=>(e as HTMLElement).style.left);
+ const before1=await notes.nth(1).evaluate(e=>(e as HTMLElement).style.left);
+ const r=await notes.nth(0).boundingBox();if(!r)throw new Error('no movable note');
+ await page.mouse.move(r.x+9,r.y+8);
+ await page.mouse.down();
+ await page.mouse.move(r.x+40,r.y+8,{steps:6});
+ await page.mouse.up();
+ const after0=await notes.nth(0).evaluate(e=>(e as HTMLElement).style.left);
+ const after1=await notes.nth(1).evaluate(e=>(e as HTMLElement).style.left);
+ expect(after0).not.toBe(before0);
+ expect(after1).not.toBe(before1);
+ await expect(page.getByText(/revision 3 · 2 notes/)).toBeVisible();
+ await page.getByRole('button',{name:'撤销'}).click();
+ expect(await notes.nth(0).evaluate(e=>(e as HTMLElement).style.left)).toBe(before0);
+ expect(await notes.nth(1).evaluate(e=>(e as HTMLElement).style.left)).toBe(before1);
+});
