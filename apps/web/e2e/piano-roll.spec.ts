@@ -44,6 +44,8 @@ test('marquee selection, one-transaction batch movement, undo and zoom',async({p
  await expect(page.getByText('2 个已框选音符')).toBeVisible();
  await expect(page.locator('.note.multi-selected')).toHaveCount(2);
  await page.getByRole('button',{name:'编辑音符'}).click();
+ // Clicking the toolbar scrolls the page to its top; restore the note to the visible viewport.
+ await notes.nth(0).scrollIntoViewIfNeeded();
  const before0=await notes.nth(0).evaluate(e=>(e as HTMLElement).style.left);
  const before1=await notes.nth(1).evaluate(e=>(e as HTMLElement).style.left);
  const r=await notes.nth(0).boundingBox();if(!r)throw new Error('no movable note');
