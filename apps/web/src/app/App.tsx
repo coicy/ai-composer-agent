@@ -200,8 +200,8 @@ export function App(){
    <button onClick={()=>picker.current?.click()}>导入 MIDI</button><button onClick={downloadMidi}>导出 MIDI</button>
    <button onClick={()=>{const id=crypto.randomUUID();run({type:'add_note',trackId,note:{noteId:id,pitch:72,startTick:notes.length*480,durationTicks:480,velocity:90}});setSelected(id);}}>+ 添加音符</button>
    <button onClick={()=>{if(playing)stop();else void play();}}>{playing?'■ 停止':'▶ 试听'}</button>
-   <button disabled={!session.past.length} onClick={()=>{setSession(s=>undoSession(s));setDraft(null);setCandidate(null);setSelectedNoteIds([]);}}>撤销</button>
-   <button disabled={!session.future.length} onClick={()=>{setSession(s=>redoSession(s));setDraft(null);setCandidate(null);setSelectedNoteIds([]);}}>重做</button>
+   <button disabled={!session.past.length} onClick={()=>{setSession(s=>undoSession(s));setDraft({});setCandidate(null);setSelectedNoteIds([]);}}>撤销</button>
+   <button disabled={!session.future.length} onClick={()=>{setSession(s=>redoSession(s));setDraft({});setCandidate(null);setSelectedNoteIds([]);}}>重做</button>
    <button disabled={!active} onClick={()=>{if(active){run({type:'delete_note',trackId,noteId:active.noteId});setSelected(null);}}}>删除所选</button>
    <span>revision {project.revision} · {notes.length} notes</span>
   </section>
