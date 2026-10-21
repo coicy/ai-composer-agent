@@ -161,7 +161,7 @@ export function App(){
     <option value="append">轨道末尾续写</option><option value="replace">重写指定小节</option><option value="selected">仅重写框选音符</option>
    </select></label>
    {aiMode==='replace'&&<label>起始小节 <input aria-label="重写起始小节" type="number" min="1" max="64" value={startBar} onChange={e=>{setStartBar(Number(e.target.value));setCandidate(null);}}/></label>}
-   {aiMode!=='selected'&&<label>生成小节数 <input aria-label="AI 小节数" type="number" min="1" max="4" value={aiBars} onChange={e=>{setAiBars(Number(e.target.value));setCandidate(null);}}/></label>
+   {aiMode!=='selected'&&<label>生成小节数 <input aria-label="AI 小节数" type="number" min="1" max="4" value={aiBars} onChange={e=>{setAiBars(Number(e.target.value));setCandidate(null);}}/></label>}
    <button disabled={modelPending||!instruction.trim()} onClick={()=>void proposeAI()}>{modelPending?'生成中…':aiMode==='append'?'AI 续写预览':'AI 重写预览'}</button>
    {modelPending&&<button onClick={()=>{activeRequest.current?.abort();setModelPending(false);}}>取消请求</button>}
    <span>{aiMode==='selected'?'框选音符后只替换选中的 Note ID；其他音符即使同时发声也会保留。':aiMode==='replace'?'整小节范围替换；锁定及跨边界音符阻止重写。':'在当前轨道最后一个音符之后追加，不修改已有音符。'} 生成结果须先预览再确认。</span>
