@@ -14,7 +14,8 @@
     "@ai-composer/midi-io": "workspace:*",
     "@ai-composer/composition": "workspace:*",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "@ai-composer/piano-roll": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.2",
