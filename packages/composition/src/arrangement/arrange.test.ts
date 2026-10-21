@@ -43,7 +43,8 @@ describe('atomic three-track arrangement candidate',()=>{
  it('enforces a strict user chord plan before commit while keeping source unchanged',async()=>{
   const plan={tonic:0,mode:'major' as const,degrees:[1] as const,registers:DEFAULT_REGISTERS,enforcement:{scale:'hard' as const,chords:'hard' as const,registers:'hard' as const}};
   const req={...request,plan};
-  await expect(proposeArrangement(fake(tracks()),req)).rejects.toThrow('plan_chords_violation');
+  const chordOnlyViolation={tracks:tracks().tracks.map(t=>t.role==='harmony'?{...t,notes:[note(62)]}:t)};
+  await expect(proposeArrangement(fake(chordOnlyViolation),req)).rejects.toThrow('plan_chords_violation');
   const generated=await proposeArrangement(new SeededArranger(),req);
   expect(generated.planFindings).toHaveLength(0);
   expect(generated.tracks).toHaveLength(3);
