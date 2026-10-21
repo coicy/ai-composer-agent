@@ -47,6 +47,15 @@ describe('agent API',()=>{
   const invalid=await fetch(url+'/api/compose',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,project:p,mode:'replace',targetNoteIds:['missing']})});
   expect(invalid.status).toBe(422);
  });
+ it('safely enforces pitch-only constraint through HTTP route',async()=>{
+  const p={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'a',pitch:60,startTick:0,durationTicks:480,velocity:81}]}]};
+  const fake=()=>({id:'fake',async generate(){return {notes:[{pitch:67,startTick:0,durationTicks:480,velocity:70}]};}});
+  const url=await launch({apiKey:'test',providerFactory:fake});
+  const good=await fetch(url+'/api/compose',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,project:p,mode:'replace',targetNoteIds:['a'],editConstraint:'pitch_only'})});
+  expect(good.status).toBe(200);expect((await good.json()).notes[0].pitch).toBe(67);
+  const bad=await fetch(url+'/api/compose',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,project:p,mode:'append',targetNoteIds:['a'],editConstraint:'pitch_only'})});
+  expect(bad.status).toBe(422);
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});

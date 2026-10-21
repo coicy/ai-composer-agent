@@ -82,6 +82,41 @@ describe('composition provider boundary',()=>{
   await expect(proposeWithProvider(spy,{...request,project:base,mode:'append',targetNoteIds:['target']})).rejects.toThrow('invalid_note_selection');
   expect(calls).toBe(0);
  });
+ it('only updates selected pitches, preserving rhythm, stable IDs and velocity',async()=>{
+  const a={noteId:'a',pitch:60,startTick:1920,durationTicks:240,velocity:73};
+  const b={noteId:'b',pitch:64,startTick:2160,durationTicks:480,velocity:95};
+  const untouched={noteId:'chord',pitch:48,startTick:1920,durationTicks:240,velocity:90,locked:true};
+  const snapshot:MusicProject={...project,tracks:[{...project.tracks[0]!,notes:[...project.tracks[0]!.notes,a,b,untouched]}]};
+  const result=await proposeWithProvider(fake({notes:[{pitch:69,startTick:2160,durationTicks:480,velocity:10},{pitch:65,startTick:1920,durationTicks:240,velocity:110}]}),{...request,project:snapshot,mode:'replace',targetNoteIds:['b','a'],editConstraint:'pitch_only'});
+  expect(result.changes.operations).toEqual([
+   {type:'update_note',trackId:'melody',noteId:'a',changes:{pitch:65}},
+   {type:'update_note',trackId:'melody',noteId:'b',changes:{pitch:69}}
+  ]);
+  expect(result.removedNotes).toEqual([]);
+  const applied=applyChangeSet(snapshot,result.changes);
+  expect(applied.ok).toBe(true);
+  if(applied.ok){
+   const arr=applied.project.tracks[0]!.notes;
+   expect(arr.find(n=>n.noteId==='a')).toEqual({...a,pitch:65});
+   expect(arr.find(n=>n.noteId==='b')).toEqual({...b,pitch:69});
+   expect(arr.find(n=>n.noteId==='chord')).toEqual(untouched);
+  }
+ });
+ it('rejects timing drift, dropped notes, unexpected extras and no-op pitches',async()=>{
+  const a={noteId:'a',pitch:60,startTick:1920,durationTicks:240,velocity:73};
+  const b={noteId:'b',pitch:64,startTick:2160,durationTicks:240,velocity:95};
+  const snapshot:MusicProject={...project,tracks:[{...project.tracks[0]!,notes:[a,b]}]};
+  const opts={...request,project:snapshot,mode:'replace' as const,targetNoteIds:['a','b'],editConstraint:'pitch_only' as const};
+  for(const notes of [
+   [{...note(1920),durationTicks:480},{...note(2160)}],
+   [{...note(1920)}],
+   [{...note(1920)},{...note(2160)},{...note(2400)}],
+   [{...note(1920)},{...note(2280)}]
+  ])await expect(proposeWithProvider(fake({notes}),opts)).rejects.toThrow('rhythm_constraint_violated');
+  await expect(proposeWithProvider(fake({notes:[{...note(1920,60)},{...note(2160,64)}]}),opts)).rejects.toThrow('no_pitch_changes');
+  await expect(proposeWithProvider(fake({notes:[note(1920)]}),{...opts,mode:'append'})).rejects.toThrow('pitch_only_requires_selection');
+  await expect(proposeWithProvider(fake({notes:[note(1920)]}),{...opts,targetNoteIds:undefined})).rejects.toThrow('pitch_only_requires_selection');
+ });
  it('rejects provider output outside scope',async()=>{
   await expect(proposeWithProvider(fake({notes:[note(0)]}),request)).rejects.toThrow('note_outside_scope');
  });
