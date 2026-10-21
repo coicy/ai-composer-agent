@@ -16,3 +16,5 @@ export {evaluateArrangement} from './evaluation/arrangement.js';
 export type {ArrangementFinding,ArrangementAssessment,ArrangementMetrics} from './evaluation/arrangement.js';
 export {validateHarmonyPlan,checkHarmonyPlan,chordPitchClasses,chordLabel,scalePitchClasses,DEFAULT_REGISTERS} from './planning/harmony-plan.js';
 export type {HarmonyPlan,PlanConstraint,PlanFinding,PlanRegister,DiatonicDegree} from './planning/harmony-plan.js';
+export {effectiveChordEvents,chordAtBeat,chordPitchClassesAtBeat,chordEventLabel,isStepwisePassingTone} from './planning/harmony-plan.js';
+export type {ChordEvent} from './planning/harmony-plan.js';
