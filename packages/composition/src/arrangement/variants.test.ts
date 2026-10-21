@@ -13,7 +13,7 @@ const p:MusicProject={projectId:'p',revision:1,ppq:480,tracks:[
 const plan={tonic:0,mode:'major' as const,degrees:[1,4] as const,registers:DEFAULT_REGISTERS,
  enforcement:{scale:'hard' as const,chords:'hard' as const,registers:'hard' as const,inversions:'hard' as const}};
 const req={project:p,sourceTrackId:'original',startTick:0,endTick:3840,instruction:'Arranging motif',plan,seed:19501};
-const notes=(a:readonly {tracks:readonly {notes:readonly unknown[]}[]}[])=>a.map(x=>x.tracks.map(t=>t.notes.map(n=>({...n}))));
+const notes=(a:readonly {tracks:readonly {notes:readonly {pitch:number;startTick:number;durationTicks:number;velocity:number}[]}[]}[])=>a.map(x=>x.tracks.map(t=>t.notes.map(n=>({pitch:n.pitch,startTick:n.startTick,durationTicks:n.durationTicks,velocity:n.velocity}))));
 describe('seeded arrangement variant bank',()=>{
  it('stable independent seeds, including 0 and unsigned maximum',()=>{
   expect(deriveArrangementSeed(19501,0)).toBe(19501);
@@ -35,9 +35,11 @@ describe('seeded arrangement variant bank',()=>{
   const variants=await proposeArrangementVariants(new SeededArranger(),req,3);
   const mixed=await combineArrangementVariants(req,variants,{harmony:0,bass:1,accompaniment:2});
   expect(mixed.roleSeeds).toEqual({harmony:variants[0]!.seed,bass:variants[1]!.seed,accompaniment:variants[2]!.seed});
-  expect(mixed.tracks.map((t,i)=>t.notes)).toEqual([variants[0]!.tracks[0]!.notes.map(n=>({...n,noteId:mixed.tracks[0]!.notes.find(m=>m.startTick===n.startTick)?.noteId??''})),
-   variants[1]!.tracks[1]!.notes.map(n=>({...n,noteId:mixed.tracks[1]!.notes.find(m=>m.startTick===n.startTick)?.noteId??''})),
-   variants[2]!.tracks[2]!.notes.map(n=>({...n,noteId:mixed.tracks[2]!.notes.find(m=>m.startTick===n.startTick)?.noteId??''}))]);
+  expect(notes([mixed])[0]).toEqual([
+   notes([variants[0]!])[0]![0],
+   notes([variants[1]!])[0]![1],
+   notes([variants[2]!])[0]![2]
+  ]);
   expect(mixed.changes.operations.map(x=>x.type)).toEqual(['add_track','add_track','add_track']);
   const committed=applyChangeSet(p,mixed.changes);
   expect(committed.ok).toBe(true);
