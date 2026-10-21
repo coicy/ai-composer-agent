@@ -5,3 +5,5 @@ export {SeededProvider} from './providers/seeded-provider.js';
 export type {CompositionProvider,CompositionMode,EditConstraint,CompositionRequest,ProviderContext,ValidatedComposition} from './contracts/provider.js';
 export type {MelodyRequest,MelodyCandidate,MelodyStyle} from './generators/melody.js';
 export type {ContinueRequest} from './generators/continue.js';
+export {proposeTranspose} from './transformations/transpose.js';
+export type {TransposeCandidate} from './transformations/transpose.js';
