@@ -18,3 +18,5 @@ export {validateHarmonyPlan,checkHarmonyPlan,chordPitchClasses,chordLabel,scaleP
 export type {HarmonyPlan,PlanConstraint,PlanFinding,PlanRegister,DiatonicDegree} from './planning/harmony-plan.js';
 export {effectiveChordEvents,chordAtBeat,chordPitchClassesAtBeat,chordEventLabel,isStepwisePassingTone} from './planning/harmony-plan.js';
 export type {ChordEvent} from './planning/harmony-plan.js';
+export {deriveArrangementSeed,proposeArrangementVariants,combineArrangementVariants,MAX_ARRANGEMENT_VARIANTS} from './arrangement/variants.js';
+export type {ArrangementPartChoices,MixedArrangementCandidate} from './arrangement/variants.js';
