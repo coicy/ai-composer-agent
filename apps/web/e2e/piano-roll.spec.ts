@@ -1,3 +1,4 @@
+import {readFile} from 'node:fs/promises';
 import {test,expect} from '@playwright/test';
 
 test('edit a note, change zoom, edit velocity, and undo in the browser',async({page})=>{
@@ -325,4 +326,65 @@ test('scoped remote proposal outside selected time window is rejected without mu
  await expect(page.getByRole('alert')).toContainText('arrangement_note_outside_scope');
  await expect(page.getByRole('region',{name:'局部重编候选'})).toHaveCount(0);
  await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+});
+
+test('region seeded candidate bank compares proposals and commits only one selected version',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.getByRole('combobox',{name:'局部重编方案数'}).selectOption('3');
+ await page.getByRole('button',{name:'按种子生成局部多方案'}).click();
+ const bank=page.getByRole('region',{name:'局部重编方案比较'});
+ await expect(bank.locator('button')).toHaveCount(3);
+ const first=await page.locator('.region-ghost').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('title')));
+ await bank.locator('button').nth(1).click();
+ const second=await page.locator('.region-ghost').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('title')));
+ expect(first).not.toEqual(second);
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toContainText('Seed');
+ await page.getByRole('button',{name:'确认局部替换'}).click();
+ await expect(bank).toHaveCount(0);
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+ await page.getByRole('button',{name:'撤销'}).click();
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+});
+
+test('approved chord plan and seed survive JSON project export/import, then guide region regeneration',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('spinbutton',{name:'编配小节数'}).fill('1');
+ await page.getByRole('checkbox',{name:'启用可控和声规划'}).check();
+ await page.getByRole('textbox',{name:'逐小节和弦级数'}).fill('1');
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await expect(page.getByText(/当前参考旋律及目标范围没有可复用的已批准规划/)).toHaveCount(0);
+ await expect(page.getByRole('checkbox',{name:/继承已批准和声规划/})).toBeChecked();
+ const promise=page.waitForEvent('download');
+ await page.getByRole('button',{name:'导出工程 JSON'}).click();
+ const saved=await promise;
+ const json=JSON.parse(await readFile(await saved.path(),'utf8'));
+ expect(json.format).toBe('ai-composer-project-v1');
+ expect(json.project.generationHistory).toHaveLength(1);
+ expect(json.project.generationHistory[0].seed).toBe(19501);
+ expect(JSON.parse(json.project.generationHistory[0].planJson).degrees).toEqual([1]);
+ const file=page.locator('input[type=file]');
+ await file.setInputFiles({name:'roundtrip.aic.json',mimeType:'application/json',
+  buffer:Buffer.from(JSON.stringify(json))});
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+ await expect(page.getByRole('checkbox',{name:/继承已批准和声规划/})).toBeChecked();
+ await page.getByRole('button',{name:'按种子局部重编（离线）'}).click();
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toBeVisible();
+});
+
+test('invalid project JSON is rejected and leaves existing MIDI unchanged',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ const invalid={format:'ai-composer-project-v1',project:{projectId:'x',revision:0,ppq:480,tracks:[],
+   generationHistory:[{recordId:'bad',kind:'scoped',sourceTrackId:'missing',targetTrackIds:['x'],
+   startTick:0,endTick:1920,seed:-1,providerId:'bad',instruction:'bad'}]}};
+ await page.locator('input[type=file]').setInputFiles({
+  name:'broken.aic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(invalid))
+ });
+ await expect(page.getByRole('alert')).toContainText('invalid_project_file');
+ await expect(page.locator('.note')).toHaveCount(1);
 });

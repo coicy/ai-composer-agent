@@ -57,3 +57,10 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Existing-track targeted re-arrangement is now available in the Piano Roll UI with independent source/target/role selection, bar range, seed, instruction, preview and audition.
 - Only target-region note operations can be committed; MIDI source and other tracks are unaffected. Existing locks and crossing notes are rejected in composition core.
 - Current UI does not automatically carry over a prior HarmonyPlan; no original arrangement plan is persisted as MusicProject data. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
+
+## Iterative local variants and saved project provenance
+- Scoped regeneration can generate 2–4 independently validated Seed variants for the same existing target track and window. Candidates can be switched, previewed, auditioned and approved as a single note ChangeSet.
+- Approved multi-track and scoped generations append a bounded `generationHistory` provenance record atomically with note edits in Music Core (undo/redo covers metadata and MIDI data).
+- A dedicated `composition.aic.json` project format preserves the complete project, including generation history and serialized approved HarmonyPlan. Import validates the project; Standard MIDI export/import remains available, but MIDI does not preserve JSON-only planning metadata.
+- Region editing can explicitly reuse a validated saved chord plan covering the selected source/target/scope, including window slicing of a full-song timeline. The checkbox can disable reuse; the system never asserts a plan exists if none is saved.
+- Multi-role candidate mixing stores per-role Seed provenance. Music core bounds history length and validates provenance before atomic commit. See docs/PROJECT_PROVENANCE.md.
