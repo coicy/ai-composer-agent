@@ -3,7 +3,7 @@ import {playProject} from '@ai-composer/audio-engine';
 import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes,tickToX,xToQuantizedTick,pitchToY,yToPitch,makeMoveOperations,makeVelocityOperations} from '@ai-composer/piano-roll';
 import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
-import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,SeededArranger,ARRANGEMENT_ROLES,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel,chordEventLabel,effectiveChordEvents} from '@ai-composer/composition';
+import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,proposeArrangementVariants,combineArrangementVariants,SeededArranger,ARRANGEMENT_ROLES,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel,chordEventLabel,effectiveChordEvents} from '@ai-composer/composition';
 import {createRemoteProvider} from '../features/agent/remote.js';
 import {createRemoteArranger} from '../features/agent/remote-arranger.js';
 import {ArrangementDiagnostics} from '../features/agent/ArrangementDiagnostics.js';
@@ -11,7 +11,7 @@ import {HarmonyPlanEditor} from '../features/agent/HarmonyPlanEditor.js';
 import type {HarmonyPlanDraft} from '../features/agent/HarmonyPlanEditor.js';
 import {timelineFromDegrees} from '../features/agent/HarmonyPlanEditor.js';
 import {VelocityLane} from '../features/editor/VelocityLane.js';
-import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole} from '@ai-composer/composition';
+import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole,ArrangementRequest,ArrangementPartChoices} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {createSession,commitSession,undoSession,redoSession} from '@ai-composer/music-core';
 import type {EditSession,MidiNote,MusicProject,NoteOperation} from '@ai-composer/music-core';
@@ -34,6 +34,11 @@ export function App(){
  const [error,setError]=useState('');
  const [candidate,setCandidate]=useState<MelodyCandidate|null>(null);
  const [arrangement,setArrangement]=useState<ArrangementCandidate|null>(null);
+ const [arrangementVariants,setArrangementVariants]=useState<readonly ArrangementCandidate[]>([]);
+ const [variantRequest,setVariantRequest]=useState<ArrangementRequest|null>(null);
+ const [variantSeed,setVariantSeed]=useState(19501);
+ const [variantCount,setVariantCount]=useState(3);
+ const [roleChoices,setRoleChoices]=useState<ArrangementPartChoices>({harmony:0,bass:0,accompaniment:0});
  const [arrangementView,setArrangementView]=useState<ArrangementRole>('harmony');
  const [arrangeStartBar,setArrangeStartBar]=useState(1);
  const [arrangeBars,setArrangeBars]=useState(4);
@@ -108,10 +113,16 @@ export function App(){
    setError('');
   }catch(e){setCandidate(null);setError(e instanceof Error?e.message:'transpose_failed');}
  }
- async function proposeMultiTrack(useModel:boolean){
+ async function proposeMultiTrack(useModel:boolean,multiple=false){
   if(!Number.isSafeInteger(arrangeStartBar)||arrangeStartBar<1||arrangeStartBar>64||
      !Number.isSafeInteger(arrangeBars)||arrangeBars<1||arrangeBars>4){
    setError('编配起始小节需为 1–64，长度需为 1–4 小节');return;
+  }
+  if(!Number.isSafeInteger(variantSeed)||variantSeed<0||variantSeed>0xffffffff){
+   setError('随机种子必须是 0 至 4294967295 的整数');return;
+  }
+  if(multiple&&(!Number.isSafeInteger(variantCount)||variantCount<2||variantCount>4)){
+   setError('候选方案数量为 2–4');return;
   }
   let plan;
   try{
@@ -124,20 +135,45 @@ export function App(){
     passingTones:harmonicPlan.passingTones,
     registers:harmonicPlan.registers,enforcement:harmonicPlan.enforcement
    },arrangeBars):undefined;
-  }catch(e){setError(e instanceof Error?e.message:'invalid_harmony_plan');setArrangement(null);return;}
+  }catch(e){setError(e instanceof Error?e.message:'invalid_harmony_plan');setArrangement(null);setArrangementVariants([]);setVariantRequest(null);return;}
   arrangeRequest.current?.abort();
   const controller=new AbortController();arrangeRequest.current=controller;
-  setArrangePending(true);setArrangement(null);setCandidate(null);setError('');
+  setArrangePending(true);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setCandidate(null);setError('');
   const snapshot=session.project;
-  const sourceTrackId=trackId;
-  const startTick=(arrangeStartBar-1)*snapshot.ppq*4;
-  const endTick=startTick+arrangeBars*snapshot.ppq*4;
+  const request:ArrangementRequest={
+   project:snapshot,sourceTrackId:trackId,
+   startTick:(arrangeStartBar-1)*snapshot.ppq*4,
+   endTick:(arrangeStartBar-1+arrangeBars)*snapshot.ppq*4,
+   instruction:arrangePrompt,plan,seed:variantSeed
+  };
   try{
    const provider=useModel?createRemoteArranger(snapshot):new SeededArranger();
-   const result=await proposeArrangement(provider,{project:snapshot,sourceTrackId,startTick,endTick,instruction:arrangePrompt,plan},controller.signal);
-   if(!controller.signal.aborted){setArrangement(result);setArrangementView('harmony');setError('');}
+   if(multiple){
+    const results=await proposeArrangementVariants(provider,request,variantCount,controller.signal);
+    if(!controller.signal.aborted&&arrangeRequest.current===controller){
+     setArrangementVariants(results);setVariantRequest(request);
+     setRoleChoices({harmony:0,bass:0,accompaniment:0});
+     setArrangement(results[0]!);setArrangementView('harmony');setError('');
+    }
+   }else{
+    const result=await proposeArrangement(provider,request,controller.signal);
+    if(!controller.signal.aborted&&arrangeRequest.current===controller){
+     setArrangement(result);setArrangementView('harmony');setError('');
+    }
+   }
   }catch(e){if(!controller.signal.aborted)setError(e instanceof Error?e.message:'arrangement_failed');}
   finally{if(arrangeRequest.current===controller){arrangeRequest.current=null;setArrangePending(false);}}
+ }
+ async function mixSelectedParts(){
+  if(!variantRequest||arrangementVariants.length<2)return;
+  if(variantRequest.project.revision!==session.project.revision){
+   setError('工程版本已更新，需要重新生成候选');return;
+  }
+  try{
+   const mixed=await combineArrangementVariants(variantRequest,arrangementVariants,roleChoices);
+   if(variantRequest.project.revision!==session.project.revision){setError('工程版本已更新，需要重新生成候选');return;}
+   setArrangement(mixed);setError('');
+  }catch(e){setError(e instanceof Error?e.message:'mixed_arrangement_failed');}
  }
  function approveMultiTrack(){
   if(!arrangement)return;
@@ -147,7 +183,7 @@ export function App(){
    stop();setSession(result.session);
    setActiveTrack(pending.tracks[0]!.trackId);
    setSelected(null);setSelectedNoteIds([]);
-   setArrangement(null);setCandidate(null);setError('');
+   setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setCandidate(null);setError('');
   }else{setArrangement(null);setError(result.reason);}
  }
  async function previewMultiTrackAudio(){
@@ -295,11 +331,38 @@ export function App(){
    <label>编配小节 <input type="number" aria-label="编配小节数" min={1} max={4} value={arrangeBars} onChange={e=>{const next=Number(e.target.value);setArrangeBars(next);setArrangement(null);if(Number.isSafeInteger(next)&&next>=1&&next<=4)setHarmonicPlan(p=>{const progression=Array.from({length:next},(_,i)=>p.progression.split(',')[i]??['1','4','5','1'][i]!).join(',');
      return {...p,progression,timeline:p.timelineEnabled?timelineFromDegrees(progression,next):p.timeline};});}}/></label>
    <HarmonyPlanEditor value={harmonicPlan} barCount={arrangeBars} onChange={next=>{setHarmonicPlan(next);setArrangement(null);}}/>
-   <textarea aria-label="编配要求" rows={2} maxLength={2000} value={arrangePrompt} onChange={e=>{setArrangePrompt(e.target.value);setArrangement(null);}}/>
+   <textarea aria-label="编配要求" rows={2} maxLength={2000} value={arrangePrompt} onChange={e=>{setArrangePrompt(e.target.value);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/>   <div className="variant-controls" role="group" aria-label="编配随机种子与候选">
+    <label>随机种子 <input type="number" aria-label="编配随机种子" min={0} max={4294967295} step={1} value={variantSeed}
+     onChange={e=>{setVariantSeed(Number(e.target.value));setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/></label>
+    <label>方案数 <select aria-label="编配方案数" value={variantCount} onChange={e=>setVariantCount(Number(e.target.value))}>
+     <option value={2}>2</option><option value={3}>3</option><option value={4}>4</option>
+    </select></label>
+    <button disabled={arrangePending||!arrangePrompt.trim()} onClick={()=>void proposeMultiTrack(false,true)}>按种子生成多方案（离线）</button>
+    <button disabled={arrangePending||!arrangePrompt.trim()} onClick={()=>void proposeMultiTrack(true,true)}>AI 多方案比较</button>
+    <span>离线模式同一工程与种子可精确复现；模型模式仅将种子作为变化参考，不保证逐音符一致。</span>
+   </div>
    <button disabled={arrangePending} onClick={()=>void proposeMultiTrack(false)}>规则编配预览（离线）</button>
    <button disabled={arrangePending||!arrangePrompt.trim()} onClick={()=>void proposeMultiTrack(true)}>{arrangePending?'生成中…':'AI 多轨编配预览'}</button>
    {arrangePending&&<button onClick={()=>{arrangeRequest.current?.abort();setArrangePending(false);}}>取消请求</button>}
    <span className="arrangement-hint">以当前轨道为只读主旋律参考，在新轨道中生成和声、低音、伴奏；不会覆盖当前或其他已有轨道。</span>
+   {arrangementVariants.length>0&&<section className="variant-bank" aria-label="编配候选对比">
+    <strong>同一主旋律的 {arrangementVariants.length} 个编配候选（尚未保存）</strong>
+    <div className="variant-cards">{arrangementVariants.map((variant,i)=>
+     <button type="button" key={variant.seed} disabled={variant.changes.baseRevision!==project.revision}
+      aria-pressed={arrangement===variant} onClick={()=>{setArrangement(variant);setError('');}}>
+      方案 {i+1} · Seed {variant.seed}
+      <span>音符 {variant.tracks.reduce((n,t)=>n+t.notes.length,0)} · 结构提醒 {variant.assessment.findings.length} · 规划偏离 {variant.planFindings.length}</span>
+     </button>)}</div>
+    <div className="role-mixer" role="group" aria-label="组合不同候选声部">
+     {ARRANGEMENT_ROLES.map((role,i)=><label key={role}>{['和声','低音','伴奏'][i]}
+      <select aria-label={`${['和声','低音','伴奏'][i]}选择方案`} value={roleChoices[role]}
+       onChange={e=>setRoleChoices(p=>({...p,[role]:Number(e.target.value)}))}>
+       {arrangementVariants.map((variant,index)=><option key={variant.seed} value={index}>方案 {index+1} · Seed {variant.seed}</option>)}
+      </select></label>)}
+     <button disabled={arrangementVariants.some(v=>v.changes.baseRevision!==project.revision)} onClick={()=>void mixSelectedParts()}>组合所选声部并重新验证</button>
+    </div>
+    <p>组合操作会重新校验三轨与和声规划；不会直接拼接旧的 ChangeSet。选择方案后可以使用下方试听与确认按钮。</p>
+   </section>}
    {arrangement&&<div className="arrangement-review">
     <strong>候选：新增 3 个轨道，{arrangement.tracks.reduce((sum,t)=>sum+t.notes.length,0)} 个 MIDI 音符（尚未提交）</strong>
     {arrangement.tracks.map((t,i)=><span className="arrangement-track" key={t.trackId}>{t.name} · {t.notes.length} 音符</span>)}
