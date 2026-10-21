@@ -123,6 +123,43 @@ describe('agent API',()=>{
   expect(invalid.status).toBe(422);
   expect((await invalid.json()).error).toBe('invalid_arrangement_seed');
  });
+ it('reconstructs scoped read-only context from project and rejects forged context fields',async()=>{
+  const melody={noteId:'melody-id',pitch:72,startTick:1920,durationTicks:480,velocity:90};
+  const old={noteId:'target-id',pitch:64,startTick:1920,durationTicks:480,velocity:80};
+  const bass={noteId:'protected-bass-id',pitch:36,startTick:1920,durationTicks:480,velocity:80};
+  const source={...project,tracks:[
+   {trackId:'melody',name:'Melody',locked:true,notes:[melody]},
+   {trackId:'harmony',name:'Harmony',locked:false,notes:[old]},
+   {trackId:'bass',name:'Bass',locked:true,notes:[bass]}
+  ]};
+  let editing:unknown;
+  let calls=0;
+  const arrangerFactory=()=>({id:'mock',async generate(ctx:{editing?:unknown}){
+   calls++;editing=ctx.editing;
+   return {tracks:[
+    {role:'harmony',notes:[{pitch:67,startTick:1920,durationTicks:480,velocity:75}]},
+    {role:'bass',notes:[{pitch:36,startTick:1920,durationTicks:480,velocity:75}]},
+    {role:'accompaniment',notes:[{pitch:55,startTick:1920,durationTicks:480,velocity:75}]}
+   ]};
+  }});
+  const url=await launch({apiKey:'fake',arrangerFactory});
+  const payload={project:source,sourceTrackId:'melody',startTick:1920,endTick:3840,instruction:'replace harmony',
+   editing:{targetTrackId:'harmony',targetRole:'harmony'}};
+  const post=async(body:unknown)=>fetch(url+'/api/arrange',{method:'POST',headers:{'content-type':'application/json'},
+   body:JSON.stringify(body)});
+  expect((await post(payload)).status).toBe(200);
+  expect(editing).toMatchObject({
+   targetRole:'harmony',original:[old],protectedParts:[{trackIndex:2,notes:[bass]}]
+  });
+  expect(calls).toBe(1);
+  const forged=await post({...payload,editing:{...payload.editing,protectedParts:[{trackIndex:1,notes:[]}]}});
+  expect(forged.status).toBe(422);
+  expect((await forged.json()).error).toBe('invalid_arrangement_editing');
+  const locked=await post({...payload,editing:{targetTrackId:'bass',targetRole:'bass'}});
+  expect(locked.status).toBe(422);
+  expect((await locked.json()).error).toBe('track_locked');
+  expect(calls).toBe(1);
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});

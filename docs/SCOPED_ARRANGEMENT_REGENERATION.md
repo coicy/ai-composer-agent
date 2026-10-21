@@ -23,3 +23,17 @@ Current UI deliberately does not reuse the nonpersisted HarmonyPlan from the ini
 - Notes crossing selected boundaries are rejected in full rather than clipped.
 - Only one region/target role may be previewed at a time; this is not yet a per-bar seeded variant bank.
 - Source, other part, and target-outside-scope notes remain identical after application. These invariants are unit-tested; Chromium E2E covers offline preview, commit and undo, cancellation, and invalid remote data.
+
+## Read-only cross-part context (increment)
+
+Scoped regeneration now derives a **bounded read-only editingScope** in `packages/composition/src/arrangement/editing-context.ts` from the current MusicProject, rather than trusting context arrays supplied by a client:
+
+- Up to 8 preceding and 8 following target-track notes, to encourage phrase continuity.
+- Up to 32 target notes within the selected replacement region, as an **optional musical reference**, not a license to preserve/edit their Note IDs directly.
+- Up to 6 *other* preserved tracks, at most 16 notes per track, preferring notes overlapping or nearest to the target region. The source melody is supplied separately, as before.
+
+The client sends only `{editing:{targetTrackId,targetRole}}` to the loopback agent API. The API rejects additional forged editing-context fields; the server independently recalculates this context from the supplied project snapshot and checks target locks/cross-boundary notes **before calling the model**.
+
+Only numeric musical note fields (pitch, startTick, durationTicks, velocity) and a read-only track index are serialized into the OpenAI Responses API input. Stable IDs, track names and writable commands are not included in `editingScope`. Existing source-melody output validation, hard HarmonyPlan constraints, music-core dry-run and atomic approval remain in force. The model still returns all three roles for protocol compatibility; only the requested target role can become a scoped ChangeSet.
+
+Limitations: this is additional *generation context*, not proof of sophisticated voice-leading or orchestration. It does not expose entire large projects to the model or permit editing preserved parts; live-model musical quality is unverified.

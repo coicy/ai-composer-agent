@@ -52,3 +52,8 @@ src/
 - Region candidate bank derives 2–4 uint32 Seeds and validates every candidate before publishing any bank. Preview/cancel never writes project notes or provenance.
 - A persisted plan is reused only when an explicit approved history record matches source and target and completely covers the selected window. Parse/validate and slice to local chords; never guess a missing plan or infer an old plan from bare MIDI.
 - Generating/committing a candidate must atomically append a provenance record with the actual Seed and plan; avoid misleading assertions about remote model reproducibility. See docs/PROJECT_PROVENANCE.md.
+
+## Scoped arrangement read-only context
+- Build neighbor and protected-part context exclusively from validated MusicProject; never trust client-supplied note arrays or apply model-proposed modifications to protected tracks.
+- Bound target before/after/original notes and other-part note counts. Keep original note IDs internal; serialize only musical note properties to provider inputs.
+- Lock and cross-boundary checks must occur before requesting a model completion. Scoped proposals may change only the chosen target track and time range.
