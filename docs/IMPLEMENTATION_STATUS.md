@@ -10,3 +10,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Deterministic, model-free ±12-semitone transposition now uses the same preview/approval/revision pipeline.
 - Mock/provider and validation tests cover timing changes, count mismatch, no-op, locks, pitch overflow and unrelated notes.
 - Live model usefulness and browser drag interactions remain unverified beyond automated type/unit checks. See [MUSIC_EDIT_CONSTRAINTS.md](MUSIC_EDIT_CONSTRAINTS.md).
+
+## Piano Roll interaction increment
+- MIDI 0–127 vertical scrolling with 128 keyboard/grid rows; horizontal zoom with 4 discrete scales.
+- Selected note groups can be dragged as a single atomic change set; numeric velocity editing applies to the current or selected notes as one transaction.
+- Geometry and gesture construction have unit tests, but no real-browser Playwright E2E or performance profiling has been executed.
+- The GUI is still a DOM/CSS prototype; instrument samples, velocity lane, vertical zoom, timeline transport and full DAW interaction remain future work. See docs/PIANO_ROLL_VIEWPORT.md.
