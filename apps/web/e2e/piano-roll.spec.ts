@@ -153,3 +153,48 @@ test('strict harmonic plan rejects an untrusted but structurally valid nonchord 
  await expect(page.getByRole('alert')).toContainText('plan_scale_violation');
  await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toHaveCount(0);
 });
+
+test('beat-level chord timeline generates two seventh chords with inversion in one bar',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('spinbutton',{name:'编配小节数'}).fill('1');
+ await page.getByRole('checkbox',{name:'启用可控和声规划'}).check();
+ await page.getByRole('checkbox',{name:'启用小节内和弦时间轴'}).check();
+ const timeline=page.getByRole('group',{name:'和弦时间轴'});
+ await timeline.getByRole('button',{name:'拆分'}).click();
+ await expect(timeline.locator('.chord-event')).toHaveCount(2);
+ await page.getByRole('checkbox',{name:'时间轴第1段七和弦'}).check();
+ await page.getByRole('combobox',{name:'时间轴第1段转位'}).selectOption('1');
+ await page.getByRole('combobox',{name:'时间轴第2段级数'}).selectOption('5');
+ await page.getByRole('checkbox',{name:'时间轴第2段七和弦'}).check();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ const report=page.getByRole('region',{name:'和声规划执行报告'});
+ await expect(report).toContainText('I7 · 第1转位');
+ await expect(report).toContainText('V7');
+ await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toBeEnabled();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+ await page.getByRole('combobox',{name:'当前轨道'}).selectOption('melody');
+ await expect(page.locator('.note')).toHaveCount(1);
+});
+
+test('client rejects a bass line that violates a hard inversion at chord onset',async({page})=>{
+ await page.route('**/api/arrange',async route=>{
+  const tracks=[
+   {role:'harmony',notes:[{pitch:64,startTick:0,durationTicks:480,velocity:80}]},
+   {role:'bass',notes:[{pitch:36,startTick:0,durationTicks:480,velocity:80}]},
+   {role:'accompaniment',notes:[{pitch:55,startTick:0,durationTicks:480,velocity:80}]}
+  ];
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({tracks})});
+ });
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('spinbutton',{name:'编配小节数'}).fill('1');
+ await page.getByRole('checkbox',{name:'启用可控和声规划'}).check();
+ await page.getByRole('checkbox',{name:'启用小节内和弦时间轴'}).check();
+ await page.getByRole('checkbox',{name:'时间轴第1段七和弦'}).check();
+ await page.getByRole('combobox',{name:'时间轴第1段转位'}).selectOption('1');
+ await page.getByRole('button',{name:'AI 多轨编配预览'}).click();
+ await expect(page.getByRole('alert')).toContainText('plan_inversions_violation:bass');
+ await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toHaveCount(0);
+});

@@ -31,3 +31,9 @@ src/
 - `hard` 必须校验所有新增轨道音符（包括跨小节延音），任何违规立即拒绝整个候选，绝不静默降级或自动修复。
 - `soft` 只生成含明确计数的 PlanFinding，不禁止音乐性合理的外音与非典型声部布局。
 - HarmonyPlan 仍必须作为单次三轨原子操作预览、显式用户批准和 revision 检查；参考 docs/HARMONY_PLANNING.md。
+
+## HarmonyPlan timeline (v0.2)
+- Quarter-note `ChordEvent` ranges must be contiguous and cover the full requested bar span. A note crossing event boundaries must pass every chord check.
+- A selected seventh extends the current scale-stacked triad with degree+6; bass `inversions: hard` is checked at first onset per chord window, including missing bass onset.
+- `passingTones: stepwise` is a narrow, deterministic harmony/accompaniment nonchord exception, never permission to bypass `scale: hard`; no silent repairs or weakening enforcement.
+- Maintain backward compatibility when `timeline` and `inversions` are omitted. See docs/HARMONY_TIMELINE.md.

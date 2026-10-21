@@ -39,3 +39,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Server and browser validate the plan before provider calls and deterministically check returned notes, including sustain across chord boundaries. Hard violations reject entire candidates; soft deviations only surface role-scoped counts.
 - The model adapter receives the explicit plan in addition to separately marked uncertain source-key hypotheses. Offline arranger respects strict constraints for demonstration.
 - Browser plan inputs, audit review, mocked remote rejection, and a source-preserving atomic three-track commit are covered by tests. See docs/HARMONY_PLANNING.md.
+
+## Editable beat-level chord timeline
+- A HarmonyPlan may now carry a contiguous quarter-beat chord timeline, up to 4 bars; segment split/merge and degree, diatonic seventh, inversion are edited in the browser. Earlier one-triad-per-bar plans remain compatible.
+- Per-segment chord-tone membership is validated against every overlapping note duration; hard bass-inversion checks apply to the first bass note onset of each chord event, with missing entries rejected.
+- Optional stepwise passing-tone exceptions allow carefully bounded nonchord motion between two chord tones, while independent scale hard constraints still apply. This is structural pattern recognition, not comprehensive counterpoint understanding.
+- SeededArranger, OpenAI prompts and API errors were adapted for timelines. Chromium tests cover split, seventh/inversion plan preview/approval, and rejecting bad bass inversion response. See docs/HARMONY_TIMELINE.md.
