@@ -237,6 +237,7 @@ export function App(){
    targetTrackIds:pending.tracks.map(t=>t.trackId),
    startTick:pending.startTick,endTick:pending.endTick,seed:pending.seed,
    providerId:pending.providerId,instruction:arrangePrompt,
+   ...('roleSeeds' in pending?{seedsByRole:pending.roleSeeds as Record<string,number>} :{}),
    ...(pending.plan?{planJson:JSON.stringify(pending.plan)}:{})
   };
   const result=commitSession(session,{...pending.changes,generationRecord:record});

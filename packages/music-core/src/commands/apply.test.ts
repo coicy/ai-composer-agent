@@ -35,3 +35,17 @@ describe('atomic generation provenance',()=>{
    .toMatchObject({ok:false,reason:'invalid_generation_record'});
  });
 });
+
+it('records independent mixed role seeds and rejects malformed ones',()=>{
+ const project:MusicProject={projectId:'p',revision:0,ppq:480,tracks:[
+  {trackId:'melody',name:'M',locked:false,notes:[]},{trackId:'h',name:'H',locked:false,notes:[]},
+  {trackId:'b',name:'B',locked:false,notes:[]},{trackId:'a',name:'A',locked:false,notes:[]}]};
+ const record={recordId:'mix0',kind:'three_track' as const,sourceTrackId:'melody',
+  targetTrackIds:['h','b','a'],startTick:0,endTick:1920,providerId:'mixed-arrangement',
+  instruction:'mix',seedsByRole:{harmony:19501,bass:101,accompaniment:22}};
+ expect(applyChangeSet(project,{baseRevision:0,operations:[{type:'add_note',trackId:'h',note}],generationRecord:record}))
+  .toMatchObject({ok:true});
+ expect(applyChangeSet(project,{baseRevision:0,operations:[{type:'add_note',trackId:'h',note}],
+  generationRecord:{...record,seedsByRole:{...record.seedsByRole,bass:-2}}}))
+  .toMatchObject({ok:false,reason:'invalid_generation_record'});
+});

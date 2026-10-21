@@ -13,6 +13,13 @@ export function validateGenerationRecord(record:GenerationRecord):boolean {
   typeof record.providerId!=='string'||!record.providerId||record.providerId.length>120||
   typeof record.instruction!=='string'||record.instruction.length>2000||
   (record.seed!==undefined&&(!integer(record.seed)||record.seed<0||record.seed>0xffffffff)))return false;
+ if(record.seedsByRole!==undefined){
+  const seeds=record.seedsByRole;
+  if(!seeds||typeof seeds!=='object'||Array.isArray(seeds)||
+   Object.keys(seeds).length!==3||
+   !['harmony','bass','accompaniment'].every(k=>integer(seeds[k])&&seeds[k]>=0&&seeds[k]<=0xffffffff))
+   return false;
+ }
  if(record.planJson!==undefined){
   if(typeof record.planJson!=='string'||record.planJson.length>16000)return false;
   try{const p=JSON.parse(record.planJson) as unknown;if(!p||typeof p!=='object'||Array.isArray(p))return false;}

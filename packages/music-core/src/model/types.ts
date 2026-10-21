@@ -9,6 +9,7 @@ export interface GenerationRecord {
  readonly startTick:number;
  readonly endTick:number;
  readonly seed?:number;
+ readonly seedsByRole?:Readonly<Record<string,number>>;
  readonly providerId:string;
  readonly instruction:string;
  readonly planJson?:string;
