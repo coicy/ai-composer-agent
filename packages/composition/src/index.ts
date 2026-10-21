@@ -22,3 +22,6 @@ export {deriveArrangementSeed,proposeArrangementVariants,combineArrangementVaria
 export type {ArrangementPartChoices,MixedArrangementCandidate} from './arrangement/variants.js';
 export {proposeRegionRegeneration} from './arrangement/regenerate-region.js';
 export type {RegionRegenerationRequest,RegionRegenerationCandidate} from './arrangement/regenerate-region.js';
+export {proposeRegionVariants} from './arrangement/region-variants.js';
+export {findReusableHarmonyPlan} from './arrangement/reuse-plan.js';
+export type {ReusablePlan} from './arrangement/reuse-plan.js';

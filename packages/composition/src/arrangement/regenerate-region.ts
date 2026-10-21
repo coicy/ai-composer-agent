@@ -10,6 +10,8 @@ export interface RegionRegenerationRequest extends ArrangementRequest {
 }
 export interface RegionRegenerationCandidate {
  readonly label:string;
+ readonly providerId:string;
+ readonly plan?:ArrangementRequest['plan'];
  readonly sourceTrackId:string;
  readonly targetTrackId:string;
  readonly targetRole:ArrangementRole;
@@ -51,6 +53,7 @@ export async function proposeRegionRegeneration(
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  return {
   label:`局部重编 · ${targetRole} · Seed ${request.seed??'未指定'}`,
+  providerId:generated.providerId,plan:generated.plan,
   sourceTrackId,targetTrackId,targetRole,seed:request.seed,
   startTick,endTick,notes,removedNotes:overlap,changes
  };
