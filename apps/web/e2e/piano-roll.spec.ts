@@ -70,6 +70,9 @@ test('offline three-track arrangement is previewed, atomically approved and undo
  await page.getByRole('button',{name:'+ 添加音符'}).click();
  await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
  await expect(page.getByText(/候选：新增 3 个轨道/)).toBeVisible();
+ const diagnostic=page.getByRole('region',{name:'编配结构诊断'});
+ await expect(diagnostic).toContainText('证据不足');
+ await expect(diagnostic).toContainText('结构统计');
  await expect(page.locator('.arrangement-ghost')).toHaveCount(8);
  await page.getByRole('combobox',{name:'编配预览轨道'}).selectOption('bass');
  await expect(page.locator('.arrangement-ghost.bass')).toHaveCount(8);
@@ -95,5 +98,24 @@ test('untrusted AI arrangement outside scope is rejected by browser validation',
  await page.getByRole('button',{name:'AI 多轨编配预览'}).click();
  await expect(page.getByRole('alert')).toContainText('arrangement_note_outside_scope');
  await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toHaveCount(0);
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(1);
+});
+
+test('valid but questionable harmony shows advisory diagnostics without automatic rejection',async({page})=>{
+ await page.route('**/api/arrange',async route=>{
+  const tracks=[
+   {role:'harmony',notes:[{pitch:73,startTick:0,durationTicks:480,velocity:80}]},
+   {role:'bass',notes:[{pitch:80,startTick:0,durationTicks:480,velocity:75}]},
+   {role:'accompaniment',notes:[{pitch:60,startTick:0,durationTicks:480,velocity:70}]}
+  ];
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({tracks})});
+ });
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'AI 多轨编配预览'}).click();
+ const diagnostic=page.getByRole('region',{name:'编配结构诊断'});
+ await expect(diagnostic).toContainText('低音高于');
+ await expect(diagnostic).toContainText('交叉');
+ await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toBeEnabled();
  await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(1);
 });

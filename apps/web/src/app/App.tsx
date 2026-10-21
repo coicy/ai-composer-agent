@@ -6,6 +6,7 @@ import {exportMidi,importMidi} from '@ai-composer/midi-io';
 import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,SeededArranger,ARRANGEMENT_ROLES} from '@ai-composer/composition';
 import {createRemoteProvider} from '../features/agent/remote.js';
 import {createRemoteArranger} from '../features/agent/remote-arranger.js';
+import {ArrangementDiagnostics} from '../features/agent/ArrangementDiagnostics.js';
 import {VelocityLane} from '../features/editor/VelocityLane.js';
 import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
@@ -284,6 +285,7 @@ export function App(){
    {arrangement&&<div className="arrangement-review">
     <strong>候选：新增 3 个轨道，{arrangement.tracks.reduce((sum,t)=>sum+t.notes.length,0)} 个 MIDI 音符（尚未提交）</strong>
     {arrangement.tracks.map((t,i)=><span className="arrangement-track" key={t.trackId}>{t.name} · {t.notes.length} 音符</span>)}
+    <ArrangementDiagnostics assessment={arrangement.assessment}/>
     <label>覆盖查看 <select aria-label="编配预览轨道" value={arrangementView} onChange={e=>setArrangementView(e.target.value as ArrangementRole)}>
      {ARRANGEMENT_ROLES.map((role,i)=><option key={role} value={role}>{arrangement.tracks[i]!.name}</option>)}
     </select></label>

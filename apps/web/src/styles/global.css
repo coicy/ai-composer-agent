@@ -51,3 +51,10 @@ select{background:#1e293b;color:#e5e7eb;border:1px solid #475569;padding:9px;bor
 .arrangement-ghost{position:absolute;z-index:2;height:22px;pointer-events:none;opacity:.8;border-radius:3px;border:1px dashed #93c5fd;background:#60a5fa88}
 .arrangement-ghost.bass{background:#b39aff88;border-color:#c4b5fd}
 .arrangement-ghost.accompaniment{background:#f4b86a88;border-color:#fcd34d}
+
+.arrangement-diagnostics{width:100%;padding:12px 14px;background:#111d2b;border:1px solid #475569;border-radius:7px;font-size:13px;line-height:1.5}
+.arrangement-diagnostics>strong{font-size:14px}
+.arrangement-diagnostics p{margin:7px 0;color:#d0dbea}
+.arrangement-diagnostics ul{padding-left:23px;margin:8px 0}
+.arrangement-diagnostics li{margin:5px 0;color:#f7d5a0}
+.arrangement-diagnostics .diagnostic-disclaimer{color:#aebaca;font-size:12px}

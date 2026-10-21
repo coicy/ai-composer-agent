@@ -20,3 +20,8 @@ src/
 - ArrangementProvider 只读一个源 MusicTrack 的投影音符；输出仅能包含 harmony、bass、accompaniment 三个新角色，每个恰好一次。
 - 任何原轨道的修改、删除或跨范围输出不得放行。通过三项 `add_track` 构建同一个 ChangeSet，验证/预览/批准后原子提交；不得绕过 Music Core。
 - Provider 不能生成稳定项目/音符 ID 或调用提交函数；ID 由确定性 validator 分配，验证规模和音高、Tick、力度。见 docs/MULTITRACK_ARRANGEMENT.md。
+
+## 调性分析与编配质量提示
+- `analysis/tonality.ts` 只计算 pitch-class 假设，明确不足或歧义；不可输出“已证实调性”。
+- `evaluation/arrangement.ts` 的检查仅为软诊断，不可绕过 Music Core 或作为无授权的修复/拒绝原因。
+- 必须保留统计证据、计数与免责声明；没有经过听评/人工标注的数据，不得报出“音乐质量分数”或宣称行业级准确率。见 docs/ARRANGEMENT_DIAGNOSTICS.md。

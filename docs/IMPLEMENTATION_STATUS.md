@@ -27,3 +27,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Enforced structural note/role/timing bounds and source-track immutability with deterministic validators and dry-run core operations. Source can remain locked.
 - Browser now supports candidate overlays by arrangement role, temporary synthesized audio audition, offline seeded demonstration and explicit approval/undo.
 - Real-model musical quality and high-density project performance remain unverified. New Playwright tests exercise offline approvals and rejected invalid remote output. See docs/MULTITRACK_ARRANGEMENT.md.
+
+## Explainable arrangement diagnostics
+- Added source melody pitch-class key hypotheses and bar-window triad suggestions, each explicitly marked as uncertain for sparse or ambiguous material.
+- Arrangement candidates now include deterministic nonblocking diagnostics (simultaneous tension, bass register, voice crossing, large melodic leaps) rather than a misleading absolute musical-quality score.
+- The provider receives advisory context; the web review shows evidence and warnings, and it still requires approval. See docs/ARRANGEMENT_DIAGNOSTICS.md.
+- Needs grounded listening-based evaluation on a corpus; algorithmic checks do not validate musical creativity.
