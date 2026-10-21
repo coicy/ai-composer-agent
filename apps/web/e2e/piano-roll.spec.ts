@@ -250,3 +250,17 @@ test('seed input cannot invoke arrangement generator with invalid value',async({
  await expect(page.getByRole('alert')).toContainText('随机种子必须');
  await expect(page.getByRole('region',{name:'编配候选对比'})).toHaveCount(0);
 });
+
+test('changing the harmony plan or selected source invalidates an earlier variant bank',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'按种子生成多方案（离线）'}).click();
+ await expect(page.getByRole('region',{name:'编配候选对比'})).toBeVisible();
+ await page.getByRole('checkbox',{name:'启用可控和声规划'}).check();
+ await expect(page.getByRole('region',{name:'编配候选对比'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toHaveCount(0);
+ await page.getByRole('button',{name:'按种子生成多方案（离线）'}).click();
+ await expect(page.getByRole('region',{name:'编配候选对比'})).toBeVisible();
+ await page.getByRole('spinbutton',{name:'编配起始小节'}).fill('2');
+ await expect(page.getByRole('region',{name:'编配候选对比'})).toHaveCount(0);
+});

@@ -71,7 +71,7 @@ export function App(){
  const viewport={ppq:project.ppq,pixelsPerQuarter:CELL,rowHeight:ROW,topPitch:TOP_PITCH};
  const xOf=(tick:number)=>tickToX(tick,viewport);
  const yOf=(pitch:number)=>pitchToY(pitch,viewport);
- async function loadMidi(file:File){try{stop();const imported=importMidi(new Uint8Array(await file.arrayBuffer()));setSession(createSession(imported));setCandidate(null);setArrangement(null);activeRequest.current?.abort();arrangeRequest.current?.abort();setActiveTrack(imported.tracks[0]!.trackId);setSelected(null);setSelectedNoteIds([]);setMarquee(null);setError('');}catch(e){setError(e instanceof Error?e.message:'import_failed');}}
+ async function loadMidi(file:File){try{stop();const imported=importMidi(new Uint8Array(await file.arrayBuffer()));setSession(createSession(imported));setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);activeRequest.current?.abort();arrangeRequest.current?.abort();setActiveTrack(imported.tracks[0]!.trackId);setSelected(null);setSelectedNoteIds([]);setMarquee(null);setError('');}catch(e){setError(e instanceof Error?e.message:'import_failed');}}
  function downloadMidi(){try{const bytes=exportMidi(project);const copy=new Uint8Array(bytes.byteLength);copy.set(bytes);const url=URL.createObjectURL(new Blob([copy.buffer],{type:'audio/midi'}));const a=document.createElement('a');a.href=url;a.download='composition.mid';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){setError(e instanceof Error?e.message:'export_failed');}}
  function propose(){try{setArrangement(null);setCandidate(composeMelody({project:session.project,trackId,startBar:0,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'generation_failed');}}
  function proposeContinuation(){try{setArrangement(null);setCandidate(continueMelody({project:session.project,trackId,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'continuation_failed');}}
@@ -195,11 +195,11 @@ export function App(){
    playback.current=handle;setPlaying(true);setError('');
   }catch(e){setError(e instanceof Error?e.message:'arrangement_preview_failed');}
  }
- function approve(){if(!candidate)return;const result=commitSession(session,candidate.changes);if(result.ok){setSession(result.session);setCandidate(null);setSelectedNoteIds([]);setError('');}else{setCandidate(null);setError(result.reason);}}
+ function approve(){if(!candidate)return;const result=commitSession(session,candidate.changes);if(result.ok){setSession(result.session);setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setSelectedNoteIds([]);setError('');}else{setCandidate(null);setError(result.reason);}}
  function runOperations(operations:NoteOperation[],keepSelection=false){
   if(!operations.length)return;
   const result=commitSession(session,{baseRevision:project.revision,operations});
-  if(result.ok){setSession(result.session);setCandidate(null);setArrangement(null);if(!keepSelection)setSelectedNoteIds([]);setError('');}
+  if(result.ok){setSession(result.session);setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);if(!keepSelection)setSelectedNoteIds([]);setError('');}
   else setError(result.reason);
  }
  function run(op:NoteOperation){runOperations([op]);}
@@ -293,7 +293,7 @@ export function App(){
  return <main>
   <header><h1>AI Composer Agent</h1><p>钢琴卷帘 · 手工编辑与自主旋律生成原型</p></header>
   <section className="toolbar">
-   <select aria-label="当前轨道" value={trackId} onChange={e=>{activeRequest.current?.abort();arrangeRequest.current?.abort();setCandidate(null);setArrangement(null);setActiveTrack(e.target.value);setSelected(null);setSelectedNoteIds([]);cancelMarquee();}}>{project.tracks.map(t=><option key={t.trackId} value={t.trackId}>{t.name}</option>)}</select>
+   <select aria-label="当前轨道" value={trackId} onChange={e=>{activeRequest.current?.abort();arrangeRequest.current?.abort();setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setActiveTrack(e.target.value);setSelected(null);setSelectedNoteIds([]);cancelMarquee();}}>{project.tracks.map(t=><option key={t.trackId} value={t.trackId}>{t.name}</option>)}</select>
    <button aria-pressed={tool==='edit'} onClick={()=>{setTool('edit');cancelMarquee();}}>编辑音符</button>
    <button aria-pressed={tool==='select'} onClick={()=>{setTool('select');cancelMarquee();}}>框选音符</button>
    <label className="zoom-control">水平缩放 <select aria-label="水平缩放" value={CELL} onChange={e=>{setCell(Number(e.target.value));cancelMarquee();}}><option value={30}>50%</option><option value={60}>100%</option><option value={90}>150%</option><option value={120}>200%</option></select></label>
@@ -301,13 +301,13 @@ export function App(){
    {selectedNoteIds.length>0&&<button onClick={()=>{setSelectedNoteIds([]);setAiMode('append');setCandidate(null);}}>清除框选</button>}
    {selectedNoteIds.length>0&&<button onClick={()=>previewTranspose(12)}>所选 +12 半音预览</button>}
    {selectedNoteIds.length>0&&<button onClick={()=>previewTranspose(-12)}>所选 -12 半音预览</button>}
-   <button onClick={()=>{const id=crypto.randomUUID();run({type:"add_track",track:{trackId:id,name:`Track ${project.tracks.length+1}`,locked:false,notes:[]}});setActiveTrack(id);setArrangement(null);setSelected(null);setSelectedNoteIds([]);}}>+ 轨道</button>
+   <button onClick={()=>{const id=crypto.randomUUID();run({type:"add_track",track:{trackId:id,name:`Track ${project.tracks.length+1}`,locked:false,notes:[]}});setActiveTrack(id);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setSelected(null);setSelectedNoteIds([]);}}>+ 轨道</button>
    <input ref={picker} type="file" accept=".mid,.midi,audio/midi" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)void loadMidi(f);e.target.value="";}}/>
    <button onClick={()=>picker.current?.click()}>导入 MIDI</button><button onClick={downloadMidi}>导出 MIDI</button>
    <button onClick={()=>{const id=crypto.randomUUID();run({type:'add_note',trackId,note:{noteId:id,pitch:72,startTick:notes.length*480,durationTicks:480,velocity:90}});setSelected(id);}}>+ 添加音符</button>
    <button onClick={()=>{if(playing)stop();else void play();}}>{playing?'■ 停止':'▶ 试听'}</button>
-   <button disabled={!session.past.length} onClick={()=>{setSession(s=>undoSession(s));setDraft({});setCandidate(null);setArrangement(null);setSelectedNoteIds([]);}}>撤销</button>
-   <button disabled={!session.future.length} onClick={()=>{setSession(s=>redoSession(s));setDraft({});setCandidate(null);setArrangement(null);setSelectedNoteIds([]);}}>重做</button>
+   <button disabled={!session.past.length} onClick={()=>{setSession(s=>undoSession(s));setDraft({});setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setSelectedNoteIds([]);}}>撤销</button>
+   <button disabled={!session.future.length} onClick={()=>{setSession(s=>redoSession(s));setDraft({});setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setSelectedNoteIds([]);}}>重做</button>
    <button disabled={!active} onClick={()=>{if(active){run({type:'delete_note',trackId,noteId:active.noteId});setSelected(null);}}}>删除所选</button>
    <span>revision {project.revision} · {notes.length} notes</span>
   </section>
@@ -327,14 +327,14 @@ export function App(){
   </section>
   <section className="arrangement-panel" aria-label="多轨 AI 编配">
    <strong>多轨 AI 编配 · 原始旋律只读</strong>
-   <label>起始小节 <input type="number" aria-label="编配起始小节" min={1} max={64} value={arrangeStartBar} onChange={e=>{setArrangeStartBar(Number(e.target.value));setArrangement(null);}}/></label>
-   <label>编配小节 <input type="number" aria-label="编配小节数" min={1} max={4} value={arrangeBars} onChange={e=>{const next=Number(e.target.value);setArrangeBars(next);setArrangement(null);if(Number.isSafeInteger(next)&&next>=1&&next<=4)setHarmonicPlan(p=>{const progression=Array.from({length:next},(_,i)=>p.progression.split(',')[i]??['1','4','5','1'][i]!).join(',');
+   <label>起始小节 <input type="number" aria-label="编配起始小节" min={1} max={64} value={arrangeStartBar} onChange={e=>{setArrangeStartBar(Number(e.target.value));setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/></label>
+   <label>编配小节 <input type="number" aria-label="编配小节数" min={1} max={4} value={arrangeBars} onChange={e=>{const next=Number(e.target.value);setArrangeBars(next);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);if(Number.isSafeInteger(next)&&next>=1&&next<=4)setHarmonicPlan(p=>{const progression=Array.from({length:next},(_,i)=>p.progression.split(',')[i]??['1','4','5','1'][i]!).join(',');
      return {...p,progression,timeline:p.timelineEnabled?timelineFromDegrees(progression,next):p.timeline};});}}/></label>
-   <HarmonyPlanEditor value={harmonicPlan} barCount={arrangeBars} onChange={next=>{setHarmonicPlan(next);setArrangement(null);}}/>
+   <HarmonyPlanEditor value={harmonicPlan} barCount={arrangeBars} onChange={next=>{setHarmonicPlan(next);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/>
    <textarea aria-label="编配要求" rows={2} maxLength={2000} value={arrangePrompt} onChange={e=>{setArrangePrompt(e.target.value);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/>   <div className="variant-controls" role="group" aria-label="编配随机种子与候选">
     <label>随机种子 <input type="number" aria-label="编配随机种子" min={0} max={4294967295} step={1} value={variantSeed}
      onChange={e=>{setVariantSeed(Number(e.target.value));setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/></label>
-    <label>方案数 <select aria-label="编配方案数" value={variantCount} onChange={e=>setVariantCount(Number(e.target.value))}>
+    <label>方案数 <select aria-label="编配方案数" value={variantCount} onChange={e=>{setVariantCount(Number(e.target.value));setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}>
      <option value={2}>2</option><option value={3}>3</option><option value={4}>4</option>
     </select></label>
     <button disabled={arrangePending||!arrangePrompt.trim()} onClick={()=>void proposeMultiTrack(false,true)}>按种子生成多方案（离线）</button>
@@ -378,7 +378,7 @@ export function App(){
     </select></label>
     <button disabled={arrangement.changes.baseRevision!==project.revision} onClick={()=>void previewMultiTrackAudio()}>试听原曲与编配候选</button>
     <button disabled={arrangement.changes.baseRevision!==project.revision} onClick={approveMultiTrack}>确认新增 3 轨</button>
-    <button onClick={()=>setArrangement(null)}>取消编配</button>
+    <button onClick={()=>{setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}>取消编配</button>
     {arrangement.changes.baseRevision!==project.revision&&<span className="error">工程版本已变化，必须重新生成。</span>}
    </div>}
   </section>
