@@ -3,10 +3,11 @@ import {playProject} from '@ai-composer/audio-engine';
 import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes,tickToX,xToQuantizedTick,pitchToY,yToPitch,makeMoveOperations,makeVelocityOperations} from '@ai-composer/piano-roll';
 import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
-import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose} from '@ai-composer/composition';
+import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,SeededArranger,ARRANGEMENT_ROLES} from '@ai-composer/composition';
 import {createRemoteProvider} from '../features/agent/remote.js';
+import {createRemoteArranger} from '../features/agent/remote-arranger.js';
 import {VelocityLane} from '../features/editor/VelocityLane.js';
-import type {MelodyCandidate,MelodyStyle} from '@ai-composer/composition';
+import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {createSession,commitSession,undoSession,redoSession} from '@ai-composer/music-core';
 import type {EditSession,MidiNote,MusicProject,NoteOperation} from '@ai-composer/music-core';
@@ -28,6 +29,13 @@ export function App(){
  const picker=useRef<HTMLInputElement|null>(null);
  const [error,setError]=useState('');
  const [candidate,setCandidate]=useState<MelodyCandidate|null>(null);
+ const [arrangement,setArrangement]=useState<ArrangementCandidate|null>(null);
+ const [arrangementView,setArrangementView]=useState<ArrangementRole>('harmony');
+ const [arrangeStartBar,setArrangeStartBar]=useState(1);
+ const [arrangeBars,setArrangeBars]=useState(4);
+ const [arrangePrompt,setArrangePrompt]=useState('基于主旋律创作具有奇幻冒险感的和声、低音与节奏性伴奏，保留主旋律的主题动机。');
+ const [arrangePending,setArrangePending]=useState(false);
+ const arrangeRequest=useRef<AbortController|null>(null);
  const [style,setStyle]=useState<MelodyStyle>('motif');
  const [seed,setSeed]=useState(19501);
  const [bars,setBars]=useState(4);
@@ -41,7 +49,7 @@ export function App(){
  const gesture=useRef<Gesture|null>(null);
  const playback=useRef<{stop():void}|null>(null);
  const [playing,setPlaying]=useState(false);
- useEffect(()=>()=>{playback.current?.stop();activeRequest.current?.abort();},[]);
+ useEffect(()=>()=>{playback.current?.stop();activeRequest.current?.abort();arrangeRequest.current?.abort();},[]);
  useEffect(()=>{if(rollRef.current)rollRef.current.scrollTop=(127-72)*ROW-240;},[]);
  function stop(){playback.current?.stop();playback.current=null;setPlaying(false);}
  async function play(){stop();try{const handle=await playProject(session.project);playback.current=handle;setPlaying(true);setError('');}catch(e){setError(e instanceof Error?e.message:'audio_error');}}
@@ -53,10 +61,10 @@ export function App(){
  const viewport={ppq:project.ppq,pixelsPerQuarter:CELL,rowHeight:ROW,topPitch:TOP_PITCH};
  const xOf=(tick:number)=>tickToX(tick,viewport);
  const yOf=(pitch:number)=>pitchToY(pitch,viewport);
- async function loadMidi(file:File){try{stop();const imported=importMidi(new Uint8Array(await file.arrayBuffer()));setSession(createSession(imported));setCandidate(null);activeRequest.current?.abort();setActiveTrack(imported.tracks[0]!.trackId);setSelected(null);setSelectedNoteIds([]);setMarquee(null);setError('');}catch(e){setError(e instanceof Error?e.message:'import_failed');}}
+ async function loadMidi(file:File){try{stop();const imported=importMidi(new Uint8Array(await file.arrayBuffer()));setSession(createSession(imported));setCandidate(null);setArrangement(null);activeRequest.current?.abort();arrangeRequest.current?.abort();setActiveTrack(imported.tracks[0]!.trackId);setSelected(null);setSelectedNoteIds([]);setMarquee(null);setError('');}catch(e){setError(e instanceof Error?e.message:'import_failed');}}
  function downloadMidi(){try{const bytes=exportMidi(project);const copy=new Uint8Array(bytes.byteLength);copy.set(bytes);const url=URL.createObjectURL(new Blob([copy.buffer],{type:'audio/midi'}));const a=document.createElement('a');a.href=url;a.download='composition.mid';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){setError(e instanceof Error?e.message:'export_failed');}}
- function propose(){try{setCandidate(composeMelody({project:session.project,trackId,startBar:0,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'generation_failed');}}
- function proposeContinuation(){try{setCandidate(continueMelody({project:session.project,trackId,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'continuation_failed');}}
+ function propose(){try{setArrangement(null);setCandidate(composeMelody({project:session.project,trackId,startBar:0,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'generation_failed');}}
+ function proposeContinuation(){try{setArrangement(null);setCandidate(continueMelody({project:session.project,trackId,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'continuation_failed');}}
 
  async function proposeAI(){
   if(aiMode!=='selected'&&(!Number.isSafeInteger(aiBars)||aiBars<1||aiBars>4)){setError('AI 小节数应在 1–4 之间');return;}
@@ -77,7 +85,7 @@ export function App(){
   if(endTick-startTick>4*measure){setError('本阶段 AI 最多重写连续 4 小节的音符');return;}
   activeRequest.current?.abort();
   const controller=new AbortController();activeRequest.current=controller;
-  setModelPending(true);setCandidate(null);setError('');
+  setModelPending(true);setCandidate(null);setArrangement(null);setError('');
   try{
    const result=await proposeWithProvider(createRemoteProvider(snapshot),{
     project:snapshot,trackId,startTick,endTick,instruction,mode:aiMode==='append'?'append':'replace',
@@ -91,15 +99,54 @@ export function App(){
  function previewTranspose(semitones:12|-12){
   activeRequest.current?.abort();setModelPending(false);
   try{
-   setCandidate(proposeTranspose(session.project,trackId,selectedNoteIds,semitones));
+   setArrangement(null);setCandidate(proposeTranspose(session.project,trackId,selectedNoteIds,semitones));
    setError('');
   }catch(e){setCandidate(null);setError(e instanceof Error?e.message:'transpose_failed');}
+ }
+ async function proposeMultiTrack(useModel:boolean){
+  if(!Number.isSafeInteger(arrangeStartBar)||arrangeStartBar<1||arrangeStartBar>64||
+     !Number.isSafeInteger(arrangeBars)||arrangeBars<1||arrangeBars>4){
+   setError('编配起始小节需为 1–64，长度需为 1–4 小节');return;
+  }
+  arrangeRequest.current?.abort();
+  const controller=new AbortController();arrangeRequest.current=controller;
+  setArrangePending(true);setArrangement(null);setCandidate(null);setError('');
+  const snapshot=session.project;
+  const sourceTrackId=trackId;
+  const startTick=(arrangeStartBar-1)*snapshot.ppq*4;
+  const endTick=startTick+arrangeBars*snapshot.ppq*4;
+  try{
+   const provider=useModel?createRemoteArranger(snapshot):new SeededArranger();
+   const result=await proposeArrangement(provider,{project:snapshot,sourceTrackId,startTick,endTick,instruction:arrangePrompt},controller.signal);
+   if(!controller.signal.aborted){setArrangement(result);setArrangementView('harmony');setError('');}
+  }catch(e){if(!controller.signal.aborted)setError(e instanceof Error?e.message:'arrangement_failed');}
+  finally{if(arrangeRequest.current===controller){arrangeRequest.current=null;setArrangePending(false);}}
+ }
+ function approveMultiTrack(){
+  if(!arrangement)return;
+  const pending=arrangement;
+  const result=commitSession(session,pending.changes);
+  if(result.ok){
+   stop();setSession(result.session);
+   setActiveTrack(pending.tracks[0]!.trackId);
+   setSelected(null);setSelectedNoteIds([]);
+   setArrangement(null);setCandidate(null);setError('');
+  }else{setArrangement(null);setError(result.reason);}
+ }
+ async function previewMultiTrackAudio(){
+  if(!arrangement||arrangement.changes.baseRevision!==session.project.revision)return;
+  stop();
+  try{
+   const preview={...session.project,tracks:[...session.project.tracks,...arrangement.tracks]};
+   const handle=await playProject(preview);
+   playback.current=handle;setPlaying(true);setError('');
+  }catch(e){setError(e instanceof Error?e.message:'arrangement_preview_failed');}
  }
  function approve(){if(!candidate)return;const result=commitSession(session,candidate.changes);if(result.ok){setSession(result.session);setCandidate(null);setSelectedNoteIds([]);setError('');}else{setCandidate(null);setError(result.reason);}}
  function runOperations(operations:NoteOperation[],keepSelection=false){
   if(!operations.length)return;
   const result=commitSession(session,{baseRevision:project.revision,operations});
-  if(result.ok){setSession(result.session);setCandidate(null);if(!keepSelection)setSelectedNoteIds([]);setError('');}
+  if(result.ok){setSession(result.session);setCandidate(null);setArrangement(null);if(!keepSelection)setSelectedNoteIds([]);setError('');}
   else setError(result.reason);
  }
  function run(op:NoteOperation){runOperations([op]);}
@@ -193,7 +240,7 @@ export function App(){
  return <main>
   <header><h1>AI Composer Agent</h1><p>钢琴卷帘 · 手工编辑与自主旋律生成原型</p></header>
   <section className="toolbar">
-   <select aria-label="当前轨道" value={trackId} onChange={e=>{activeRequest.current?.abort();setCandidate(null);setActiveTrack(e.target.value);setSelected(null);setSelectedNoteIds([]);cancelMarquee();}}>{project.tracks.map(t=><option key={t.trackId} value={t.trackId}>{t.name}</option>)}</select>
+   <select aria-label="当前轨道" value={trackId} onChange={e=>{activeRequest.current?.abort();arrangeRequest.current?.abort();setCandidate(null);setArrangement(null);setActiveTrack(e.target.value);setSelected(null);setSelectedNoteIds([]);cancelMarquee();}}>{project.tracks.map(t=><option key={t.trackId} value={t.trackId}>{t.name}</option>)}</select>
    <button aria-pressed={tool==='edit'} onClick={()=>{setTool('edit');cancelMarquee();}}>编辑音符</button>
    <button aria-pressed={tool==='select'} onClick={()=>{setTool('select');cancelMarquee();}}>框选音符</button>
    <label className="zoom-control">水平缩放 <select aria-label="水平缩放" value={CELL} onChange={e=>{setCell(Number(e.target.value));cancelMarquee();}}><option value={30}>50%</option><option value={60}>100%</option><option value={90}>150%</option><option value={120}>200%</option></select></label>
@@ -201,13 +248,13 @@ export function App(){
    {selectedNoteIds.length>0&&<button onClick={()=>{setSelectedNoteIds([]);setAiMode('append');setCandidate(null);}}>清除框选</button>}
    {selectedNoteIds.length>0&&<button onClick={()=>previewTranspose(12)}>所选 +12 半音预览</button>}
    {selectedNoteIds.length>0&&<button onClick={()=>previewTranspose(-12)}>所选 -12 半音预览</button>}
-   <button onClick={()=>{const id=crypto.randomUUID();run({type:"add_track",track:{trackId:id,name:`Track ${project.tracks.length+1}`,locked:false,notes:[]}});setActiveTrack(id);setSelected(null);setSelectedNoteIds([]);}}>+ 轨道</button>
+   <button onClick={()=>{const id=crypto.randomUUID();run({type:"add_track",track:{trackId:id,name:`Track ${project.tracks.length+1}`,locked:false,notes:[]}});setActiveTrack(id);setArrangement(null);setSelected(null);setSelectedNoteIds([]);}}>+ 轨道</button>
    <input ref={picker} type="file" accept=".mid,.midi,audio/midi" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)void loadMidi(f);e.target.value="";}}/>
    <button onClick={()=>picker.current?.click()}>导入 MIDI</button><button onClick={downloadMidi}>导出 MIDI</button>
    <button onClick={()=>{const id=crypto.randomUUID();run({type:'add_note',trackId,note:{noteId:id,pitch:72,startTick:notes.length*480,durationTicks:480,velocity:90}});setSelected(id);}}>+ 添加音符</button>
    <button onClick={()=>{if(playing)stop();else void play();}}>{playing?'■ 停止':'▶ 试听'}</button>
-   <button disabled={!session.past.length} onClick={()=>{setSession(s=>undoSession(s));setDraft({});setCandidate(null);setSelectedNoteIds([]);}}>撤销</button>
-   <button disabled={!session.future.length} onClick={()=>{setSession(s=>redoSession(s));setDraft({});setCandidate(null);setSelectedNoteIds([]);}}>重做</button>
+   <button disabled={!session.past.length} onClick={()=>{setSession(s=>undoSession(s));setDraft({});setCandidate(null);setArrangement(null);setSelectedNoteIds([]);}}>撤销</button>
+   <button disabled={!session.future.length} onClick={()=>{setSession(s=>redoSession(s));setDraft({});setCandidate(null);setArrangement(null);setSelectedNoteIds([]);}}>重做</button>
    <button disabled={!active} onClick={()=>{if(active){run({type:'delete_note',trackId,noteId:active.noteId});setSelected(null);}}}>删除所选</button>
    <span>revision {project.revision} · {notes.length} notes</span>
   </section>
@@ -225,6 +272,27 @@ export function App(){
    {modelPending&&<button onClick={()=>{activeRequest.current?.abort();setModelPending(false);}}>取消请求</button>}
    <span>{aiMode==='selected'?'框选音符后只替换选中的 Note ID；其他音符即使同时发声也会保留。':aiMode==='replace'?'整小节范围替换；锁定及跨边界音符阻止重写。':'在当前轨道最后一个音符之后追加，不修改已有音符。'} 生成结果须先预览再确认。</span>
   </section>
+  <section className="arrangement-panel" aria-label="多轨 AI 编配">
+   <strong>多轨 AI 编配 · 原始旋律只读</strong>
+   <label>起始小节 <input type="number" aria-label="编配起始小节" min={1} max={64} value={arrangeStartBar} onChange={e=>{setArrangeStartBar(Number(e.target.value));setArrangement(null);}}/></label>
+   <label>编配小节 <input type="number" aria-label="编配小节数" min={1} max={4} value={arrangeBars} onChange={e=>{setArrangeBars(Number(e.target.value));setArrangement(null);}}/></label>
+   <textarea aria-label="编配要求" rows={2} maxLength={2000} value={arrangePrompt} onChange={e=>{setArrangePrompt(e.target.value);setArrangement(null);}}/>
+   <button disabled={arrangePending} onClick={()=>void proposeMultiTrack(false)}>规则编配预览（离线）</button>
+   <button disabled={arrangePending||!arrangePrompt.trim()} onClick={()=>void proposeMultiTrack(true)}>{arrangePending?'生成中…':'AI 多轨编配预览'}</button>
+   {arrangePending&&<button onClick={()=>{arrangeRequest.current?.abort();setArrangePending(false);}}>取消请求</button>}
+   <span className="arrangement-hint">以当前轨道为只读主旋律参考，在新轨道中生成和声、低音、伴奏；不会覆盖当前或其他已有轨道。</span>
+   {arrangement&&<div className="arrangement-review">
+    <strong>候选：新增 3 个轨道，{arrangement.tracks.reduce((sum,t)=>sum+t.notes.length,0)} 个 MIDI 音符（尚未提交）</strong>
+    {arrangement.tracks.map((t,i)=><span className="arrangement-track" key={t.trackId}>{t.name} · {t.notes.length} 音符</span>)}
+    <label>覆盖查看 <select aria-label="编配预览轨道" value={arrangementView} onChange={e=>setArrangementView(e.target.value as ArrangementRole)}>
+     {ARRANGEMENT_ROLES.map((role,i)=><option key={role} value={role}>{arrangement.tracks[i]!.name}</option>)}
+    </select></label>
+    <button disabled={arrangement.changes.baseRevision!==project.revision} onClick={()=>void previewMultiTrackAudio()}>试听原曲与编配候选</button>
+    <button disabled={arrangement.changes.baseRevision!==project.revision} onClick={approveMultiTrack}>确认新增 3 轨</button>
+    <button onClick={()=>setArrangement(null)}>取消编配</button>
+    {arrangement.changes.baseRevision!==project.revision&&<span className="error">工程版本已变化，必须重新生成。</span>}
+   </div>}
+  </section>
   <section className="roll" ref={rollRef} onScroll={e=>setRollScrollLeft(e.currentTarget.scrollLeft)}>
    <div className="keys">{Array.from({length:128},(_,i)=><div key={i} className={'key'+((TOP_PITCH-i)%12===0?' octave-key':'')}>{TOP_PITCH-i}</div>)}</div>
    <div className={'grid'+(tool==='select'?' select-tool':'')} style={{minWidth:gridWidth,height:128*ROW,backgroundSize:`${CELL/4}px ${ROW}px, 100% ${ROW}px`}}
@@ -233,6 +301,11 @@ export function App(){
     {aiMode!=='append'&&Number.isSafeInteger(highlightStart)&&highlightStart>=0&&Number.isSafeInteger(highlightEnd)&&highlightEnd>highlightStart&&<div className="selection-range" style={{left:xOf(highlightStart),width:xOf(highlightEnd-highlightStart)}}/>}
     {Array.from({length:128},(_,i)=><div className="lane" key={i} />)}
     {candidate?.changes.baseRevision===project.revision&&candidate.changes.operations.some(o=>(o.type==='add_note'||o.type==='update_note')&&o.trackId===trackId)&&candidate.notes.filter(n=>candidate.changes.operations.some(o=>(o.type==='add_note'&&o.note.noteId===n.noteId)||(o.type==='update_note'&&o.noteId===n.noteId))).map(n=><div key={'ghost-'+n.noteId} className="ghost-note" style={{left:xOf(n.startTick),top:yOf(n.pitch),width:Math.max(6,xOf(n.durationTicks)-2)}} />)}
+    {arrangement&&arrangement.changes.baseRevision===project.revision&&arrangement.sourceTrackId===trackId&&
+     arrangement.tracks[ARRANGEMENT_ROLES.indexOf(arrangementView)]?.notes.map(n=>
+      <div key={'arrange-ghost-'+n.noteId} className={'arrangement-ghost '+arrangementView}
+       style={{left:xOf(n.startTick),top:yOf(n.pitch),width:Math.max(6,xOf(n.durationTicks)-2)}}
+       title={`${arrangementView} pitch ${n.pitch}, tick ${n.startTick}`}/>)}
     {marquee&&<div className="marquee-box" style={{left:marquee.left,top:marquee.top,width:marquee.right-marquee.left,height:marquee.bottom-marquee.top}}/>}
     {notes.map(n=>{const display=draft[n.noteId]??n;return <div key={n.noteId} className={'note'+(selected===n.noteId?' selected':'')+(removedIds.has(n.noteId)?' pending-delete':'')+(selectedSet.has(n.noteId)?' multi-selected':'')+(updatedIds.has(n.noteId)?' pending-update':'')}
      style={{left:xOf(display.startTick),top:yOf(display.pitch),width:Math.max(6,xOf(display.durationTicks)-2)}}

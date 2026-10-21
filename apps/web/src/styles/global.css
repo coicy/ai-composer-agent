@@ -38,3 +38,16 @@ select{background:#1e293b;color:#e5e7eb;border:1px solid #475569;padding:9px;bor
 .velocity-plot{position:relative;touch-action:none;user-select:none;background:repeating-linear-gradient(to right,transparent 0,transparent 14px,#4755694c 15px)}
 .velocity-bar{position:absolute;bottom:0;background:#4c9f8b;border:1px solid #9de9d1;border-bottom:0;cursor:ns-resize;touch-action:none;min-height:2px}
 .velocity-bar.is-selected{background:#e8a648;border-color:#ffdda0}
+
+.arrangement-panel{display:flex;align-items:center;flex-wrap:wrap;gap:10px;background:#182638;border:1px solid #40536c;padding:14px;border-radius:8px;margin-bottom:10px}
+.arrangement-panel>strong{width:100%;font-size:15px}
+.arrangement-panel label{display:flex;align-items:center;gap:6px}
+.arrangement-panel input{background:#101827;color:#e5e7eb;border:1px solid #475569;border-radius:5px;padding:8px;width:64px}
+.arrangement-panel textarea{flex:1;min-width:260px;background:#101827;border:1px solid #475569;border-radius:5px;padding:8px;color:#e5e7eb;font:inherit}
+.arrangement-hint{color:#9fb2c9;font-size:12px;width:100%}
+.arrangement-review{width:100%;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px solid #40536c;padding-top:12px}
+.arrangement-review>strong{width:100%}
+.arrangement-track{font-size:12px;padding:5px 8px;border:1px solid #64748b;border-radius:4px}
+.arrangement-ghost{position:absolute;z-index:2;height:22px;pointer-events:none;opacity:.8;border-radius:3px;border:1px dashed #93c5fd;background:#60a5fa88}
+.arrangement-ghost.bass{background:#b39aff88;border-color:#c4b5fd}
+.arrangement-ghost.accompaniment{background:#f4b86a88;border-color:#fcd34d}
