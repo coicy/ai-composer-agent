@@ -1,7 +1,7 @@
 # Implementation status
 
-The browser prototype now supports piano-roll note editing, multiple track selection, basic audio playback, MIDI import/export, and in-memory undo/redo.
+Basic piano-roll editing, multi-track selection, Web Audio preview, MIDI I/O, transactional note operations and in-memory undo/redo are implemented as a prototype. The optional loopback OpenAI adapter can generate/append/replace MIDI note candidates with explicit approval.
 
-AI candidate workflows now support **append** and **scoped replace** on an explicit track and bar range. The model receives bounded neighboring note context and existing target notes, but can return only replacement note data. Server and browser validators independently enforce schema, target range, note locks, cross-boundary overlap and full atomic dry-run, and the UI previews deleted/new notes before user approval. Stale project revisions are rejected at commit time.
+New mouse marquee selection: a selection rectangle chooses stable note IDs; the AI **仅重写框选音符** mode replaces only those IDs, retaining unrelated notes even if they overlap in time. Validation remains two-stage (server/client) plus revision-checked commit. A pure tested geometry package isolates hit-testing from UI and Music Core.
 
-Limitations: drag-to-range selection is not implemented (numerical start-bar and length controls are used); current scope uses fixed 4/4 timing; the service remains loopback-only and not safe for public hosting without authentication; no actual paid model musical quality test has been performed. The tool is not yet a production DAW or fully autonomous multi-step music Agent.
+Not yet complete: production authentication, live model music quality tests, real DAW-grade editing, sophisticated automatic accompaniment, arbitrary meter/key and multi-track AI operations.

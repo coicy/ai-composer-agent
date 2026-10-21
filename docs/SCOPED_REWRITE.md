@@ -12,3 +12,6 @@ Commit is only possible against the original base revision, and music-core reche
 Current UI exposes numerical **starting bar and length** rather than drag-to-range selection. Time assumes 4/4, with an AI length limit of 1–4 bars. Advanced meter mapping, musically nuanced rewriting and rich selection gestures are future work. No live LLM quality testing has been completed.
 
 See [LLM_INTEGRATION.md](LLM_INTEGRATION.md) for local setup.
+## Mouse selection and stable-ID rewriting
+
+See [PIANO_ROLL_SELECTION.md](PIANO_ROLL_SELECTION.md) for marquee selection and selected note-ID replacement, which preserves unselected same-bar notes.
