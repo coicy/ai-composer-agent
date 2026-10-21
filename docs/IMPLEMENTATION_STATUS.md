@@ -45,3 +45,10 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Per-segment chord-tone membership is validated against every overlapping note duration; hard bass-inversion checks apply to the first bass note onset of each chord event, with missing entries rejected.
 - Optional stepwise passing-tone exceptions allow carefully bounded nonchord motion between two chord tones, while independent scale hard constraints still apply. This is structural pattern recognition, not comprehensive counterpoint understanding.
 - SeededArranger, OpenAI prompts and API errors were adapted for timelines. Chromium tests cover split, seventh/inversion plan preview/approval, and rejecting bad bass inversion response. See docs/HARMONY_TIMELINE.md.
+
+## Seeded variant comparison (multi-track arrangement)
+- Added a validated unsigned 32-bit `seed` property to arrangement requests and provider contexts. The offline arranger uses a local deterministic PRNG to vary voicings, note lengths and velocities without violating the chosen hard music plan.
+- A batch workflow derives 2–4 reproducible seeds from the base seed; candidates are independently checked and compared by note count, structural advice and planning warnings.
+- UI supports previewing any candidate and choosing harmony, bass and accompaniment from different candidates, then rebuilding a fresh three-track proposal with full validation rather than merging raw ChangeSets. The original source track is not changed before explicit confirmation.
+- An OpenAI provider receives the numeric variation seed only as a hint: external model outputs are **not guaranteed repeatable**. No live-model quality/reproducibility study has been performed.
+- See docs/ARRANGEMENT_VARIANTS.md.

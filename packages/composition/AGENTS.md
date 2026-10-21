@@ -37,3 +37,9 @@ src/
 - A selected seventh extends the current scale-stacked triad with degree+6; bass `inversions: hard` is checked at first onset per chord window, including missing bass onset.
 - `passingTones: stepwise` is a narrow, deterministic harmony/accompaniment nonchord exception, never permission to bypass `scale: hard`; no silent repairs or weakening enforcement.
 - Maintain backward compatibility when `timeline` and `inversions` are omitted. See docs/HARMONY_TIMELINE.md.
+
+## Seeded arrangements and candidate banks
+- `seed` is an optional unsigned 32-bit integer; validate it before provider invocation. Batch count must be 2–4, with deterministic derived-seed scheduling; local PRNG state must not depend on global `Math.random`, clock, or previous requests.
+- Provider model seeds are only variation guides; never claim deterministic reproduction for remote model outputs without a supported, measured guarantee.
+- Candidate role mixing must rebuild a fresh proposal and rerun *all* MIDI/harmony/source/revision checks. Never splice independently generated ChangeSets or bypass explicit preview and commit.
+- Preserve backwards compatibility with an omitted seed and legacy one-shot arrangement APIs. See docs/ARRANGEMENT_VARIANTS.md.
