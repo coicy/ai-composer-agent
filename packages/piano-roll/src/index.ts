@@ -3,3 +3,4 @@ export type {GridPoint,GridRect,PianoRollGeometry,NoteTimeRange} from './selecti
 export {tickToX,xToQuantizedTick,pitchToY,yToPitch} from './viewport/coordinates.js';
 export type {RollViewport} from './viewport/coordinates.js';
 export {makeMoveOperations} from './gestures/move.js';
+export {makeVelocityOperations} from './gestures/velocity.js';

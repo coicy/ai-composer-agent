@@ -1,6 +1,6 @@
 import {useRef,useState,useEffect} from 'react';
 import {playProject} from '@ai-composer/audio-engine';
-import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes,tickToX,xToQuantizedTick,pitchToY,yToPitch,makeMoveOperations} from '@ai-composer/piano-roll';
+import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes,tickToX,xToQuantizedTick,pitchToY,yToPitch,makeMoveOperations,makeVelocityOperations} from '@ai-composer/piano-roll';
 import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
 import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose} from '@ai-composer/composition';
@@ -104,7 +104,8 @@ export function App(){
  function setVelocity(raw:number){
   if(!Number.isSafeInteger(raw)||raw<1||raw>127){setError('力度需要在 1 到 127 之间');return;}
   const ids=selectedNoteIds.length?selectedNoteIds:(selected?[selected]:[]);
-  const ops:NoteOperation[]=notes.filter(n=>ids.includes(n.noteId)&&n.velocity!==raw).map(n=>({type:'update_note',trackId,noteId:n.noteId,changes:{velocity:raw}}));
+  let ops:NoteOperation[];
+  try{ops=makeVelocityOperations(trackId,notes,ids,raw);}catch(e){setError(e instanceof Error?e.message:'invalid_velocity');return;}
   runOperations(ops,true);
  }
  function addAt(clientX:number,clientY:number,target:HTMLElement){
