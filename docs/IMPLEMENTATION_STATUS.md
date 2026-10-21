@@ -1,13 +1,7 @@
-# Implementation status
+# 实现状态
 
-The current prototype includes an editable single-track piano roll view with multi-track selection, preview audio, MIDI exchange, transactional note operations, and undo/redo in memory.
+工程包含基础钢琴卷帘编辑、多轨轨道选择、简单试听、MIDI 交换、Music Core 修订与内存撤销；另有程序化原创旋律和上下文续写。
 
-Composition now has two **deterministic algorithmic** modes:
-- composeMelody: generate/replace the start of a track in fixed C major, 4/4, eighth notes.
-- continueMelody: read existing notes in the selected track, begin after the last sounding note at the next 4/4 bar, reuse recent pitches as a motif or perform seeded step/leap movement, add notes without deleting existing material.
+本次新增可替换的 `CompositionProvider` 接口、运行时未知输出的严格音符校验、范围检查、dry-run 音乐命令校验，以及 `SeededProvider` 本地演示适配器与相关测试。Provider 不具有写入工程的能力；批准仍由 UI 和 music-core 决定。
 
-Both modes return proposed ChangeSets that must be approved. Base-revision checks reject stale previews, and track locks are checked at candidate creation and commit.
-
-**Not yet implemented:** LLM or natural-language composition Agent, rich rhythmic and harmonic planning, configurable key/meter, advanced preview diff, project persistence, robust browser E2E coverage and soundfonts. Quality of generated melodies is not independently verified.
-
-See GitHub Actions for the tested status of each commit.
+**未实现**真实模型 API、自由语言的语义作曲、模型提示词工程、可变调性节拍、专业音乐质量判断、持久工程、完整候选差异与选择性替换。CI 状态以实际运行结果为准。
