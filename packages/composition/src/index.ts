@@ -1,2 +1,1 @@
-// Package boundary reserved; implementation follows the roadmap.
-export {};
+export {composeMelody} from './generators/melody.js';export type {MelodyRequest,MelodyCandidate,MelodyStyle} from './generators/melody.js';

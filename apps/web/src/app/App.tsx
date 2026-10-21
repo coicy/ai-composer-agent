@@ -1,6 +1,8 @@
 import {useRef,useState,useEffect} from 'react';
 import {playProject} from '@ai-composer/audio-engine';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
+import {composeMelody} from '@ai-composer/composition';
+import type {MelodyCandidate,MelodyStyle} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {createSession,commitSession,undoSession,redoSession} from '@ai-composer/music-core';
 import type {EditSession,MidiNote,MusicProject,NoteOperation} from '@ai-composer/music-core';
@@ -13,6 +15,10 @@ export function App(){
  const [activeTrack,setActiveTrack]=useState('melody');
  const picker=useRef<HTMLInputElement|null>(null);
  const [error,setError]=useState('');
+ const [candidate,setCandidate]=useState<MelodyCandidate|null>(null);
+ const [style,setStyle]=useState<MelodyStyle>('motif');
+ const [seed,setSeed]=useState(19501);
+ const [bars,setBars]=useState(4);
  const gesture=useRef<Gesture|null>(null);
  const playback=useRef<{stop():void}|null>(null);
  const [playing,setPlaying]=useState(false);
@@ -24,6 +30,8 @@ export function App(){
  const trackId=track?.trackId??'melody';
  async function loadMidi(file:File){try{stop();const imported=importMidi(new Uint8Array(await file.arrayBuffer()));setSession(createSession(imported));setActiveTrack(imported.tracks[0]!.trackId);setSelected(null);setError('');}catch(e){setError(e instanceof Error?e.message:'import_failed');}}
  function downloadMidi(){try{const bytes=exportMidi(project);const copy=new Uint8Array(bytes.byteLength);copy.set(bytes);const url=URL.createObjectURL(new Blob([copy.buffer],{type:'audio/midi'}));const a=document.createElement('a');a.href=url;a.download='composition.mid';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){setError(e instanceof Error?e.message:'export_failed');}}
+ function propose(){try{setCandidate(composeMelody({project:session.project,trackId,startBar:0,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'generation_failed');}}
+ function approve(){if(!candidate)return;const result=commitSession(session,candidate.changes);if(result.ok){setSession(result.session);setCandidate(null);setError('');}else{setCandidate(null);setError(result.reason);}}
  function run(op:NoteOperation){const result=commitSession(session,{baseRevision:project.revision,operations:[op]});if(result.ok){setSession(result.session);setError('');}else setError(result.reason);}
  function addAt(clientX:number,clientY:number,target:HTMLElement){
   const rect=target.getBoundingClientRect(),x=clientX-rect.left,y=clientY-rect.top;
@@ -65,10 +73,12 @@ export function App(){
    <button disabled={!active} onClick={()=>{if(active){run({type:'delete_note',trackId,noteId:active.noteId});setSelected(null);}}}>删除所选</button>
    <span>revision {project.revision} · {notes.length} notes</span>
   </section>
+  <section className="generator"><strong>旋律候选生成（规则算法，非 LLM）</strong><label>风格 <select value={style} onChange={e=>setStyle(e.target.value as MelodyStyle)}><option value="motif">Motif</option><option value="steps">Steps</option><option value="leaps">Leaps</option></select></label><label>小节 <input type="number" min="1" max="16" value={bars} onChange={e=>setBars(Number(e.target.value))}/></label><label>Seed <input type="number" value={seed} onChange={e=>setSeed(Number(e.target.value))}/></label><button onClick={propose}>生成预览</button>{candidate&&<><span>预览 {candidate.notes.length} 音符，不修改工程</span><button onClick={approve}>确认应用</button><button onClick={()=>setCandidate(null)}>取消</button></>}</section>
   <section className="roll">
    <div className="keys">{Array.from({length:24},(_,i)=><div key={i} className="key">{TOP_PITCH-i}</div>)}</div>
    <div className="grid" onDoubleClick={e=>{if(e.target===e.currentTarget)addAt(e.clientX,e.clientY,e.currentTarget);}}>
     {Array.from({length:24},(_,i)=><div className="lane" key={i} />)}
+    {candidate?.changes.baseRevision===project.revision&&candidate.changes.operations.some(o=>o.type==='add_note'&&o.trackId===trackId)&&candidate.notes.map(n=><div key={'ghost-'+n.noteId} className="ghost-note" style={{left:n.startTick/480*CELL,top:(TOP_PITCH-n.pitch)*ROW,width:Math.max(6,n.durationTicks/480*CELL-2)}} />)}
     {notes.map(n=>{const display=draft?.noteId===n.noteId?{...n,...draft}:n;return <div key={n.noteId} className={'note'+(selected===n.noteId?' selected':'')}
      style={{left:display.startTick/480*CELL,top:(TOP_PITCH-display.pitch)*ROW,width:Math.max(6,display.durationTicks/480*CELL-2)}}
      title={`pitch ${n.pitch}, start ${n.startTick}, duration ${n.durationTicks}`}
@@ -80,6 +90,6 @@ export function App(){
   <p className="hint">双击空白钢琴卷帘新增音符；拖动音符移动音高/时间；拖动右边缘改变时值。网格吸附为 1/16 音符。</p>
   {active&&<div className="details">所选：音高 {active.pitch} · 起点 {active.startTick} tick · 时长 {active.durationTicks} tick · 力度 {active.velocity}</div>}
   {error&&<p role="alert" className="error">{error}</p>}
-  <p className="hint">试听使用 Web Audio 三角波与固定 120 BPM，尚无音色、循环和 Tempo Map。当前没有 Agent；MIDI 导出暂为固定 120 BPM，导入替换现有工程。撤销/重做采用内存快照；刷新页面不会保留编辑历史。</p>
+  <p className="hint">试听使用 Web Audio 三角波与固定 120 BPM，尚无音色、循环和 Tempo Map。当前有程序化旋律候选，但没有 LLM Agent；MIDI 导出暂为固定 120 BPM，导入替换现有工程。撤销/重做采用内存快照；刷新页面不会保留编辑历史。</p>
  </main>;
 }

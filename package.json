@@ -1,1 +1,18 @@
-{"name":"ai-composer-agent","private":true,"version":"0.0.0","type":"module","packageManager":"pnpm@10.18.0","scripts":{"dev":"pnpm --filter @ai-composer/web dev","build":"pnpm -r --if-present build","typecheck":"pnpm -r --if-present typecheck","test":"pnpm --filter @ai-composer/music-core test","check:boundaries":"node scripts/check-boundaries.mjs","check":"pnpm check:boundaries && pnpm typecheck && pnpm test && pnpm build"},"devDependencies":{"typescript":"^5.9.3"}}
+{
+  "name": "ai-composer-agent",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.18.0",
+  "scripts": {
+    "dev": "pnpm --filter @ai-composer/web dev",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm --filter @ai-composer/music-core test && pnpm --filter @ai-composer/composition test",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check": "pnpm check:boundaries && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
