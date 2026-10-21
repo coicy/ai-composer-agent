@@ -22,3 +22,7 @@ No authentication for Internet hosting, no persistence, no project tempo/meter m
 ## Rewriting an existing phrase
 
 Choose **重写指定小节** in the Agent panel, set the first bar (1-based) and number of bars (1–4), and provide a musical instruction. The model sees the selected passage and nearby context; newly proposed notes show as blue ghosts while notes that would be removed show red. If any existing note straddles the selection or is locked, the operation is rejected before the API call. Click 确认应用 to atomically apply the verified change or 取消 to retain the original. Choose 轨道末尾续写 to append without deletions. This operates on one MIDI track and fixed 4/4 bar mapping in the current prototype.
+
+## Strict pitch-only rewriting
+
+Use the Piano Roll marquee, select **仅重写框选音符**, enable **只改音高**, and request a new melody shape. The local model is asked to preserve all original onset/length values, but these constraints are independently enforced by the composition validator. If the provider changes timing or note count, the request returns a validation error instead of silently changing the music. Original note IDs, velocity and unaffected notes are preserved. Deterministic ±12-semitone transposition is available without running the model. See [MUSIC_EDIT_CONSTRAINTS.md](MUSIC_EDIT_CONSTRAINTS.md).
