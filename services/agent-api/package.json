@@ -1,1 +1,22 @@
-{"name":"@ai-composer/agent-api","version":"0.0.0","private":true,"type":"module","scripts":{"typecheck":"tsc --noEmit"},"dependencies":{"@ai-composer/music-core":"workspace:*","@ai-composer/composition":"workspace:*"},"devDependencies":{"typescript":"^5.9.3"}}
+{
+  "name": "@ai-composer/agent-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-composer/music-core": "workspace:*",
+    "@ai-composer/composition": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.9.3",
+    "tsx": "^4.20.5",
+    "vitest": "^3.2.4"
+  }
+}

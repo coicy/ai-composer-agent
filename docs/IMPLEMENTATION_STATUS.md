@@ -1,7 +1,7 @@
-# 实现状态
+# Implementation status
 
-工程包含基础钢琴卷帘编辑、多轨轨道选择、简单试听、MIDI 交换、Music Core 修订与内存撤销；另有程序化原创旋律和上下文续写。
+The project includes a basic Piano Roll, multi-track selection, synthesized preview audio, MIDI import/export, revision-aware editing and undo, algorithmic melody composition and continuation. A CompositionProvider boundary validates generated notes in an empty target range.
 
-本次新增可替换的 `CompositionProvider` 接口、运行时未知输出的严格音符校验、范围检查、dry-run 音乐命令校验，以及 `SeededProvider` 本地演示适配器与相关测试。Provider 不具有写入工程的能力；批准仍由 UI 和 music-core 决定。
+Added local **agent-api** service with an OpenAI Responses API model adapter (key only on server), bounded JSON-schema structured output, timeout and safe error responses. Web app can request natural-language melody proposals and, after client-side validation, preview them on the piano roll for explicit approval. Default local-dev model is configurable by OPENAI_MODEL.
 
-**未实现**真实模型 API、自由语言的语义作曲、模型提示词工程、可变调性节拍、专业音乐质量判断、持久工程、完整候选差异与选择性替换。CI 状态以实际运行结果为准。
+CI uses a mock network API and does **not** prove a real model API request or artistic quality. The backend binds to 127.0.0.1 and is not production-authenticated. Details: docs/LLM_INTEGRATION.md.
