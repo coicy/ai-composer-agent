@@ -56,8 +56,7 @@ export function VelocityLane({notes,selectedIds,activeId,ppq,pixelsPerQuarter,wi
     <div className="velocity-plot" style={{width,height:HEIGHT,transform:`translateX(-${scrollLeft}px)`}}
      onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerCancel}>
      {notes.map(n=>{
-      const affected=!!draft?.ids.includes(n.noteId);
-      const velocity=affected?draft.velocity:n.velocity;
+      const velocity=draft?.ids.includes(n.noteId)?draft.velocity:n.velocity;
       return <div key={n.noteId} className={'velocity-bar'+(selectedIds.includes(n.noteId)||activeId===n.noteId?' is-selected':'')}
        data-note-id={n.noteId} role="slider" aria-label={`音符力度 ${n.pitch} @ ${n.startTick}`}
        aria-valuemin={1} aria-valuemax={127} aria-valuenow={velocity}
