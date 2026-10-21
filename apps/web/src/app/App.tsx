@@ -1,7 +1,8 @@
 import {useRef,useState,useEffect} from 'react';
 import {playProject} from '@ai-composer/audio-engine';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
-import {composeMelody,continueMelody} from '@ai-composer/composition';
+import {composeMelody,continueMelody,proposeWithProvider} from '@ai-composer/composition';
+import {createRemoteProvider} from '../features/agent/remote.js';
 import type {MelodyCandidate,MelodyStyle} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {createSession,commitSession,undoSession,redoSession} from '@ai-composer/music-core';
@@ -19,10 +20,13 @@ export function App(){
  const [style,setStyle]=useState<MelodyStyle>('motif');
  const [seed,setSeed]=useState(19501);
  const [bars,setBars]=useState(4);
+ const [instruction,setInstruction]=useState('写一段带奇幻冒险感、动机清晰的旋律，适合游戏主题音乐');
+ const [modelPending,setModelPending]=useState(false);
+ const activeRequest=useRef<AbortController|null>(null);
  const gesture=useRef<Gesture|null>(null);
  const playback=useRef<{stop():void}|null>(null);
  const [playing,setPlaying]=useState(false);
- useEffect(()=>()=>playback.current?.stop(),[]);
+ useEffect(()=>()=>{playback.current?.stop();activeRequest.current?.abort();},[]);
  function stop(){playback.current?.stop();playback.current=null;setPlaying(false);}
  async function play(){stop();try{const handle=await playProject(session.project);playback.current=handle;setPlaying(true);setError('');}catch(e){setError(e instanceof Error?e.message:'audio_error');}}
  const [draft,setDraft]=useState<{noteId:string;startTick:number;durationTicks:number;pitch:number}|null>(null);
@@ -32,6 +36,21 @@ export function App(){
  function downloadMidi(){try{const bytes=exportMidi(project);const copy=new Uint8Array(bytes.byteLength);copy.set(bytes);const url=URL.createObjectURL(new Blob([copy.buffer],{type:'audio/midi'}));const a=document.createElement('a');a.href=url;a.download='composition.mid';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){setError(e instanceof Error?e.message:'export_failed');}}
  function propose(){try{setCandidate(composeMelody({project:session.project,trackId,startBar:0,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'generation_failed');}}
  function proposeContinuation(){try{setCandidate(continueMelody({project:session.project,trackId,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'continuation_failed');}}
+ async function proposeAI(){
+  activeRequest.current?.abort();const controller=new AbortController();activeRequest.current=controller;
+  setModelPending(true);setCandidate(null);setError('');
+  const snapshot=session.project;
+  const current=snapshot.tracks.find(t=>t.trackId===trackId);
+  const lastEnd=current?.notes.reduce((max,n)=>Math.max(max,n.startTick+n.durationTicks),0)??0;
+  const measure=snapshot.ppq*4;
+  const startTick=Math.ceil(lastEnd/measure)*measure;
+  const endTick=startTick+Math.max(1,Math.min(4,bars))*measure;
+  try{
+   const result=await proposeWithProvider(createRemoteProvider(snapshot),{project:snapshot,trackId,startTick,endTick,instruction,maxNotes:64},controller.signal);
+   if(!controller.signal.aborted){setCandidate(result);setError('');}
+  }catch(e){if(!controller.signal.aborted)setError(e instanceof Error?e.message:'generation_failed');}
+  finally{if(activeRequest.current===controller){activeRequest.current=null;setModelPending(false);}}
+ }
  function approve(){if(!candidate)return;const result=commitSession(session,candidate.changes);if(result.ok){setSession(result.session);setCandidate(null);setError('');}else{setCandidate(null);setError(result.reason);}}
  function run(op:NoteOperation){const result=commitSession(session,{baseRevision:project.revision,operations:[op]});if(result.ok){setSession(result.session);setError('');}else setError(result.reason);}
  function addAt(clientX:number,clientY:number,target:HTMLElement){
@@ -61,7 +80,7 @@ export function App(){
  }
  const active=notes.find(n=>n.noteId===selected);
  return <main>
-  <header><h1>AI Composer Agent</h1><p>钢琴卷帘 · 手工编辑原型 · AI 作曲尚未接入</p></header>
+  <header><h1>AI Composer Agent</h1><p>钢琴卷帘 · 手工编辑与自主旋律生成原型</p></header>
   <section className="toolbar">
    <select aria-label="当前轨道" value={trackId} onChange={e=>{setActiveTrack(e.target.value);setSelected(null);}}>{project.tracks.map(t=><option key={t.trackId} value={t.trackId}>{t.name}</option>)}</select>
    <button onClick={()=>{const id=crypto.randomUUID();run({type:"add_track",track:{trackId:id,name:`Track ${project.tracks.length+1}`,locked:false,notes:[]}});setActiveTrack(id);setSelected(null);}}>+ 轨道</button>
@@ -75,6 +94,7 @@ export function App(){
    <span>revision {project.revision} · {notes.length} notes</span>
   </section>
   <section className="generator"><strong>旋律候选生成（规则算法，非 LLM）</strong><label>风格 <select value={style} onChange={e=>setStyle(e.target.value as MelodyStyle)}><option value="motif">Motif</option><option value="steps">Steps</option><option value="leaps">Leaps</option></select></label><label>小节 <input type="number" min="1" max="16" value={bars} onChange={e=>setBars(Number(e.target.value))}/></label><label>Seed <input type="number" value={seed} onChange={e=>setSeed(Number(e.target.value))}/></label><button onClick={propose}>从零生成 / 重写前段</button><button onClick={proposeContinuation}>基于现有旋律续写</button>{candidate&&<><span>预览 {candidate.label}，{candidate.notes.length} 音符，不修改工程</span><button onClick={approve}>确认应用</button><button onClick={()=>setCandidate(null)}>取消</button></>}</section>
+  <section className="agent-request"><label htmlFor="agent-prompt"><strong>自然语言作曲 Agent（模型服务）</strong></label><textarea id="agent-prompt" value={instruction} maxLength={2000} onChange={e=>setInstruction(e.target.value)} rows={2} placeholder="描述旋律情绪、风格、动机或节奏"/><button disabled={modelPending||!instruction.trim()} onClick={()=>void proposeAI()}>{modelPending?'生成中…':'AI 生成预览'}</button>{modelPending&&<button onClick={()=>activeRequest.current?.abort()}>取消请求</button>}<span>在轨道末尾追加 1–4 小节（使用上方小节数，上限 4）；模型 Key 保存在本地服务端。</span></section>
   <section className="roll">
    <div className="keys">{Array.from({length:24},(_,i)=><div key={i} className="key">{TOP_PITCH-i}</div>)}</div>
    <div className="grid" onDoubleClick={e=>{if(e.target===e.currentTarget)addAt(e.clientX,e.clientY,e.currentTarget);}}>
@@ -91,6 +111,6 @@ export function App(){
   <p className="hint">双击空白钢琴卷帘新增音符；拖动音符移动音高/时间；拖动右边缘改变时值。网格吸附为 1/16 音符。</p>
   {active&&<div className="details">所选：音高 {active.pitch} · 起点 {active.startTick} tick · 时长 {active.durationTicks} tick · 力度 {active.velocity}</div>}
   {error&&<p role="alert" className="error">{error}</p>}
-  <p className="hint">试听使用 Web Audio 三角波与固定 120 BPM，尚无音色、循环和 Tempo Map。当前有基于已有旋律上下文的程序化续写，但没有 LLM Agent；MIDI 导出暂为固定 120 BPM，导入替换现有工程。撤销/重做采用内存快照；刷新页面不会保留编辑历史。</p>
+  <p className="hint">试听使用 Web Audio 三角波与固定 120 BPM，尚无音色、循环和 Tempo Map。现支持可选的模型驱动自然语言旋律生成，需要启动本地 agent-api 并配置密钥；MIDI 导出暂为固定 120 BPM，导入替换现有工程。撤销/重做采用内存快照；刷新页面不会保留编辑历史。</p>
  </main>;
 }

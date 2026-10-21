@@ -25,3 +25,9 @@
 - [操作 Schema](schemas/music-operation.schema.json)
 
 技术候选：React、TypeScript、Vite、Canvas 2D、Tone.js、@tonejs/midi；可选 Zustand 与 FastAPI，均待验证。许可证尚未决定。
+## 本地运行与 AI 作曲
+
+安装：`pnpm install`。终端 1 运行 `pnpm dev`。
+如需调用 OpenAI 模型，在终端 2 的 shell 中设置 `OPENAI_API_KEY`，再执行 `pnpm dev:agent`。模型可通过 `OPENAI_MODEL` 配置，默认 `gpt-4.1-mini`。不要将密钥写入前端或提交仓库。详细说明见 [docs/LLM_INTEGRATION.md](docs/LLM_INTEGRATION.md)。
+
+目前 AI 请求默认在现有轨道末尾追加音符，进入候选预览，不会自动覆盖作品。音乐质量及真实模型 API 调用尚未通过生产环境验证。
