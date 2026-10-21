@@ -14,3 +14,5 @@ export {analyzeTonality,suggestChords} from './analysis/tonality.js';
 export type {KeyHypothesis,TonalProfile,ChordSuggestion,ScaleMode} from './analysis/tonality.js';
 export {evaluateArrangement} from './evaluation/arrangement.js';
 export type {ArrangementFinding,ArrangementAssessment,ArrangementMetrics} from './evaluation/arrangement.js';
+export {validateHarmonyPlan,checkHarmonyPlan,chordPitchClasses,chordLabel,scalePitchClasses,DEFAULT_REGISTERS} from './planning/harmony-plan.js';
+export type {HarmonyPlan,PlanConstraint,PlanFinding,PlanRegister,DiatonicDegree} from './planning/harmony-plan.js';

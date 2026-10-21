@@ -2,6 +2,8 @@ import {applyChangeSet,validateNote,validateProject} from '@ai-composer/music-co
 import {analyzeTonality,suggestChords} from '../analysis/tonality.js';
 import type {TonalProfile,ChordSuggestion} from '../analysis/tonality.js';
 import {evaluateArrangement} from '../evaluation/arrangement.js';
+import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js';
+import type {HarmonyPlan,PlanFinding} from '../planning/harmony-plan.js';
 import type {ArrangementAssessment} from '../evaluation/arrangement.js';
 import type {ChangeSet,MidiNote,MusicProject,MusicTrack,NoteOperation} from '@ai-composer/music-core';
 
@@ -13,6 +15,7 @@ export interface ArrangementRequest {
  readonly startTick:number;
  readonly endTick:number;
  readonly instruction:string;
+ readonly plan?:HarmonyPlan;
 }
 export interface ArrangementContext {
  readonly sourceTrackId:string;
@@ -22,6 +25,7 @@ export interface ArrangementContext {
  readonly instruction:string;
  readonly sourceNotes:readonly MidiNote[];
  readonly neighborNotes:readonly MidiNote[];
+ readonly plan?:HarmonyPlan;
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
  readonly chordSuggestions?:readonly ChordSuggestion[];
@@ -36,6 +40,8 @@ export interface ArrangementCandidate {
  readonly sourceTrackId:string;
  readonly tracks:readonly MusicTrack[];
  readonly assessment:ArrangementAssessment;
+ readonly plan?:HarmonyPlan;
+ readonly planFindings:readonly PlanFinding[];
  readonly changes:ChangeSet;
 }
 const NAMES:Record<ArrangementRole,string>={harmony:'AI 和声',bass:'AI 低音',accompaniment:'AI 伴奏'};
@@ -73,6 +79,11 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  if(!validateProject(project))throw new Error('invalid_project');
  if(!Number.isSafeInteger(startTick)||!Number.isSafeInteger(endTick)||startTick<0||endTick<=startTick||endTick-startTick>project.ppq*4*4)throw new Error('invalid_arrangement_scope');
  if(typeof instruction!=='string'||!instruction.trim()||instruction.length>2000)throw new Error('invalid_instruction');
+ // Validate before sending user-supplied planning data to any provider.
+ const barTicks=project.ppq*4;
+ const barCount=Math.ceil((endTick-startTick)/barTicks);
+ const plan=request.plan===undefined?undefined:validateHarmonyPlan(request.plan,barCount);
+ if(plan&&(startTick%barTicks!==0||endTick%barTicks!==0))throw new Error('plan_requires_whole_bars');
  const source=project.tracks.find(t=>t.trackId===sourceTrackId);
  if(!source)throw new Error('source_track_not_found');
  // Source notes are read-only, even if the source track itself is locked.
@@ -84,15 +95,16 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  const tonalProfile=analyzeTonality(selected,startTick,endTick);
  const chordSuggestions=suggestChords(selected,startTick,endTick,project.ppq);
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
-  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions};
+  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan};
  const raw=await provider.generate(context,signal);
  if(signal?.aborted)throw new Error('generation_cancelled');
  const tracks=parseArranged(raw,project,sourceTrackId,startTick,endTick);
+ const planFindings=plan?checkHarmonyPlan(plan,tracks,startTick,endTick,project.ppq):[];
  const operations:NoteOperation[]=tracks.map(track=>({type:'add_track',track}));
  const changes:ChangeSet={baseRevision:project.revision,operations};
  const dryRun=applyChangeSet(project,changes);
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  // The proposal does not write the project. Approval must still pass a revision check.
  const assessment=evaluateArrangement(selected,tracks,startTick,endTick,project.ppq);
- return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,tracks,assessment,changes};
+ return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,tracks,assessment,plan,planFindings,changes};
 }
