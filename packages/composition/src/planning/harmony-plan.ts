@@ -149,7 +149,7 @@ export function checkHarmonyPlan(plan:HarmonyPlan,tracks:readonly MusicTrack[],s
    const passing=plan.passingTones==='stepwise'&&role!=='bass'&&isStepwisePassingTone(sorted,index,plan,startTick,ppq);
    if(violated&&!passing)count.chords++;
   }
-  if(role==='bass'){
+  if(role==='bass'&&(plan.timeline!==undefined||plan.enforcement.inversions!==undefined)){
    for(const event of events){
     const from=startTick+event.startBeat*ppq,to=from+event.durationBeats*ppq;
     const first=sorted.find(n=>n.startTick>=from&&n.startTick<to);

@@ -117,7 +117,9 @@ export function App(){
   try{
    plan=harmonicPlan.enabled?validateHarmonyPlan({
     tonic:harmonicPlan.tonic,mode:harmonicPlan.mode,
-    degrees:harmonicPlan.progression.split(',').map(x=>Number(x.trim())),
+    degrees:harmonicPlan.timelineEnabled?Array.from({length:arrangeBars},(_,i)=>
+     harmonicPlan.timeline.find(e=>e.startBeat<=i*4&&i*4<e.startBeat+e.durationBeats)?.degree??1
+    ):harmonicPlan.progression.split(',').map(x=>Number(x.trim())),
     ...(harmonicPlan.timelineEnabled?{timeline:harmonicPlan.timeline}:{}),
     passingTones:harmonicPlan.passingTones,
     registers:harmonicPlan.registers,enforcement:harmonicPlan.enforcement
