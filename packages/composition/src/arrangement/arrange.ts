@@ -5,6 +5,8 @@ import {evaluateArrangement} from '../evaluation/arrangement.js';
 import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js';
 import type {HarmonyPlan,PlanFinding} from '../planning/harmony-plan.js';
 import type {ArrangementAssessment} from '../evaluation/arrangement.js';
+import {createArrangementEditingContext} from './editing-context.js';
+import type {ArrangementEditingContext,ArrangementEditingIntent} from './editing-context.js';
 import type {ChangeSet,MidiNote,MusicProject,MusicTrack,NoteOperation} from '@ai-composer/music-core';
 
 export const ARRANGEMENT_ROLES=['harmony','bass','accompaniment'] as const;
@@ -17,6 +19,7 @@ export interface ArrangementRequest {
  readonly instruction:string;
  readonly plan?:HarmonyPlan;
  readonly seed?:number;
+ readonly editing?:ArrangementEditingIntent;
 }
 export interface ArrangementContext {
  readonly sourceTrackId:string;
@@ -28,6 +31,7 @@ export interface ArrangementContext {
  readonly neighborNotes:readonly MidiNote[];
  readonly plan?:HarmonyPlan;
  readonly seed?:number;
+ readonly editing?:ArrangementEditingContext;
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
  readonly chordSuggestions?:readonly ChordSuggestion[];
@@ -100,8 +104,10 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
   .sort((a,b)=>Math.abs(a.startTick-startTick)-Math.abs(b.startTick-startTick)).slice(0,16);
  const tonalProfile=analyzeTonality(selected,startTick,endTick);
  const chordSuggestions=suggestChords(selected,startTick,endTick,project.ppq);
+ const editing=request.editing===undefined?undefined:
+  createArrangementEditingContext(project,sourceTrackId,request.editing,startTick,endTick);
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
-  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed};
+  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing};
  const raw=await provider.generate(context,signal);
  if(signal?.aborted)throw new Error('generation_cancelled');
  const tracks=parseArranged(raw,project,sourceTrackId,startTick,endTick);

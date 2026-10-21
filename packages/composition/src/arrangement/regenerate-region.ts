@@ -39,7 +39,7 @@ export async function proposeRegionRegeneration(
  if(overlap.some(n=>n.startTick<startTick||n.startTick+n.durationTicks>endTick))
   throw new Error('cross_boundary_note');
  // Perform the complete source, scope, plan and generated-MIDI checks before any edits.
- const generated=await proposeArrangement(provider,request,signal);
+ const generated=await proposeArrangement(provider,{...request,editing:{targetTrackId,targetRole}},signal);
  const roleIndex=ARRANGEMENT_ROLES.indexOf(targetRole);
  const notes=generated.tracks[roleIndex]!.notes;
  const oldIds=new Set(target.notes.map(n=>n.noteId));

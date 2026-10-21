@@ -30,6 +30,33 @@ describe('OpenAI arrangement API adapter',()=>{
   expect(await provider.generate(context)).toEqual(raw);
   expect(request).toHaveBeenCalledOnce();
  });
+ it('passes protected neighbor notes without note IDs or writable track metadata',async()=>{
+  const responseBody={status:'completed',output:[{type:'message',content:[{type:'output_text',
+   text:JSON.stringify(raw)}]}]};
+  let observed:unknown;
+  const fetcher=async(_url:string|URL|Request,init?:RequestInit)=>{
+   const body=JSON.parse(String(init?.body));
+   observed=JSON.parse(body.input);
+   return new Response(JSON.stringify(responseBody),{status:200});
+  };
+  const provider=createOpenAIArranger({apiKey:'fake-key',model:'test-model',fetcher:fetcher as typeof fetch});
+  const near={noteId:'SECRET_TARGET_NEIGHBOR',pitch:64,startTick:0,durationTicks:480,velocity:85};
+  const protectedNote={noteId:'SECRET_OTHER_TRACK',pitch:40,startTick:0,durationTicks:480,velocity:70};
+  await provider.generate({...context,editing:{
+   targetTrackId:'SECRET_TARGET_TRACK',targetRole:'harmony',before:[near],
+   original:[],after:[],protectedParts:[{trackIndex:2,notes:[protectedNote]}]
+  }});
+  const input=observed as {editingScope?:{targetRole:string;targetBefore:unknown[];protectedParts:unknown[]}};
+  expect(input.editingScope?.targetRole).toBe('harmony');
+  expect(input.editingScope?.targetBefore).toEqual([{pitch:64,startTick:0,durationTicks:480,velocity:85}]);
+  expect(input.editingScope?.protectedParts).toEqual([{trackIndex:2,notes:[{
+   pitch:40,startTick:0,durationTicks:480,velocity:70
+  }]}]);
+  const serialized=JSON.stringify(input);
+  expect(serialized).not.toContain('SECRET_TARGET_NEIGHBOR');
+  expect(serialized).not.toContain('SECRET_OTHER_TRACK');
+  expect(serialized).not.toContain('SECRET_TARGET_TRACK');
+ });
  it('rejects malformed responses without forwarding body',async()=>{
   const provider=createOpenAIArranger({apiKey:'fake',model:'test',fetcher:(async()=>new Response('sensitive',{status:400})) as typeof fetch});
   await expect(provider.generate(context)).rejects.toThrow('model_http_400');

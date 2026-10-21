@@ -398,3 +398,29 @@ test('empty but structurally valid project JSON does not replace existing compos
  await expect(page.locator('.note')).toHaveCount(1);
  await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(1);
 });
+
+test('remote scoped regeneration sends target intent, then previews only the selected track',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ let received:unknown;
+ await page.route('**/api/arrange',async route=>{
+  received=route.request().postDataJSON();
+  const tracks=[
+   {role:'harmony',notes:[{pitch:67,startTick:0,durationTicks:480,velocity:80}]},
+   {role:'bass',notes:[{pitch:36,startTick:0,durationTicks:480,velocity:80}]},
+   {role:'accompaniment',notes:[{pitch:55,startTick:0,durationTicks:480,velocity:80}]}
+  ];
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({tracks})});
+ });
+ await page.getByRole('button',{name:'AI 局部重编'}).click();
+ const payload=received as {editing?:unknown};
+ expect(payload.editing).toEqual({targetTrackId:'arrange-1-melody-0-harmony',targetRole:'harmony'});
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toBeVisible();
+ await expect(page.locator('.region-ghost')).toHaveCount(1);
+ await page.getByRole('button',{name:'确认局部替换'}).click();
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+ await page.getByRole('combobox',{name:'当前轨道'}).selectOption('melody');
+ await expect(page.locator('.note')).toHaveCount(1);
+});

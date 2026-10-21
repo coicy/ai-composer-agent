@@ -39,7 +39,16 @@ function parseArrangementRequest(value:unknown):ArrangementRequest{
  if(body.seed!==undefined&&(!Number.isSafeInteger(body.seed)||(body.seed as number)<0||(body.seed as number)>0xffffffff))throw new Error('invalid_arrangement_seed');
  const barCount=Math.ceil((endTick-startTick)/barTicks);
  const plan=body.plan===undefined?undefined:validateHarmonyPlan(body.plan,barCount);
- return {project,sourceTrackId:body.sourceTrackId,startTick,endTick,instruction:body.instruction,plan,seed:body.seed as number|undefined};
+ let editing:ArrangementRequest['editing'];
+ if(body.editing!==undefined){
+  if(!body.editing||typeof body.editing!=='object'||Array.isArray(body.editing))throw new Error('invalid_arrangement_editing');
+  const value=body.editing as Record<string,unknown>;
+  if(Object.keys(value).some(k=>k!=='targetTrackId'&&k!=='targetRole')||
+   typeof value.targetTrackId!=='string'||!['harmony','bass','accompaniment'].includes(value.targetRole as string))
+   throw new Error('invalid_arrangement_editing');
+  editing={targetTrackId:value.targetTrackId,targetRole:value.targetRole as 'harmony'|'bass'|'accompaniment'};
+ }
+ return {project,sourceTrackId:body.sourceTrackId,startTick,endTick,instruction:body.instruction,plan,seed:body.seed as number|undefined,editing};
 }
 type ProviderFactory=typeof createOpenAIProvider;
 type ArrangerFactory=typeof createOpenAIArranger;
@@ -76,7 +85,7 @@ export function createAgentServer(options:ServerOptions={}){
   }catch(e){
    if(res.destroyed)return;
    const reason=e instanceof Error?e.message:'internal_error';
-   const clientError=['invalid_request','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','rhythm_constraint_violated','no_pitch_changes','invalid_arrangement_scope','invalid_arrangement_seed','source_track_not_found','empty_source_range','source_range_too_dense','invalid_harmony_plan','invalid_plan_key','invalid_plan_progression','invalid_plan_register','invalid_plan_enforcement','invalid_plan_timeline','invalid_plan_passing_tones','plan_requires_whole_bars'].includes(reason) || /^plan_(scale|chords|registers)_violation:(harmony|bass|accompaniment)$/.test(reason);
+   const clientError=['invalid_request','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','rhythm_constraint_violated','no_pitch_changes','invalid_arrangement_scope','invalid_arrangement_seed','invalid_arrangement_role','invalid_arrangement_editing','source_track_is_target','target_track_not_found','source_track_not_found','empty_source_range','source_range_too_dense','invalid_harmony_plan','invalid_plan_key','invalid_plan_progression','invalid_plan_register','invalid_plan_enforcement','invalid_plan_timeline','invalid_plan_passing_tones','plan_requires_whole_bars'].includes(reason) || /^plan_(scale|chords|registers|inversions)_violation:(harmony|bass|accompaniment)$/.test(reason);
    reply(res,clientError?422:502,{error:clientError?reason:'generation_failed'});
   }
  });

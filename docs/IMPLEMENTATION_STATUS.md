@@ -64,3 +64,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - A dedicated `composition.aic.json` project format preserves the complete project, including generation history and serialized approved HarmonyPlan. Import validates the project; Standard MIDI export/import remains available, but MIDI does not preserve JSON-only planning metadata.
 - Region editing can explicitly reuse a validated saved chord plan covering the selected source/target/scope, including window slicing of a full-song timeline. The checkbox can disable reuse; the system never asserts a plan exists if none is saved.
 - Multi-role candidate mixing stores per-role Seed provenance. Music core bounds history length and validates provenance before atomic commit. See docs/PROJECT_PROVENANCE.md.
+
+## Read-only cross-part context for scoped regeneration
+- Scoped regeneration now derives bounded target-before/target-original/target-after note context and protected parts from the validated MusicProject.
+- API sends only validated target track/role intent; the server independently derives protected context, checks locks and crossing notes before the model invocation, and serializes note music fields without stable note IDs.
+- Model is advised about phrase continuity and preserving other parts; only the chosen target role may be applied as a single revision-checked ChangeSet. Music quality remains untested against real arrangements.
+- See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
