@@ -198,3 +198,55 @@ test('client rejects a bass line that violates a hard inversion at chord onset',
  await expect(page.getByRole('alert')).toContainText('plan_inversions_violation:bass');
  await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toHaveCount(0);
 });
+
+test('seeded offline batch offers reproducible comparison and combines role-specific candidates atomically',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('spinbutton',{name:'编配随机种子'}).fill('19501');
+ await page.getByRole('combobox',{name:'编配方案数'}).selectOption('3');
+ await page.getByRole('button',{name:'按种子生成多方案（离线）'}).click();
+ const bank=page.getByRole('region',{name:'编配候选对比'});
+ await expect(bank.locator('.variant-cards button')).toHaveCount(3);
+ const first=await page.locator('.arrangement-ghost').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('title')));
+ await bank.locator('.variant-cards button').nth(1).click();
+ const second=await page.locator('.arrangement-ghost').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('title')));
+ expect(first).not.toEqual(second);
+ await page.getByRole('combobox',{name:'和声选择方案'}).selectOption('0');
+ await page.getByRole('combobox',{name:'低音选择方案'}).selectOption('1');
+ await page.getByRole('combobox',{name:'伴奏选择方案'}).selectOption('2');
+ await page.getByRole('button',{name:'组合所选声部并重新验证'}).click();
+ await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toBeEnabled();
+ await expect(bank.getByText(/同一主旋律的 3 个编配候选/)).toBeVisible();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ const tracks=page.getByRole('combobox',{name:'当前轨道'});
+ await expect(tracks.locator('option')).toHaveCount(4);
+ await tracks.selectOption('melody');
+ await expect(page.locator('.note')).toHaveCount(1);
+ await page.getByRole('button',{name:'撤销'}).click();
+ await expect(tracks.locator('option')).toHaveCount(1);
+});
+
+test('same seed reproduces exact offline candidate MIDI projection without modifying source',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('spinbutton',{name:'编配随机种子'}).fill('90210');
+ const button=page.getByRole('button',{name:'按种子生成多方案（离线）'});
+ await button.click();
+ const projection=async()=>page.locator('.arrangement-ghost').evaluateAll(nodes=>nodes.map(n=>({
+  title:n.getAttribute('title'),
+  style:n.getAttribute('style')
+ })));
+ const first=await projection();
+ await button.click();
+ expect(await projection()).toEqual(first);
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(1);
+});
+
+test('seed input cannot invoke arrangement generator with invalid value',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('spinbutton',{name:'编配随机种子'}).fill('-1');
+ await page.getByRole('button',{name:'按种子生成多方案（离线）'}).click();
+ await expect(page.getByRole('alert')).toContainText('随机种子必须');
+ await expect(page.getByRole('region',{name:'编配候选对比'})).toHaveCount(0);
+});

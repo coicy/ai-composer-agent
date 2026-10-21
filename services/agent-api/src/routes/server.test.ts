@@ -106,6 +106,23 @@ describe('agent API',()=>{
   expect(await response.json()).toEqual({error:'plan_scale_violation:harmony'});
   expect(src.tracks).toHaveLength(1);
  });
+ it('passes the numeric variation seed as model context and rejects invalid seeds at API boundary',async()=>{
+  const src={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'src',pitch:60,startTick:0,durationTicks:480,velocity:80}]}]};
+  let seenSeed:number|undefined;
+  const factory=()=>({id:'mock',async generate(ctx:{seed?:number}){seenSeed=ctx.seed;return {tracks:[
+   {role:'harmony',notes:[{pitch:64,startTick:0,durationTicks:480,velocity:80}]},
+   {role:'bass',notes:[{pitch:36,startTick:0,durationTicks:480,velocity:80}]},
+   {role:'accompaniment',notes:[{pitch:55,startTick:0,durationTicks:480,velocity:80}]}
+  ]};}});
+  const url=await launch({apiKey:'test',arrangerFactory:factory});
+  const params={project:src,sourceTrackId:'melody',startTick:0,endTick:1920,instruction:'create',seed:12345};
+  const send=async(body:unknown)=>fetch(url+'/api/arrange',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  expect((await send(params)).status).toBe(200);
+  expect(seenSeed).toBe(12345);
+  const invalid=await send({...params,seed:-1});
+  expect(invalid.status).toBe(422);
+  expect((await invalid.json()).error).toBe('invalid_arrangement_seed');
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});
