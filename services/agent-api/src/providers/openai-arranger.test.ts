@@ -17,6 +17,8 @@ describe('OpenAI arrangement API adapter',()=>{
    expect(body.text.format.schema.properties.tracks.items.properties.role.enum).toEqual(['harmony','bass','accompaniment']);
    const input=JSON.parse(body.input);
    expect(input.sourceMelody).toEqual([{pitch:64,startTick:0,durationTicks:480,velocity:90}]);
+   expect(input).toHaveProperty('tonalProfile');
+   expect(input).toHaveProperty('chordSuggestions');
    expect(JSON.stringify(input)).not.toContain('locked-source');
    expect((init?.headers as Record<string,string>).authorization).toBe('Bearer fake-key');
    return new Response(JSON.stringify(response),{status:200});

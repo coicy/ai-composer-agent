@@ -17,6 +17,9 @@ describe('atomic three-track arrangement candidate',()=>{
  it('adds three independent tracks in a single revision without changing locked source',async()=>{
   const candidate=await proposeArrangement(fake(tracks()),request);
   expect(candidate.changes.operations.map(x=>x.type)).toEqual(['add_track','add_track','add_track']);
+  expect(candidate.assessment.tonalProfile.status).toBe('insufficient');
+  expect(candidate.assessment.chordSuggestions).toHaveLength(1);
+  expect(candidate.assessment.disclaimer).toContain('启发式');
   expect(candidate.tracks.map(t=>t.name)).toEqual(['AI 和声','AI 低音','AI 伴奏']);
   expect(original.tracks).toHaveLength(1);
   const applied=applyChangeSet(original,candidate.changes);
@@ -26,6 +29,14 @@ describe('atomic three-track arrangement candidate',()=>{
    expect(applied.project.tracks).toHaveLength(4);
    expect(applied.project.tracks[0]).toEqual(original.tracks[0]);
   }
+ });
+ it('passes uncertain music context to provider without changing source',async()=>{
+  let saw:{profile?:unknown;chords?:unknown}|undefined;
+  const provider:ArrangementProvider={id:'spy',async generate(context){saw={profile:context.tonalProfile,chords:context.chordSuggestions};return tracks();}};
+  await proposeArrangement(provider,request);
+  expect(saw?.profile).toMatchObject({status:'insufficient',noteCount:1});
+  expect(saw?.chords).toHaveLength(1);
+  expect(original.tracks[0]?.notes).toEqual([melody]);
  });
  it('rejects absent, extra and duplicate roles',async()=>{
   for(const invalid of [{tracks:tracks().tracks.slice(0,2)},{tracks:[...tracks().tracks.slice(0,2),tracks().tracks[0]]},{tracks:[...tracks().tracks,{role:'extra',notes:[note(60)]}]}]){
