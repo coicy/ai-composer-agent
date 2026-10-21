@@ -55,7 +55,8 @@ describe('beat-granular harmonic timeline',()=>{
   expect(effectiveChordEvents(p)).toHaveLength(2);
   expect(chordPitchClassesAtBeat(p,1)).toEqual([0,4,7,11]);
   expect(chordPitchClassesAtBeat(p,3)).toEqual([7,11,2,5]);
-  expect(chordEventLabel(p,p.timeline![0]!)).toContain('7 · 第1转位');
+  expect(chordEventLabel(p,p.timeline![0]!)).toContain('Imaj7 · 第1转位');
+  expect(chordEventLabel(p,p.timeline![1]!)).toBe('V7');
   const arranged:MusicTrack[]=[
    {trackId:'h',name:'H',locked:false,notes:[note('h1',64,0),note('h2',67,960)]},
    {trackId:'b',name:'B',locked:false,notes:[note('b1',40,0),note('b2',43,960)]},

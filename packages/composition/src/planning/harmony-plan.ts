@@ -65,8 +65,12 @@ export function chordLabel(plan:HarmonyPlan,barIndex:number):string{
 export function chordEventLabel(plan:HarmonyPlan,event:ChordEvent):string{
  const major=['I','ii','iii','IV','V','vi','vii°'];
  const minor=['i','ii°','III','iv','v','VI','VII'];
- const label=(plan.mode==='major'?major:minor)[event.degree-1]!;
- return label+(event.seventh?'7':'')+(event.inversion?` · 第${event.inversion}转位`:'');
+ const majorSevenths=['Imaj7','ii7','iii7','IVmaj7','V7','vi7','viiø7'];
+ const minorSevenths=['i7','iiø7','IIImaj7','iv7','v7','VImaj7','VII7'];
+ const label=event.seventh?
+  (plan.mode==='major'?majorSevenths:minorSevenths)[event.degree-1]!:
+  (plan.mode==='major'?major:minor)[event.degree-1]!;
+ return label+(event.inversion?` · 第${event.inversion}转位`:'');
 }
 export function validateHarmonyPlan(value:unknown,barCount:number):HarmonyPlan{
  if(!Number.isSafeInteger(barCount)||barCount<1||barCount>4)throw new Error('invalid_plan_progression');

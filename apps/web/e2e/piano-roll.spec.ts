@@ -169,7 +169,7 @@ test('beat-level chord timeline generates two seventh chords with inversion in o
  await page.getByRole('checkbox',{name:'时间轴第2段七和弦'}).check();
  await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
  const report=page.getByRole('region',{name:'和声规划执行报告'});
- await expect(report).toContainText('I7 · 第1转位');
+ await expect(report).toContainText('Imaj7 · 第1转位');
  await expect(report).toContainText('V7');
  await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toBeEnabled();
  await page.getByRole('button',{name:'确认新增 3 轨'}).click();

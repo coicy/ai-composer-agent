@@ -23,3 +23,6 @@ The user receives violations/warnings with role-specific codes; hard violations 
 The local deterministic arranger chooses diatonic seventh/chord tones and role-bounded notes at quarter-note boundaries when timeline is used. The model receives this explicit user-authored timeline separately from uncertain machine-estimated key/chord hypotheses. The original source track remains read-only. Server + browser independently apply HarmonyPlan checks and only accept three new tracks in one atomic user-approved operation.
 
 Existing limitations: no chromatically altered or borrowed chords, harmonic minor leading-tone accidentals, fixed 4/4 quarter-note timeline granularity (no eighth-note chords), no independent voiced chord completeness rule, no listening-based quality benchmarks, and no direct editing of existing chord tracks.
+
+### Seventh chord labels
+Seventh quality is derived from the selected natural diatonic scale, not merely the seventh toggle: major scale I/IV use `maj7`, V uses dominant `7`, and vii uses half-diminished `ø7`. Natural minor uses i7, iiø7, IIImaj7, iv7, v7, VImaj7, VII7; it does not silently raise the seventh to create harmonic-minor dominant harmony.
