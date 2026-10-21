@@ -17,7 +17,7 @@ export function validateGenerationRecord(record:GenerationRecord):boolean {
   const seeds=record.seedsByRole;
   if(!seeds||typeof seeds!=='object'||Array.isArray(seeds)||
    Object.keys(seeds).length!==3||
-   !['harmony','bass','accompaniment'].every(k=>integer(seeds[k])&&seeds[k]>=0&&seeds[k]<=0xffffffff))
+   !['harmony','bass','accompaniment'].every(k=>{const n=seeds[k];return typeof n==='number'&&integer(n)&&n>=0&&n<=0xffffffff;}))
    return false;
  }
  if(record.planJson!==undefined){
@@ -30,6 +30,6 @@ export function validateGenerationRecord(record:GenerationRecord):boolean {
 export function validateProject(p:MusicProject):boolean {
  return !!p&&typeof p.projectId==='string'&&p.projectId.length>0&&integer(p.revision)&&p.revision>=0&&integer(p.ppq)&&p.ppq>0&&Array.isArray(p.tracks)&&new Set(p.tracks.map(t=>t.trackId)).size===p.tracks.length&&p.tracks.every(t=>typeof t.trackId==='string'&&t.trackId.length>0&&typeof t.name==='string'&&typeof t.locked==='boolean'&&Array.isArray(t.notes)&&new Set(t.notes.map((n:MidiNote)=>n.noteId)).size===t.notes.length&&t.notes.every(validateNote))&&
  (p.generationHistory===undefined||(Array.isArray(p.generationHistory)&&p.generationHistory.length<=128&&
-  new Set(p.generationHistory.map(r=>r.recordId)).size===p.generationHistory.length&&
-  p.generationHistory.every(r=>validateGenerationRecord(r)&&p.tracks.some(t=>t.trackId===r.sourceTrackId)&&r.targetTrackIds.every(id=>p.tracks.some(t=>t.trackId===id)))));
+  new Set(p.generationHistory.map((r:GenerationRecord)=>r?.recordId)).size===p.generationHistory.length&&
+  p.generationHistory.every((r:GenerationRecord)=>validateGenerationRecord(r)&&p.tracks.some(t=>t.trackId===r.sourceTrackId)&&r.targetTrackIds.every((id:string)=>p.tracks.some(t=>t.trackId===id)))));
 }
