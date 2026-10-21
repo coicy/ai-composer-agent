@@ -3,7 +3,7 @@ import {playProject} from '@ai-composer/audio-engine';
 import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes} from '@ai-composer/piano-roll';
 import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
-import {composeMelody,continueMelody,proposeWithProvider} from '@ai-composer/composition';
+import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose} from '@ai-composer/composition';
 import {createRemoteProvider} from '../features/agent/remote.js';
 import type {MelodyCandidate,MelodyStyle} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
@@ -29,6 +29,7 @@ export function App(){
  const [aiBars,setAiBars]=useState(4);
  const [startBar,setStartBar]=useState(1);
  const [aiMode,setAiMode]=useState<'append'|'replace'|'selected'>('append');
+ const [pitchOnly,setPitchOnly]=useState(false);
  const [instruction,setInstruction]=useState('写一段带奇幻冒险感、动机清晰的旋律，适合游戏主题音乐');
  const [modelPending,setModelPending]=useState(false);
  const activeRequest=useRef<AbortController|null>(null);
@@ -69,11 +70,19 @@ export function App(){
   try{
    const result=await proposeWithProvider(createRemoteProvider(snapshot),{
     project:snapshot,trackId,startTick,endTick,instruction,mode:aiMode==='append'?'append':'replace',
-    targetNoteIds:aiMode==='selected'?[...selectedNoteIds]:undefined,maxNotes:64
+    targetNoteIds:aiMode==='selected'?[...selectedNoteIds]:undefined,
+    editConstraint:aiMode==='selected'&&pitchOnly?'pitch_only':undefined,maxNotes:64
    },controller.signal);
    if(!controller.signal.aborted){setCandidate(result);setError('');}
   }catch(e){if(!controller.signal.aborted)setError(e instanceof Error?e.message:'generation_failed');}
   finally{if(activeRequest.current===controller){activeRequest.current=null;setModelPending(false);}}
+ }
+ function previewTranspose(semitones:12|-12){
+  activeRequest.current?.abort();setModelPending(false);
+  try{
+   setCandidate(proposeTranspose(session.project,trackId,selectedNoteIds,semitones));
+   setError('');
+  }catch(e){setCandidate(null);setError(e instanceof Error?e.message:'transpose_failed');}
  }
  function approve(){if(!candidate)return;const result=commitSession(session,candidate.changes);if(result.ok){setSession(result.session);setCandidate(null);setSelectedNoteIds([]);setError('');}else{setCandidate(null);setError(result.reason);}}
  function run(op:NoteOperation){const result=commitSession(session,{baseRevision:project.revision,operations:[op]});if(result.ok){setSession(result.session);setCandidate(null);setSelectedNoteIds([]);setError('');}else setError(result.reason);}
@@ -128,6 +137,7 @@ export function App(){
  function cancelMarquee(){marqueeStart.current=null;setMarquee(null);}
  const active=notes.find(n=>n.noteId===selected);
  const removedIds=new Set(candidate?.changes.baseRevision===project.revision?candidate.changes.operations.filter(o=>o.type==='delete_note'&&o.trackId===trackId).map(o=>o.type==='delete_note'?o.noteId:''):[]);
+ const updatedIds=new Set(candidate?.changes.baseRevision===project.revision?candidate.changes.operations.filter(o=>o.type==='update_note'&&o.trackId===trackId).map(o=>o.type==='update_note'?o.noteId:''):[]);
  const selectedSet=new Set(selectedNoteIds);
  const validSelectionIds=selectedNoteIds.filter(id=>notes.some(n=>n.noteId===id));
  const selectionScope=aiMode==='selected'&&validSelectionIds.length>0?timeRangeOfSelectedNotes(notes,validSelectionIds):null;
@@ -142,7 +152,9 @@ export function App(){
    <button aria-pressed={tool==='edit'} onClick={()=>{setTool('edit');cancelMarquee();}}>编辑音符</button>
    <button aria-pressed={tool==='select'} onClick={()=>{setTool('select');cancelMarquee();}}>框选音符</button>
    {selectedNoteIds.length>0&&<span>{selectedNoteIds.length} 个已框选音符</span>}
-   {selectedNoteIds.length>0&&<button onClick={()=>{setSelectedNoteIds([]);setAiMode('append');}}>清除框选</button>}
+   {selectedNoteIds.length>0&&<button onClick={()=>{setSelectedNoteIds([]);setAiMode('append');setCandidate(null);}}>清除框选</button>}
+   {selectedNoteIds.length>0&&<button onClick={()=>previewTranspose(12)}>所选 +12 半音预览</button>}
+   {selectedNoteIds.length>0&&<button onClick={()=>previewTranspose(-12)}>所选 -12 半音预览</button>}
    <button onClick={()=>{const id=crypto.randomUUID();run({type:"add_track",track:{trackId:id,name:`Track ${project.tracks.length+1}`,locked:false,notes:[]}});setActiveTrack(id);setSelected(null);setSelectedNoteIds([]);}}>+ 轨道</button>
    <input ref={picker} type="file" accept=".mid,.midi,audio/midi" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)void loadMidi(f);e.target.value="";}}/>
    <button onClick={()=>picker.current?.click()}>导入 MIDI</button><button onClick={downloadMidi}>导出 MIDI</button>
@@ -153,13 +165,14 @@ export function App(){
    <button disabled={!active} onClick={()=>{if(active){run({type:'delete_note',trackId,noteId:active.noteId});setSelected(null);}}}>删除所选</button>
    <span>revision {project.revision} · {notes.length} notes</span>
   </section>
-  <section className="generator"><strong>旋律候选生成（规则算法，非 LLM）</strong><label>风格 <select value={style} onChange={e=>setStyle(e.target.value as MelodyStyle)}><option value="motif">Motif</option><option value="steps">Steps</option><option value="leaps">Leaps</option></select></label><label>小节 <input type="number" min="1" max="16" value={bars} onChange={e=>setBars(Number(e.target.value))}/></label><label>Seed <input type="number" value={seed} onChange={e=>setSeed(Number(e.target.value))}/></label><button onClick={propose}>从零生成 / 重写前段</button><button onClick={proposeContinuation}>基于现有旋律续写</button>{candidate&&<><span>预览 {candidate.label}：新增 {candidate.changes.operations.filter(o=>o.type==='add_note').length} / 删除 {candidate.changes.operations.filter(o=>o.type==='delete_note').length} 音符（未提交）{candidate.changes.baseRevision!==project.revision?' · 已过期，请重新生成':''}</span><button disabled={candidate.changes.baseRevision!==project.revision} onClick={approve}>确认应用</button><button onClick={()=>setCandidate(null)}>取消</button></>}</section>
+  <section className="generator"><strong>旋律候选生成（规则算法，非 LLM）</strong><label>风格 <select value={style} onChange={e=>setStyle(e.target.value as MelodyStyle)}><option value="motif">Motif</option><option value="steps">Steps</option><option value="leaps">Leaps</option></select></label><label>小节 <input type="number" min="1" max="16" value={bars} onChange={e=>setBars(Number(e.target.value))}/></label><label>Seed <input type="number" value={seed} onChange={e=>setSeed(Number(e.target.value))}/></label><button onClick={propose}>从零生成 / 重写前段</button><button onClick={proposeContinuation}>基于现有旋律续写</button>{candidate&&<><span>预览 {candidate.label}：新增 {candidate.changes.operations.filter(o=>o.type==='add_note').length} / 删除 {candidate.changes.operations.filter(o=>o.type==='delete_note').length} / 更新 {candidate.changes.operations.filter(o=>o.type==='update_note').length} 音符（未提交）{candidate.changes.baseRevision!==project.revision?' · 已过期，请重新生成':''}</span><button disabled={candidate.changes.baseRevision!==project.revision} onClick={approve}>确认应用</button><button onClick={()=>setCandidate(null)}>取消</button></>}</section>
   <section className="agent-request">
    <label htmlFor="agent-prompt"><strong>自然语言作曲 Agent（模型服务）</strong></label>
    <textarea id="agent-prompt" value={instruction} maxLength={2000} onChange={e=>setInstruction(e.target.value)} rows={2} placeholder="描述旋律情绪、风格、动机或节奏"/>
    <label>模式 <select aria-label="AI 操作模式" value={aiMode} onChange={e=>{setAiMode(e.target.value as 'append'|'replace'|'selected');setCandidate(null);}}>
     <option value="append">轨道末尾续写</option><option value="replace">重写指定小节</option><option value="selected">仅重写框选音符</option>
    </select></label>
+   {aiMode==='selected'&&<label className="constraint-toggle"><input type="checkbox" checked={pitchOnly} onChange={e=>{setPitchOnly(e.target.checked);setCandidate(null);}}/>只改音高（保留原节奏/力度/音符 ID）</label>}
    {aiMode==='replace'&&<label>起始小节 <input aria-label="重写起始小节" type="number" min="1" max="64" value={startBar} onChange={e=>{setStartBar(Number(e.target.value));setCandidate(null);}}/></label>}
    {aiMode!=='selected'&&<label>生成小节数 <input aria-label="AI 小节数" type="number" min="1" max="4" value={aiBars} onChange={e=>{setAiBars(Number(e.target.value));setCandidate(null);}}/></label>}
    <button disabled={modelPending||!instruction.trim()} onClick={()=>void proposeAI()}>{modelPending?'生成中…':aiMode==='append'?'AI 续写预览':'AI 重写预览'}</button>
@@ -173,9 +186,9 @@ export function App(){
     onDoubleClick={e=>{if(tool==='edit'&&e.target===e.currentTarget)addAt(e.clientX,e.clientY,e.currentTarget);}}>
     {aiMode!=='append'&&Number.isSafeInteger(highlightStart)&&highlightStart>=0&&Number.isSafeInteger(highlightEnd)&&highlightEnd>highlightStart&&<div className="selection-range" style={{left:highlightStart/project.ppq*CELL,width:(highlightEnd-highlightStart)/project.ppq*CELL}}/>}
     {Array.from({length:24},(_,i)=><div className="lane" key={i} />)}
-    {candidate?.changes.baseRevision===project.revision&&candidate.changes.operations.some(o=>o.type==='add_note'&&o.trackId===trackId)&&candidate.notes.map(n=><div key={'ghost-'+n.noteId} className="ghost-note" style={{left:n.startTick/project.ppq*CELL,top:(TOP_PITCH-n.pitch)*ROW,width:Math.max(6,n.durationTicks/project.ppq*CELL-2)}} />)}
+    {candidate?.changes.baseRevision===project.revision&&candidate.changes.operations.some(o=>(o.type==='add_note'||o.type==='update_note')&&o.trackId===trackId)&&candidate.notes.filter(n=>candidate.changes.operations.some(o=>(o.type==='add_note'&&o.note.noteId===n.noteId)||(o.type==='update_note'&&o.noteId===n.noteId))).map(n=><div key={'ghost-'+n.noteId} className="ghost-note" style={{left:n.startTick/project.ppq*CELL,top:(TOP_PITCH-n.pitch)*ROW,width:Math.max(6,n.durationTicks/project.ppq*CELL-2)}} />)}
     {marquee&&<div className="marquee-box" style={{left:marquee.left,top:marquee.top,width:marquee.right-marquee.left,height:marquee.bottom-marquee.top}}/>}
-    {notes.map(n=>{const display=draft?.noteId===n.noteId?{...n,...draft}:n;return <div key={n.noteId} className={'note'+(selected===n.noteId?' selected':'')+(removedIds.has(n.noteId)?' pending-delete':'')+(selectedSet.has(n.noteId)?' multi-selected':'')}
+    {notes.map(n=>{const display=draft?.noteId===n.noteId?{...n,...draft}:n;return <div key={n.noteId} className={'note'+(selected===n.noteId?' selected':'')+(removedIds.has(n.noteId)?' pending-delete':'')+(selectedSet.has(n.noteId)?' multi-selected':'')+(updatedIds.has(n.noteId)?' pending-update':'')}
      style={{left:display.startTick/project.ppq*CELL,top:(TOP_PITCH-display.pitch)*ROW,width:Math.max(6,display.durationTicks/project.ppq*CELL-2)}}
      title={`pitch ${n.pitch}, start ${n.startTick}, duration ${n.durationTicks}`}
      onPointerDown={e=>onPointerDown(e,n,'move')} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={()=>{gesture.current=null;setDraft(null);}}>
