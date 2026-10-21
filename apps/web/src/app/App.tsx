@@ -141,7 +141,7 @@ export function App(){
     setDraft({[g.noteId]:{...g.note,durationTicks}});
    }
    setError('');
-  }catch(e){setError(e instanceof Error?e.message:'invalid_drag');}
+  }catch(e){draftOps.current=[];setDraft({});setError(e instanceof Error?e.message:'invalid_drag');}
  }
  function onPointerUp(){
   if(!gesture.current)return;
@@ -240,7 +240,7 @@ export function App(){
   <p className="hint">可垂直滚动查看 MIDI 0–127 全音域；缩放只改变显示比例，不修改工程 Tick。框选后切换回编辑模式，拖动其中任一音符可整体移动，操作作为单次撤销记录。</p>
   <p className="hint">编辑模式：双击空白新增音符，拖动音符修改音高/时间，拖动右边缘改变时值。框选模式：按住鼠标左键拖动矩形区域，再选择“仅重写框选音符”交给 Agent。</p>
   {active&&<div className="details">所选：音高 {active.pitch} · 起点 {active.startTick} tick · 时长 {active.durationTicks} tick · 力度 {active.velocity}
-  <label className="velocity-control">力度 (1–127) <input type="number" min={1} max={127} key={active.noteId} defaultValue={active.velocity} onBlur={e=>{const number=Number(e.currentTarget.value);if(number!==active.velocity)setVelocity(number);}} onKeyDown={e=>{if(e.key==='Enter')e.currentTarget.blur();}}/></label>
+  <label className="velocity-control">力度 (1–127) <input type="number" min={1} max={127} key={`${active.noteId}:${active.velocity}`} defaultValue={active.velocity} onBlur={e=>{const number=Number(e.currentTarget.value);if(number!==active.velocity)setVelocity(number);}} onKeyDown={e=>{if(e.key==='Enter')e.currentTarget.blur();}}/></label>
   {selectedNoteIds.length>0&&<span>更改力度将一次性作用于 {selectedNoteIds.length} 个所选音符。</span>}</div>}
   {error&&<p role="alert" className="error">{error}</p>}
   <p className="hint">试听使用 Web Audio 三角波与固定 120 BPM，尚无音色、循环和 Tempo Map。可选择 AI 续写或选区重写；重写操作先显示蓝色新增音符与红色待删除音符，需启动本地 agent-api 并配置密钥；MIDI 导出暂为固定 120 BPM，导入替换现有工程。撤销/重做采用内存快照；刷新页面不会保留编辑历史。</p>
