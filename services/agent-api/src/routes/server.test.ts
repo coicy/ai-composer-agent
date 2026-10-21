@@ -56,6 +56,32 @@ describe('agent API',()=>{
   const bad=await fetch(url+'/api/compose',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,project:p,mode:'append',targetNoteIds:['a'],editConstraint:'pitch_only'})});
   expect(bad.status).toBe(422);
  });
+ it('returns three proposed tracks from a locked source without committing',async()=>{
+  const melody={noteId:'source-note',pitch:64,startTick:0,durationTicks:480,velocity:92,locked:true};
+  const locked={...project,tracks:[{...project.tracks[0]!,locked:true,notes:[melody]}]};
+  let observedSource:readonly {noteId:string}[]=[];
+  const arrangerFactory=()=>({id:'fake-arranger',async generate(ctx:{sourceNotes:readonly {noteId:string}[]}){
+   observedSource=ctx.sourceNotes;
+   return {tracks:[
+    {role:'harmony',notes:[{pitch:67,startTick:0,durationTicks:480,velocity:70}]},
+    {role:'bass',notes:[{pitch:40,startTick:0,durationTicks:480,velocity:80}]},
+    {role:'accompaniment',notes:[{pitch:55,startTick:0,durationTicks:480,velocity:65}]}
+   ]};
+  }});
+  const url=await launch({apiKey:'fake',arrangerFactory});
+  const response=await fetch(url+'/api/arrange',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({project:locked,sourceTrackId:'melody',startTick:0,endTick:1920,instruction:'create orchestration'})});
+  expect(response.status).toBe(200);
+  const body=(await response.json()) as {tracks:{role:string;notes:unknown[]}[]};
+  expect(body.tracks.map(t=>t.role)).toEqual(['harmony','bass','accompaniment']);
+  expect(observedSource).toEqual([melody]);
+  expect(locked.tracks).toHaveLength(1);
+ });
+ it('rejects absent source and unsafe arrangement window',async()=>{
+  const url=await launch({apiKey:'fake'});
+  const send=async(payload:unknown)=>fetch(url+'/api/arrange',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+  expect((await send({project,sourceTrackId:'missing',startTick:0,endTick:1920,instruction:'arrange'})).status).toBe(422);
+  expect((await send({project,sourceTrackId:'melody',startTick:0,endTick:9000,instruction:'arrange'})).status).toBe(422);
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});
