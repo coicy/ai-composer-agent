@@ -19,7 +19,8 @@ function parseRequest(value:unknown):CompositionRequest{
  if(!body.project||typeof body.project!=='object'||Array.isArray(body.project)||!validateProject(body.project as CompositionRequest['project']))throw new Error('invalid_project');
  if(typeof body.trackId!=='string'||typeof body.instruction!=='string'||!Number.isSafeInteger(body.startTick)||!Number.isSafeInteger(body.endTick))throw new Error('invalid_request');
  if(body.instruction.length>2000)throw new Error('invalid_instruction');
- return {project:body.project as CompositionRequest['project'],trackId:body.trackId,startTick:body.startTick as number,endTick:body.endTick as number,instruction:body.instruction,maxNotes:64};
+ if(body.mode!==undefined&&body.mode!=='append'&&body.mode!=='replace')throw new Error('invalid_mode');
+ return {project:body.project as CompositionRequest['project'],trackId:body.trackId,startTick:body.startTick as number,endTick:body.endTick as number,instruction:body.instruction,mode:body.mode as 'append'|'replace'|undefined,maxNotes:64};
 }
 type ProviderFactory=typeof createOpenAIProvider;
 export interface ServerOptions {apiKey?:string;model?:string;allowedOrigin?:string;providerFactory?:ProviderFactory}
@@ -46,7 +47,7 @@ export function createAgentServer(options:ServerOptions={}){
   }catch(e){
    if(res.destroyed)return;
    const reason=e instanceof Error?e.message:'internal_error';
-   const clientError=['invalid_request','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty'].includes(reason);
+   const clientError=['invalid_request','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit'].includes(reason);
    reply(res,clientError?422:502,{error:clientError?reason:'generation_failed'});
   }
  });

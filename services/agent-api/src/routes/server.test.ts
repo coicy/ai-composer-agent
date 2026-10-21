@@ -2,6 +2,7 @@ import {afterEach,describe,it,expect} from 'vitest';
 import type {AddressInfo} from 'node:net';
 import {createAgentServer} from './server.js';
 import type {MusicProject} from '@ai-composer/music-core';
+import type {ProviderContext} from '@ai-composer/composition';
 const project:MusicProject={projectId:'test',revision:0,ppq:480,tracks:[{trackId:'melody',name:'Melody',locked:false,notes:[]}]};
 const body={project,trackId:'melody',startTick:0,endTick:1920,instruction:'write a melody'};
 const fakeFactory=()=>({id:'fake',async generate(){return {notes:[{pitch:60,startTick:0,durationTicks:480,velocity:90}]};}});
@@ -23,6 +24,18 @@ describe('agent API',()=>{
   const url=await launch({});
   expect((await fetch(url+'/api/compose',{method:'POST',headers:{origin:'https://evil.example'},body:'{}'})).status).toBe(403);
   expect((await fetch(url+'/api/compose',{method:'POST',body:'{}'})).status).toBe(503);
+ });
+ it('passes scoped replace and rejects boundary crossing',async()=>{
+  let observed:ProviderContext|undefined;
+  const fake=()=>({id:'fake',async generate(ctx:ProviderContext){observed=ctx;return {notes:[{pitch:72,startTick:0,durationTicks:480,velocity:90}]};}});
+  const url=await launch({apiKey:'fake',providerFactory:fake});
+  const old={noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90};
+  const p={...project,tracks:[{...project.tracks[0]!,notes:[old]}]};
+  const res=await fetch(url+'/api/compose',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,mode:'replace',project:p})});
+  expect(res.status).toBe(200);expect(observed?.targetNotes).toEqual([old]);expect(observed?.mode).toBe('replace');
+  const crossing={...project,tracks:[{...project.tracks[0]!,notes:[{...old,startTick:1700,durationTicks:400}]}]};
+  const bad=await fetch(url+'/api/compose',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,mode:'replace',project:crossing})});
+  expect(bad.status).toBe(422);expect((await bad.json()).error).toBe('cross_boundary_note');
  });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
