@@ -58,3 +58,18 @@ select{background:#1e293b;color:#e5e7eb;border:1px solid #475569;padding:9px;bor
 .arrangement-diagnostics ul{padding-left:23px;margin:8px 0}
 .arrangement-diagnostics li{margin:5px 0;color:#f7d5a0}
 .arrangement-diagnostics .diagnostic-disclaimer{color:#aebaca;font-size:12px}
+
+.harmonic-plan{width:100%;border:1px solid #52647d;border-radius:7px;padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.harmonic-plan legend{font-weight:700;color:#c4d7ed}
+.harmonic-plan .plan-enable{width:100%;justify-content:flex-start}
+.harmonic-plan .plan-enable input{width:auto;accent-color:#60a5fa}
+.harmonic-plan p{width:100%;margin:4px 0;color:#aebfd3;font-size:12px}
+.harmonic-plan label{display:flex;gap:6px;align-items:center}
+.harmonic-plan input[type=text]{width:140px}
+.harmonic-plan .plan-policies{display:flex;flex-wrap:wrap;gap:12px;width:100%}
+.harmonic-plan .plan-registers{display:flex;flex-wrap:wrap;gap:16px;width:100%}
+.harmonic-plan .plan-registers>div{display:flex;flex-wrap:wrap;align-items:center;gap:7px;background:#132131;padding:8px;border-radius:6px}
+.harmonic-plan .plan-registers strong{margin-right:5px}
+.plan-review{width:100%;background:#122637;border:1px solid #54748a;border-radius:7px;padding:12px}
+.plan-review p{margin:6px 0}
+.plan-review ul{margin:8px 0;color:#ffc98a;padding-left:22px}

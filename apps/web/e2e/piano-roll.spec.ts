@@ -119,3 +119,37 @@ test('valid but questionable harmony shows advisory diagnostics without automati
  await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toBeEnabled();
  await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(1);
 });
+
+test('strict harmonic plan is enforced before atomic three-track confirmation',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('checkbox',{name:'启用可控和声规划'}).check();
+ await page.getByRole('combobox',{name:'规划主音'}).selectOption('0');
+ await page.getByRole('combobox',{name:'规划调式'}).selectOption('major');
+ await page.getByRole('textbox',{name:'逐小节和弦级数'}).fill('1,4,5,1');
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ const review=page.getByRole('region',{name:'和声规划执行报告'});
+ await expect(review).toContainText('I – IV – V – I');
+ await expect(review).toContainText('硬约束');
+ await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toBeEnabled();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+ await page.getByRole('combobox',{name:'当前轨道'}).selectOption('melody');
+ await expect(page.locator('.note')).toHaveCount(1);
+});
+test('strict harmonic plan rejects an untrusted but structurally valid nonchord model response',async({page})=>{
+ await page.route('**/api/arrange',async route=>{
+  const tracks=[
+   {role:'harmony',notes:[{pitch:61,startTick:0,durationTicks:480,velocity:80}]},
+   {role:'bass',notes:[{pitch:36,startTick:0,durationTicks:480,velocity:80}]},
+   {role:'accompaniment',notes:[{pitch:55,startTick:0,durationTicks:480,velocity:80}]}
+  ];
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({tracks})});
+ });
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('checkbox',{name:'启用可控和声规划'}).check();
+ await page.getByRole('button',{name:'AI 多轨编配预览'}).click();
+ await expect(page.getByRole('alert')).toContainText('plan_scale_violation');
+ await expect(page.getByRole('button',{name:'确认新增 3 轨'})).toHaveCount(0);
+});
