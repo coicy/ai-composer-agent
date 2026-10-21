@@ -1,5 +1,4 @@
 import type {MidiNote,MusicProject} from '@ai-composer/music-core';
-import {ARRANGEMENT_ROLES} from './arrange.js';
 import type {ArrangementRole} from './arrange.js';
 
 /** Target selection, not model-owned editing rights. */
@@ -17,6 +16,7 @@ export interface ArrangementEditingContext extends ArrangementEditingIntent {
  readonly after:readonly MidiNote[];
  readonly protectedParts:readonly ProtectedPartContext[];
 }
+const ROLES:readonly ArrangementRole[]=['harmony','bass','accompaniment'];
 const MAX_NEIGHBORS=8,MAX_ORIGINAL=32,MAX_PARTS=6,MAX_PART_NOTES=16;
 const end=(n:MidiNote)=>n.startTick+n.durationTicks;
 const byTime=(a:MidiNote,b:MidiNote)=>a.startTick-b.startTick||a.pitch-b.pitch||a.noteId.localeCompare(b.noteId);
@@ -27,7 +27,7 @@ const distance=(n:MidiNote,start:number,finish:number)=>
 export function createArrangementEditingContext(
  project:MusicProject,sourceTrackId:string,intent:ArrangementEditingIntent,startTick:number,endTick:number
 ):ArrangementEditingContext{
- if(!intent||!ARRANGEMENT_ROLES.includes(intent.targetRole))throw new Error('invalid_arrangement_role');
+ if(!intent||!ROLES.includes(intent.targetRole))throw new Error('invalid_arrangement_role');
  if(typeof intent.targetTrackId!=='string'||!intent.targetTrackId)throw new Error('target_track_not_found');
  if(sourceTrackId===intent.targetTrackId)throw new Error('source_track_is_target');
  const target=project.tracks.find(t=>t.trackId===intent.targetTrackId);
