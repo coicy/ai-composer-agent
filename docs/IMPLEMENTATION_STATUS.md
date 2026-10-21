@@ -52,3 +52,8 @@ Not yet complete: production authentication, live model music quality tests, rea
 - UI supports previewing any candidate and choosing harmony, bass and accompaniment from different candidates, then rebuilding a fresh three-track proposal with full validation rather than merging raw ChangeSets. The original source track is not changed before explicit confirmation.
 - An OpenAI provider receives the numeric variation seed only as a hint: external model outputs are **not guaranteed repeatable**. No live-model quality/reproducibility study has been performed.
 - See docs/ARRANGEMENT_VARIANTS.md.
+
+## Scoped regeneration: browser UI
+- Existing-track targeted re-arrangement is now available in the Piano Roll UI with independent source/target/role selection, bar range, seed, instruction, preview and audition.
+- Only target-region note operations can be committed; MIDI source and other tracks are unaffected. Existing locks and crossing notes are rejected in composition core.
+- Current UI does not automatically carry over a prior HarmonyPlan; no original arrangement plan is persisted as MusicProject data. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
