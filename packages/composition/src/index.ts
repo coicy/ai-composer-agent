@@ -7,3 +7,6 @@ export type {MelodyRequest,MelodyCandidate,MelodyStyle} from './generators/melod
 export type {ContinueRequest} from './generators/continue.js';
 export {proposeTranspose} from './transformations/transpose.js';
 export type {TransposeCandidate} from './transformations/transpose.js';
+export {proposeArrangement,ARRANGEMENT_ROLES} from './arrangement/arrange.js';
+export type {ArrangementRole,ArrangementRequest,ArrangementContext,ArrangementProvider,ArrangementCandidate} from './arrangement/arrange.js';
+export {SeededArranger} from './arrangement/seeded-arranger.js';
