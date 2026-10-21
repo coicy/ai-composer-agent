@@ -9,7 +9,7 @@ The only accepted model output remains `{notes:[{pitch,startTick,durationTicks,v
 
 Commit is only possible against the original base revision, and music-core rechecks locks during commit. If the user edits between generation and approval, the candidate becomes stale. Only the selected track can change; the remainder of the project is preserved.
 
-Current UI exposes numerical **starting bar and length** rather than drag-to-range selection. Time assumes 4/4, with an AI length limit of 1–4 bars. Advanced meter mapping, musically nuanced rewriting and rich selection gestures are future work. No live LLM quality testing has been completed.
+The UI supports numerical **starting bar and length** for full-bar replacement, plus mouse marquee note-ID selection for targeted replacement. Time assumes 4/4, with an AI length limit of 1–4 bars. Advanced meter mapping, musically nuanced rewriting and rich selection gestures are future work. No live LLM quality testing has been completed.
 
 See [LLM_INTEGRATION.md](LLM_INTEGRATION.md) for local setup.
 ## Mouse selection and stable-ID rewriting
