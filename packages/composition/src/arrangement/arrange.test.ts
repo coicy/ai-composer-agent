@@ -2,6 +2,8 @@ import {describe,it,expect} from 'vitest';
 import {applyChangeSet} from '@ai-composer/music-core';
 import type {MusicProject} from '@ai-composer/music-core';
 import {proposeArrangement} from './arrange.js';
+import {DEFAULT_REGISTERS} from '../planning/harmony-plan.js';
+import {SeededArranger} from './seeded-arranger.js';
 import type {ArrangementProvider} from './arrange.js';
 const melody={noteId:'melody-1',pitch:64,startTick:0,durationTicks:480,velocity:91,locked:true};
 const original:MusicProject={projectId:'p',revision:3,ppq:480,tracks:[{trackId:'source',name:'旋律',locked:true,notes:[melody]}]};
@@ -37,6 +39,28 @@ describe('atomic three-track arrangement candidate',()=>{
   expect(saw?.profile).toMatchObject({status:'insufficient',noteCount:1});
   expect(saw?.chords).toHaveLength(1);
   expect(original.tracks[0]?.notes).toEqual([melody]);
+ });
+ it('enforces a strict user chord plan before commit while keeping source unchanged',async()=>{
+  const plan={tonic:0,mode:'major' as const,degrees:[1] as const,registers:DEFAULT_REGISTERS,enforcement:{scale:'hard' as const,chords:'hard' as const,registers:'hard' as const}};
+  const req={...request,plan};
+  await expect(proposeArrangement(fake(tracks()),req)).rejects.toThrow('plan_chords_violation');
+  const generated=await proposeArrangement(new SeededArranger(),req);
+  expect(generated.planFindings).toHaveLength(0);
+  expect(generated.tracks).toHaveLength(3);
+  expect(generated.plan?.degrees).toEqual([1]);
+  expect(original.tracks[0]?.notes).toEqual([melody]);
+ });
+ it('permits soft preference warnings without silently repairing generated music',async()=>{
+  const plan={tonic:0,mode:'major' as const,degrees:[1] as const,registers:DEFAULT_REGISTERS,enforcement:{scale:'soft' as const,chords:'soft' as const,registers:'soft' as const}};
+  const candidate=await proposeArrangement(fake(tracks()),{...request,plan});
+  expect(candidate.planFindings.some(f=>f.constraint==='chords')).toBe(true);
+  expect(candidate.tracks.map(t=>t.notes[0]?.pitch)).toEqual([68,40,55]);
+ });
+ it('fails malformed plans before calling any provider',async()=>{
+  let called=0;
+  const spy:ArrangementProvider={id:'spy',async generate(){called++;return tracks();}};
+  await expect(proposeArrangement(spy,{...request,plan:{tonic:0,mode:'major',degrees:[9]}} as never)).rejects.toThrow();
+  expect(called).toBe(0);
  });
  it('rejects absent, extra and duplicate roles',async()=>{
   for(const invalid of [{tracks:tracks().tracks.slice(0,2)},{tracks:[...tracks().tracks.slice(0,2),tracks().tracks[0]]},{tracks:[...tracks().tracks,{role:'extra',notes:[note(60)]}]}]){

@@ -5,7 +5,7 @@ export function createRemoteArranger(project:ArrangementRequest['project']):Arra
   let response:Response;
   try{response=await fetch('/api/arrange',{
    method:'POST',headers:{'content-type':'application/json'},signal,
-   body:JSON.stringify({project,sourceTrackId:context.sourceTrackId,startTick:context.startTick,endTick:context.endTick,instruction:context.instruction})
+   body:JSON.stringify({project,sourceTrackId:context.sourceTrackId,startTick:context.startTick,endTick:context.endTick,instruction:context.instruction,plan:context.plan})
   });}catch{
    if(signal?.aborted)throw new Error('generation_cancelled');
    throw new Error('agent_api_unreachable');

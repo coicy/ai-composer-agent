@@ -82,6 +82,16 @@ describe('agent API',()=>{
   expect((await send({project,sourceTrackId:'missing',startTick:0,endTick:1920,instruction:'arrange'})).status).toBe(422);
   expect((await send({project,sourceTrackId:'melody',startTick:0,endTick:9000,instruction:'arrange'})).status).toBe(422);
  });
+ it('rejects malformed harmony plan at the HTTP boundary',async()=>{
+  const url=await launch({apiKey:'fake'});
+  const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'src',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
+  const response=await fetch(url+'/api/arrange',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
+   project:occupied,sourceTrackId:'melody',startTick:0,endTick:1920,instruction:'compose',
+   plan:{tonic:12,mode:'major',degrees:[1],registers:{},enforcement:{}}
+  })});
+  expect(response.status).toBe(422);
+  expect((await response.json()).error).toBe('invalid_plan_key');
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});
