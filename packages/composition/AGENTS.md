@@ -47,3 +47,8 @@ src/
 ## Scoped region regeneration
 - 局部变奏只更新目标已存在的轨道与明确范围；源旋律只读、其他声部不变。
 - 拒绝锁定轨道或音符、跨选区音符和模型未验证输出；在域层 dry-run 并通过工程 revision 进行最终检查。参见 docs/SCOPED_ARRANGEMENT_REGENERATION.md。
+
+## Project provenance & local variants
+- Region candidate bank derives 2–4 uint32 Seeds and validates every candidate before publishing any bank. Preview/cancel never writes project notes or provenance.
+- A persisted plan is reused only when an explicit approved history record matches source and target and completely covers the selected window. Parse/validate and slice to local chords; never guess a missing plan or infer an old plan from bare MIDI.
+- Generating/committing a candidate must atomically append a provenance record with the actual Seed and plan; avoid misleading assertions about remote model reproducibility. See docs/PROJECT_PROVENANCE.md.

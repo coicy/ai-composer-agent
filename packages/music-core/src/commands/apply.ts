@@ -1,5 +1,5 @@
 import type {ApplyResult,ChangeSet,MidiNote,MusicProject,MusicTrack} from '../model/types.js';
-import {validateNote,validateProject} from '../validation/notes.js';
+import {validateGenerationRecord,validateNote,validateProject} from '../validation/notes.js';
 export function applyChangeSet(project:MusicProject,changeSet:ChangeSet):ApplyResult{
  if(!validateProject(project))return {ok:false,reason:'invalid_project'};
  if(!changeSet||changeSet.baseRevision!==project.revision)return {ok:false,reason:'stale_revision'};
@@ -31,5 +31,12 @@ export function applyChangeSet(project:MusicProject,changeSet:ChangeSet):ApplyRe
   }
   tracks[idx]={...t,notes};
  }
- return {ok:true,project:{...project,revision:project.revision+1,tracks}};
+ const record=changeSet.generationRecord;
+ if(record&&(!validateGenerationRecord(record)||!tracks.some(t=>t.trackId===record.sourceTrackId)||
+  record.targetTrackIds.some(id=>!tracks.some(t=>t.trackId===id))||
+  (project.generationHistory??[]).length>=128||
+  (project.generationHistory??[]).some(r=>r.recordId===record.recordId)))
+  return {ok:false,reason:'invalid_generation_record'};
+ const history=record?[...(project.generationHistory??[]),{...record,targetTrackIds:[...record.targetTrackIds]}]:project.generationHistory;
+ return {ok:true,project:{...project,revision:project.revision+1,tracks,...(history?{generationHistory:history}:{})}};
 }

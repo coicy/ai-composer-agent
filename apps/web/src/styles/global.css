@@ -107,3 +107,10 @@ select{background:#1e293b;color:#e5e7eb;border:1px solid #475569;padding:9px;bor
 .scoped-review>p{font-size:12px;color:#a9c0d8}
 .region-ghost{position:absolute;pointer-events:none;z-index:3;height:22px;opacity:.8;
  border:1px dashed #83c5ff;background:#399bea8a;border-radius:3px}
+
+.scoped-variants{display:flex;align-items:center;flex-wrap:wrap;gap:8px;width:100%;
+ padding:11px;background:#0e2234;border:1px solid #567f9b;border-radius:7px}
+.scoped-variants>strong,.scoped-variants>p{width:100%}
+.scoped-variants>p{font-size:12px;color:#afc4d8}
+.scoped-variants button[aria-pressed="true"]{outline:2px solid #76c4ff}
+.scoped-no-plan{font-size:12px;color:#aebdd1}

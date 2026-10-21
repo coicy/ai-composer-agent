@@ -3,7 +3,7 @@ import {playProject} from '@ai-composer/audio-engine';
 import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes,tickToX,xToQuantizedTick,pitchToY,yToPitch,makeMoveOperations,makeVelocityOperations} from '@ai-composer/piano-roll';
 import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
-import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,proposeArrangementVariants,combineArrangementVariants,SeededArranger,proposeRegionRegeneration,ARRANGEMENT_ROLES,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel,chordEventLabel,effectiveChordEvents} from '@ai-composer/composition';
+import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,proposeArrangementVariants,combineArrangementVariants,SeededArranger,proposeRegionRegeneration,proposeRegionVariants,findReusableHarmonyPlan,ARRANGEMENT_ROLES,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel,chordEventLabel,effectiveChordEvents} from '@ai-composer/composition';
 import {createRemoteProvider} from '../features/agent/remote.js';
 import {createRemoteArranger} from '../features/agent/remote-arranger.js';
 import {ArrangementDiagnostics} from '../features/agent/ArrangementDiagnostics.js';
@@ -13,8 +13,8 @@ import {timelineFromDegrees} from '../features/agent/HarmonyPlanEditor.js';
 import {VelocityLane} from '../features/editor/VelocityLane.js';
 import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole,ArrangementRequest,ArrangementPartChoices,RegionRegenerationCandidate,RegionRegenerationRequest} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
-import {createSession,commitSession,undoSession,redoSession,applyChangeSet} from '@ai-composer/music-core';
-import type {EditSession,MidiNote,MusicProject,NoteOperation} from '@ai-composer/music-core';
+import {createSession,commitSession,undoSession,redoSession,applyChangeSet,validateProject} from '@ai-composer/music-core';
+import type {EditSession,MidiNote,MusicProject,NoteOperation,GenerationRecord} from '@ai-composer/music-core';
 const initial:MusicProject={projectId:'demo',revision:0,ppq:480,tracks:[{trackId:'melody',name:'主旋律',locked:false,notes:[]}]};
 const ROW=24,TOP_PITCH=127,BOTTOM_PITCH=0;
 type Gesture={noteId:string;kind:'move'|'resize';x:number;y:number;note:MidiNote;targets:readonly MidiNote[]};
@@ -54,6 +54,9 @@ export function App(){
  const [regionSeed,setRegionSeed]=useState(19501);
  const [regionInstruction,setRegionInstruction]=useState('保留其他声部，给选定声部在指定小节写一个新的动机变化。');
  const [regionCandidate,setRegionCandidate]=useState<RegionRegenerationCandidate|null>(null);
+ const [regionCandidates,setRegionCandidates]=useState<readonly RegionRegenerationCandidate[]>([]);
+ const [regionVariantCount,setRegionVariantCount]=useState(3);
+ const [reuseApprovedPlan,setReuseApprovedPlan]=useState(true);
  const [regionPending,setRegionPending]=useState(false);
  const regionRequest=useRef<AbortController|null>(null);
  const arrangeRequest=useRef<AbortController|null>(null);
@@ -81,17 +84,48 @@ export function App(){
  const regionSourceId=project.tracks.some(t=>t.trackId===regionSource)?regionSource:project.tracks[0]?.trackId??'';
  const regionTargets=project.tracks.filter(t=>t.trackId!==regionSourceId);
  const regionTargetId=regionTargets.some(t=>t.trackId===regionTarget)?regionTarget:regionTargets[0]?.trackId??'';
+ const proposedStart=(regionStartBar-1)*project.ppq*4;
+ const savedHarmonyPlan=Number.isSafeInteger(regionStartBar)&&Number.isSafeInteger(regionBars)&&regionStartBar>=1&&regionBars>=1&&regionBars<=4?
+  findReusableHarmonyPlan(project,regionSourceId,regionTargetId,proposedStart,proposedStart+regionBars*project.ppq*4):null;
  useEffect(()=>{
   regionRequest.current?.abort();
   regionRequest.current=null;
   setRegionPending(false);
   setRegionCandidate(null);
+  setRegionCandidates([]);
  },[project.revision]);
  const STEP=Math.max(1,Math.round(project.ppq/4));
  const viewport={ppq:project.ppq,pixelsPerQuarter:CELL,rowHeight:ROW,topPitch:TOP_PITCH};
  const xOf=(tick:number)=>tickToX(tick,viewport);
  const yOf=(pitch:number)=>pitchToY(pitch,viewport);
- async function loadMidi(file:File){try{stop();const imported=importMidi(new Uint8Array(await file.arrayBuffer()));setSession(createSession(imported));regionRequest.current?.abort();setRegionCandidate(null);setRegionSource(imported.tracks[0]!.trackId);setRegionTarget('');setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);activeRequest.current?.abort();arrangeRequest.current?.abort();setActiveTrack(imported.tracks[0]!.trackId);setSelected(null);setSelectedNoteIds([]);setMarquee(null);setError('');}catch(e){setError(e instanceof Error?e.message:'import_failed');}}
+ async function loadMidi(file:File){
+  try{
+   stop();
+   let imported:MusicProject;
+   if(file.name.toLowerCase().endsWith('.json')){
+    if(file.size>2*1024*1024)throw new Error('project_file_too_large');
+    const parsed=JSON.parse(await file.text()) as {format?:unknown;project?:unknown};
+    if(!parsed||parsed.format!=='ai-composer-project-v1'||!validateProject(parsed.project as MusicProject))
+     throw new Error('invalid_project_file');
+    imported=parsed.project as MusicProject;
+   }else imported=importMidi(new Uint8Array(await file.arrayBuffer()));
+   if(imported.tracks.length===0)throw new Error('invalid_project_file');
+   setSession(createSession(imported));regionRequest.current?.abort();setRegionCandidate(null);setRegionCandidates([]);
+   setRegionSource(imported.tracks[0]!.trackId);setRegionTarget('');
+   setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);
+   activeRequest.current?.abort();arrangeRequest.current?.abort();setActiveTrack(imported.tracks[0]!.trackId);
+   setSelected(null);setSelectedNoteIds([]);setMarquee(null);setError('');
+  }catch(e){setError(e instanceof Error?e.message:'import_failed');}
+ }
+ function downloadProject(){
+  try{
+   if(!validateProject(project))throw new Error('invalid_project');
+   const data=JSON.stringify({format:'ai-composer-project-v1',project},null,2);
+   const url=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+   const a=document.createElement('a');a.href=url;a.download='composition.aic.json';a.click();
+   setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(e){setError(e instanceof Error?e.message:'export_failed');}
+ }
  function downloadMidi(){try{const bytes=exportMidi(project);const copy=new Uint8Array(bytes.byteLength);copy.set(bytes);const url=URL.createObjectURL(new Blob([copy.buffer],{type:'audio/midi'}));const a=document.createElement('a');a.href=url;a.download='composition.mid';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){setError(e instanceof Error?e.message:'export_failed');}}
  function propose(){try{setArrangement(null);setCandidate(composeMelody({project:session.project,trackId,startBar:0,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'generation_failed');}}
  function proposeContinuation(){try{setArrangement(null);setCandidate(continueMelody({project:session.project,trackId,bars,style,seed}));setError('');}catch(e){setCandidate(null);setError(e instanceof Error?e.message:'continuation_failed');}}
@@ -198,7 +232,16 @@ export function App(){
  function approveMultiTrack(){
   if(!arrangement)return;
   const pending=arrangement;
-  const result=commitSession(session,pending.changes);
+  const record:GenerationRecord={
+   recordId:`gen-${project.revision}-${(project.generationHistory??[]).length}`,
+   kind:'three_track',sourceTrackId:pending.sourceTrackId,
+   targetTrackIds:pending.tracks.map(t=>t.trackId),
+   startTick:pending.startTick,endTick:pending.endTick,seed:pending.seed,
+   providerId:pending.providerId,instruction:arrangePrompt,
+   ...('roleSeeds' in pending?{seedsByRole:pending.roleSeeds as Record<string,number>} :{}),
+   ...(pending.plan?{planJson:JSON.stringify(pending.plan)}:{})
+  };
+  const result=commitSession(session,{...pending.changes,generationRecord:record});
   if(result.ok){
    stop();setSession(result.session);
    setActiveTrack(pending.tracks[0]!.trackId);
@@ -220,13 +263,17 @@ export function App(){
   regionRequest.current=null;
   setRegionPending(false);
   setRegionCandidate(null);
+  setRegionCandidates([]);
  }
- async function proposeScopedRegion(useModel:boolean){
+ async function proposeScopedRegion(useModel:boolean,multiple=false){
   if(!regionTargetId||regionTargetId===regionSourceId){setError('请先选择与参考旋律不同的目标轨道');return;}
   if(!Number.isSafeInteger(regionStartBar)||regionStartBar<1||regionStartBar>64||
      !Number.isSafeInteger(regionBars)||regionBars<1||regionBars>4){setError('局部重编范围必须是第 1–64 小节，长度 1–4 小节');return;}
   if(!Number.isSafeInteger(regionSeed)||regionSeed<0||regionSeed>0xffffffff){setError('局部重编种子必须是 0 至 4294967295 的整数');return;}
   if(!regionInstruction.trim()||regionInstruction.length>2000){setError('请填写不超过 2000 字的局部编配指令');return;}
+  if(multiple&&(!Number.isSafeInteger(regionVariantCount)||regionVariantCount<2||regionVariantCount>4)){
+   setError('局部候选数必须在 2–4 之间');return;
+  }
   invalidateRegion();
   const controller=new AbortController();regionRequest.current=controller;
   setRegionPending(true);setRegionCandidate(null);setCandidate(null);
@@ -236,13 +283,21 @@ export function App(){
   const request:RegionRegenerationRequest={
    project:snapshot,sourceTrackId:regionSourceId,targetTrackId:regionTargetId,targetRole:regionRole,
    startTick,endTick:startTick+regionBars*snapshot.ppq*4,
-   instruction:regionInstruction,seed:regionSeed
+   instruction:regionInstruction,seed:regionSeed,
+   ...(reuseApprovedPlan&&savedHarmonyPlan?{plan:savedHarmonyPlan.plan}:{})
   };
   try{
    const provider=useModel?createRemoteArranger(snapshot):new SeededArranger();
-   const proposal=await proposeRegionRegeneration(provider,request,controller.signal);
-   if(regionRequest.current!==controller||controller.signal.aborted)return;
-   setRegionCandidate(proposal);setActiveTrack(regionTargetId);
+   if(multiple){
+    const variants=await proposeRegionVariants(provider,request,regionVariantCount,controller.signal);
+    if(regionRequest.current!==controller||controller.signal.aborted)return;
+    setRegionCandidates(variants);setRegionCandidate(variants[0]!);
+   }else{
+    const proposal=await proposeRegionRegeneration(provider,request,controller.signal);
+    if(regionRequest.current!==controller||controller.signal.aborted)return;
+    setRegionCandidates([]);setRegionCandidate(proposal);
+   }
+   setActiveTrack(regionTargetId);
    setSelected(null);setSelectedNoteIds([]);setError('');
   }catch(e){if(!controller.signal.aborted&&regionRequest.current===controller)setError(e instanceof Error?e.message:'scoped_regeneration_failed');}
   finally{if(regionRequest.current===controller){regionRequest.current=null;setRegionPending(false);}}
@@ -251,7 +306,14 @@ export function App(){
   const pending=regionCandidate;
   if(!pending)return;
   if(pending.changes.baseRevision!==project.revision){invalidateRegion();setError('工程已变化，需要重新生成局部候选');return;}
-  const applied=commitSession(session,pending.changes);
+  const record:GenerationRecord={
+   recordId:`gen-${project.revision}-${(project.generationHistory??[]).length}`,
+   kind:'scoped',sourceTrackId:pending.sourceTrackId,targetTrackIds:[pending.targetTrackId],
+   startTick:pending.startTick,endTick:pending.endTick,seed:pending.seed,
+   providerId:pending.providerId,instruction:regionInstruction,
+   ...(pending.plan?{planJson:JSON.stringify(pending.plan)}:{})
+  };
+  const applied=commitSession(session,{...pending.changes,generationRecord:record});
   if(applied.ok){stop();setSession(applied.session);invalidateRegion();setError('');}
   else{invalidateRegion();setError(applied.reason);}
  }
@@ -373,8 +435,10 @@ export function App(){
    {selectedNoteIds.length>0&&<button onClick={()=>previewTranspose(12)}>所选 +12 半音预览</button>}
    {selectedNoteIds.length>0&&<button onClick={()=>previewTranspose(-12)}>所选 -12 半音预览</button>}
    <button onClick={()=>{const id=crypto.randomUUID();run({type:"add_track",track:{trackId:id,name:`Track ${project.tracks.length+1}`,locked:false,notes:[]}});setActiveTrack(id);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setSelected(null);setSelectedNoteIds([]);}}>+ 轨道</button>
-   <input ref={picker} type="file" accept=".mid,.midi,audio/midi" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)void loadMidi(f);e.target.value="";}}/>
-   <button onClick={()=>picker.current?.click()}>导入 MIDI</button><button onClick={downloadMidi}>导出 MIDI</button>
+   <input ref={picker} type="file" accept=".mid,.midi,.json,audio/midi,application/json" style={{display:"none"}} onChange={e=>{const f=e.target.files?.[0];if(f)void loadMidi(f);e.target.value="";}}/>
+   <button onClick={()=>picker.current?.click()}>导入 MIDI / 工程 JSON</button>
+   <button onClick={downloadMidi}>导出 MIDI</button>
+   <button onClick={downloadProject}>导出工程 JSON</button>
    <button onClick={()=>{const id=crypto.randomUUID();run({type:'add_note',trackId,note:{noteId:id,pitch:72,startTick:notes.length*480,durationTicks:480,velocity:90}});setSelected(id);}}>+ 添加音符</button>
    <button onClick={()=>{if(playing)stop();else void play();}}>{playing?'■ 停止':'▶ 试听'}</button>
    <button disabled={!session.past.length} onClick={()=>{setSession(s=>undoSession(s));setDraft({});setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setSelectedNoteIds([]);}}>撤销</button>
@@ -476,11 +540,26 @@ export function App(){
     onChange={e=>{setRegionSeed(Number(e.target.value));invalidateRegion();}}/></label>
    <textarea aria-label="局部重编指令" rows={2} maxLength={2000} value={regionInstruction}
     onChange={e=>{setRegionInstruction(e.target.value);invalidateRegion();}}/>
+   {savedHarmonyPlan?<label><input type="checkbox" checked={reuseApprovedPlan} onChange={e=>{setReuseApprovedPlan(e.target.checked);invalidateRegion();}}/>继承已批准和声规划（{savedHarmonyPlan.recordId}）</label>:
+    <span className="scoped-no-plan">当前参考旋律及目标范围没有可复用的已批准规划。</span>}
+   <label>候选数 <select aria-label="局部重编方案数" value={regionVariantCount}
+    onChange={e=>{setRegionVariantCount(Number(e.target.value));invalidateRegion();}}>
+    <option value={2}>2</option><option value={3}>3</option><option value={4}>4</option>
+   </select></label>
    <div className="scoped-actions">
+    <button disabled={regionPending||!regionTargetId||!regionInstruction.trim()} onClick={()=>void proposeScopedRegion(false,true)}>按种子生成局部多方案</button>
+    <button disabled={regionPending||!regionTargetId||!regionInstruction.trim()} onClick={()=>void proposeScopedRegion(true,true)}>AI 局部多方案</button>
     <button disabled={regionPending||!regionTargetId||!regionInstruction.trim()} onClick={()=>void proposeScopedRegion(false)}>按种子局部重编（离线）</button>
     <button disabled={regionPending||!regionTargetId||!regionInstruction.trim()} onClick={()=>void proposeScopedRegion(true)}>AI 局部重编</button>
     {regionPending&&<button onClick={invalidateRegion}>取消局部请求</button>}
    </div>
+   {regionCandidates.length>0&&<section className="scoped-variants" role="region" aria-label="局部重编方案比较">
+    <strong>局部候选比较：{regionCandidates.length} 个方案（尚未提交）</strong>
+    {regionCandidates.map((option,i)=><button type="button" key={option.seed} aria-pressed={regionCandidate===option}
+     onClick={()=>{setRegionCandidate(option);setError('');}}>
+     方案 {i+1} · Seed {option.seed} · {option.notes.length} 音符</button>)}
+    <p>切换候选可逐个试听；确认仅替换当前选定的候选与目标小节。</p>
+   </section>}
    {regionCandidate&&<div className="scoped-review" role="region" aria-label="局部重编候选">
     <strong>待确认：{regionCandidate.removedNotes.length} 个旧音符将替换为 {regionCandidate.notes.length} 个新音符，Seed {regionCandidate.seed}</strong>
     <p>只修改 {project.tracks.find(t=>t.trackId===regionCandidate.targetTrackId)?.name??'目标轨道'} 的第 {Math.floor(regionCandidate.startTick/(project.ppq*4))+1} 小节起指定范围。钢琴卷帘中蓝色为新音符，红色为待删除音符。</p>
