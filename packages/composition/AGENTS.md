@@ -43,3 +43,7 @@ src/
 - Provider model seeds are only variation guides; never claim deterministic reproduction for remote model outputs without a supported, measured guarantee.
 - Candidate role mixing must rebuild a fresh proposal and rerun *all* MIDI/harmony/source/revision checks. Never splice independently generated ChangeSets or bypass explicit preview and commit.
 - Preserve backwards compatibility with an omitted seed and legacy one-shot arrangement APIs. See docs/ARRANGEMENT_VARIANTS.md.
+
+## Scoped region regeneration
+- 局部变奏只更新目标已存在的轨道与明确范围；源旋律只读、其他声部不变。
+- 拒绝锁定轨道或音符、跨选区音符和模型未验证输出；在域层 dry-run 并通过工程 revision 进行最终检查。参见 docs/SCOPED_ARRANGEMENT_REGENERATION.md。
