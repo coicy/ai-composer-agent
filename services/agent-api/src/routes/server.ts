@@ -1,8 +1,9 @@
 import {createServer,type IncomingMessage,type ServerResponse} from 'node:http';
 import {validateProject} from '@ai-composer/music-core';
-import {proposeWithProvider} from '@ai-composer/composition';
-import type {CompositionRequest} from '@ai-composer/composition';
+import {proposeWithProvider,proposeArrangement,ARRANGEMENT_ROLES} from '@ai-composer/composition';
+import type {CompositionRequest,ArrangementRequest} from '@ai-composer/composition';
 import {createOpenAIProvider} from '../providers/openai.js';
+import {createOpenAIArranger} from '../providers/openai-arranger.js';
 const MAX_BODY=128*1024;
 function reply(res:ServerResponse,status:number,data:unknown){
  res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'});
@@ -24,8 +25,17 @@ function parseRequest(value:unknown):CompositionRequest{
  if(body.targetNoteIds!==undefined&&(!Array.isArray(body.targetNoteIds)||body.targetNoteIds.length>64||body.targetNoteIds.length===0||body.targetNoteIds.some(x=>typeof x!=='string'||!x)))throw new Error('invalid_note_selection');
  return {project:body.project as CompositionRequest['project'],trackId:body.trackId,startTick:body.startTick as number,endTick:body.endTick as number,instruction:body.instruction,mode:body.mode as 'append'|'replace'|undefined,editConstraint:body.editConstraint as 'pitch_only'|undefined,targetNoteIds:body.targetNoteIds as string[]|undefined,maxNotes:64};
 }
+function parseArrangementRequest(value:unknown):ArrangementRequest{
+ if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('invalid_request');
+ const body=value as Record<string,unknown>;
+ if(!body.project||typeof body.project!=='object'||Array.isArray(body.project)||!validateProject(body.project as ArrangementRequest['project']))throw new Error('invalid_project');
+ if(typeof body.sourceTrackId!=='string'||typeof body.instruction!=='string'||!Number.isSafeInteger(body.startTick)||!Number.isSafeInteger(body.endTick))throw new Error('invalid_request');
+ if(body.instruction.length>2000)throw new Error('invalid_instruction');
+ return {project:body.project as ArrangementRequest['project'],sourceTrackId:body.sourceTrackId,startTick:body.startTick as number,endTick:body.endTick as number,instruction:body.instruction};
+}
 type ProviderFactory=typeof createOpenAIProvider;
-export interface ServerOptions {apiKey?:string;model?:string;allowedOrigin?:string;providerFactory?:ProviderFactory}
+type ArrangerFactory=typeof createOpenAIArranger;
+export interface ServerOptions {apiKey?:string;model?:string;allowedOrigin?:string;providerFactory?:ProviderFactory;arrangerFactory?:ArrangerFactory}
 export function createAgentServer(options:ServerOptions={}){
  const allowedOrigin=options.allowedOrigin??'http://localhost:5173';
  const rates=new Map<string,{window:number,count:number}>();
@@ -33,7 +43,7 @@ export function createAgentServer(options:ServerOptions={}){
   const origin=req.headers.origin;
   if(origin&&origin!==allowedOrigin&&origin!=='http://127.0.0.1:5173'){reply(res,403,{error:'forbidden_origin'});return;}
   if(req.method==='GET'&&req.url==='/health'){reply(res,200,{ok:true,modelConfigured:!!options.apiKey});return;}
-  if(req.method!=='POST'||req.url!=='/api/compose'){reply(res,404,{error:'not_found'});return;}
+  if(req.method!=='POST'||(req.url!=='/api/compose'&&req.url!=='/api/arrange')){reply(res,404,{error:'not_found'});return;}
   if(!options.apiKey){reply(res,503,{error:'api_key_not_configured'});return;}
   const address=req.socket.remoteAddress??'local',now=Date.now(),prior=rates.get(address);
   const entry=(!prior||now-prior.window>60000)?{window:now,count:0}:prior;
@@ -42,14 +52,23 @@ export function createAgentServer(options:ServerOptions={}){
   const controller=new AbortController();
   res.on('close',()=>{if(!res.writableEnded)controller.abort();});
   try{
-   const request=parseRequest(await readBody(req));
-   const provider=(options.providerFactory??createOpenAIProvider)({apiKey:options.apiKey,model:options.model??'gpt-4.1-mini'});
-   const candidate=await proposeWithProvider(provider,request,controller.signal);
-   reply(res,200,{notes:candidate.notes.map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity}))});
+   const body=await readBody(req);
+   if(req.url==='/api/arrange'){
+    const request=parseArrangementRequest(body);
+    const provider=(options.arrangerFactory??createOpenAIArranger)({apiKey:options.apiKey,model:options.model??'gpt-4.1-mini'});
+    const candidate=await proposeArrangement(provider,request,controller.signal);
+    const tracks=candidate.tracks.map((t,i)=>({role:ARRANGEMENT_ROLES[i],notes:t.notes.map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity}))}));
+    reply(res,200,{tracks});
+   }else{
+    const request=parseRequest(body);
+    const provider=(options.providerFactory??createOpenAIProvider)({apiKey:options.apiKey,model:options.model??'gpt-4.1-mini'});
+    const candidate=await proposeWithProvider(provider,request,controller.signal);
+    reply(res,200,{notes:candidate.notes.map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity}))});
+   }
   }catch(e){
    if(res.destroyed)return;
    const reason=e instanceof Error?e.message:'internal_error';
-   const clientError=['invalid_request','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','rhythm_constraint_violated','no_pitch_changes'].includes(reason);
+   const clientError=['invalid_request','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','rhythm_constraint_violated','no_pitch_changes','invalid_arrangement_scope','source_track_not_found','empty_source_range','source_range_too_dense'].includes(reason);
    reply(res,clientError?422:502,{error:clientError?reason:'generation_failed'});
   }
  });
