@@ -1,6 +1,7 @@
 import type {MusicProject,ChangeSet,MidiNote} from '@ai-composer/music-core';
 
 export type CompositionMode = 'append' | 'replace';
+export type EditConstraint = 'pitch_only';
 export interface CompositionRequest {
  readonly project:MusicProject;
  readonly trackId:string;
@@ -8,6 +9,8 @@ export interface CompositionRequest {
  readonly endTick:number;
  readonly instruction:string;
  readonly mode?:CompositionMode;
+ /** Deterministically enforced, not merely an instruction to the model. */
+ readonly editConstraint?:EditConstraint;
  /** When replacing, only these stable note IDs may be removed; omitted means full tick-range replacement. */
  readonly targetNoteIds?:readonly string[];
  readonly maxNotes?:number;
@@ -18,6 +21,7 @@ export interface ProviderContext {
  readonly endTick:number;
  readonly ppq:number;
  readonly mode:CompositionMode;
+ readonly editConstraint?:EditConstraint;
  readonly targetNoteIds?:readonly string[];
  readonly existingNotes:readonly MidiNote[];
  readonly targetNotes:readonly MidiNote[];
