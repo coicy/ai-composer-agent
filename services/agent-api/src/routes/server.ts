@@ -75,7 +75,7 @@ export function createAgentServer(options:ServerOptions={}){
   }catch(e){
    if(res.destroyed)return;
    const reason=e instanceof Error?e.message:'internal_error';
-   const clientError=['invalid_request','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','rhythm_constraint_violated','no_pitch_changes','invalid_arrangement_scope','source_track_not_found','empty_source_range','source_range_too_dense','invalid_harmony_plan','invalid_plan_key','invalid_plan_progression','invalid_plan_register','invalid_plan_enforcement','plan_requires_whole_bars'].includes(reason);
+   const clientError=['invalid_request','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','rhythm_constraint_violated','no_pitch_changes','invalid_arrangement_scope','source_track_not_found','empty_source_range','source_range_too_dense','invalid_harmony_plan','invalid_plan_key','invalid_plan_progression','invalid_plan_register','invalid_plan_enforcement','plan_requires_whole_bars'].includes(reason) || /^plan_(scale|chords|registers)_violation:(harmony|bass|accompaniment)$/.test(reason);
    reply(res,clientError?422:502,{error:clientError?reason:'generation_failed'});
   }
  });

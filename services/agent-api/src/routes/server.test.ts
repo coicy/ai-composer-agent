@@ -92,6 +92,20 @@ describe('agent API',()=>{
   expect(response.status).toBe(422);
   expect((await response.json()).error).toBe('invalid_plan_key');
  });
+ it('reports a hard harmony planning violation without disclosing provider data',async()=>{
+  const src={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'melody-note',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
+  const plan={tonic:0,mode:'major',degrees:[1],registers:{harmony:{minPitch:55,maxPitch:88},bass:{minPitch:28,maxPitch:60},accompaniment:{minPitch:42,maxPitch:84}},enforcement:{scale:'hard',chords:'hard',registers:'hard'}};
+  const factory=()=>({id:'mock',async generate(){return {tracks:[
+   {role:'harmony',notes:[{pitch:61,startTick:0,durationTicks:480,velocity:85}]},
+   {role:'bass',notes:[{pitch:36,startTick:0,durationTicks:480,velocity:85}]},
+   {role:'accompaniment',notes:[{pitch:55,startTick:0,durationTicks:480,velocity:85}]}
+  ]};}});
+  const url=await launch({apiKey:'test',arrangerFactory:factory});
+  const response=await fetch(url+'/api/arrange',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({project:src,sourceTrackId:'melody',startTick:0,endTick:1920,instruction:'compose',plan})});
+  expect(response.status).toBe(422);
+  expect(await response.json()).toEqual({error:'plan_scale_violation:harmony'});
+  expect(src.tracks).toHaveLength(1);
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});

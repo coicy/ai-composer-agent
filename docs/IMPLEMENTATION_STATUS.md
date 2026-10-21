@@ -33,3 +33,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Arrangement candidates now include deterministic nonblocking diagnostics (simultaneous tension, bass register, voice crossing, large melodic leaps) rather than a misleading absolute musical-quality score.
 - The provider receives advisory context; the web review shows evidence and warnings, and it still requires approval. See docs/ARRANGEMENT_DIAGNOSTICS.md.
 - Needs grounded listening-based evaluation on a corpus; algorithmic checks do not validate musical creativity.
+
+## Harmony planning (hard vs advisory)
+- Introduced a user-authored `HarmonyPlan` with tonic/major-or-natural-minor, one diatonic triad degree per 4/4 bar, role-specific MIDI registers and independent hard/soft policies for scale, chord membership and register.
+- Server and browser validate the plan before provider calls and deterministically check returned notes, including sustain across chord boundaries. Hard violations reject entire candidates; soft deviations only surface role-scoped counts.
+- The model adapter receives the explicit plan in addition to separately marked uncertain source-key hypotheses. Offline arranger respects strict constraints for demonstration.
+- Browser plan inputs, audit review, mocked remote rejection, and a source-preserving atomic three-track commit are covered by tests. See docs/HARMONY_PLANNING.md.

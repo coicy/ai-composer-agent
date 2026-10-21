@@ -25,3 +25,9 @@ src/
 - `analysis/tonality.ts` 只计算 pitch-class 假设，明确不足或歧义；不可输出“已证实调性”。
 - `evaluation/arrangement.ts` 的检查仅为软诊断，不可绕过 Music Core 或作为无授权的修复/拒绝原因。
 - 必须保留统计证据、计数与免责声明；没有经过听评/人工标注的数据，不得报出“音乐质量分数”或宣称行业级准确率。见 docs/ARRANGEMENT_DIAGNOSTICS.md。
+
+## 可控 HarmonyPlan（v0.1）
+- 用户显式的 tonic/mode/degrees/registers 和三个独立 enforcement 策略才是编配规划权威；不能将 `tonalProfile` 推测默认升级为强制音阶。
+- `hard` 必须校验所有新增轨道音符（包括跨小节延音），任何违规立即拒绝整个候选，绝不静默降级或自动修复。
+- `soft` 只生成含明确计数的 PlanFinding，不禁止音乐性合理的外音与非典型声部布局。
+- HarmonyPlan 仍必须作为单次三轨原子操作预览、显式用户批准和 revision 检查；参考 docs/HARMONY_PLANNING.md。
