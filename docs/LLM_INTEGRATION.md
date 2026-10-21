@@ -18,3 +18,7 @@ No live key/model call occurs in CI (a fake fetcher tests the API adapter). No a
 
 ## Limitations
 No authentication for Internet hosting, no persistence, no project tempo/meter map, no model feedback loop, no structured instrument control, no harmony generation, no note deletion from model output, and no guarantee that model melodies are musically compelling.
+
+## Rewriting an existing phrase
+
+Choose **重写指定小节** in the Agent panel, set the first bar (1-based) and number of bars (1–4), and provide a musical instruction. The model sees the selected passage and nearby context; newly proposed notes show as blue ghosts while notes that would be removed show red. If any existing note straddles the selection or is locked, the operation is rejected before the API call. Click 确认应用 to atomically apply the verified change or 取消 to retain the original. Choose 轨道末尾续写 to append without deletions. This operates on one MIDI track and fixed 4/4 bar mapping in the current prototype.
