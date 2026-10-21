@@ -20,3 +20,5 @@ export {effectiveChordEvents,chordAtBeat,chordPitchClassesAtBeat,chordEventLabel
 export type {ChordEvent} from './planning/harmony-plan.js';
 export {deriveArrangementSeed,proposeArrangementVariants,combineArrangementVariants,MAX_ARRANGEMENT_VARIANTS} from './arrangement/variants.js';
 export type {ArrangementPartChoices,MixedArrangementCandidate} from './arrangement/variants.js';
+export {proposeRegionRegeneration} from './arrangement/regenerate-region.js';
+export type {RegionRegenerationRequest,RegionRegenerationCandidate} from './arrangement/regenerate-region.js';

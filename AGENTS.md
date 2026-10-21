@@ -56,3 +56,8 @@ tests/                 # 跨包集成、契约及端到端测试
 变更前阅读根文件、目标目录 `AGENTS.md`、相关 docs；大变更写目标/范围/风险/验证方案。优先 M0→M1→M2→M3→M4 的薄切片。为边界、并发 revision、锁、幂等、rollback、undo/redo、序列化和 MIDI 往返写测试；音乐审美须另行人工试听，不可用静态规则冒充审美保证。
 
 提交采用 conventional commits；PR 说明产品影响、依赖变化、真实运行测试和未验证事项。未经用户同意不添加许可证、不擅自引入五线谱、DAW 插件、VST、音频转录及多人协同。
+
+## CI 与分支保护开发流程
+- 不再向 `main` 提交未经验证的中间实现。先从 `main` 建功能分支，以 PR 的 `check`、`e2e` 两项绿灯作为合并门槛。任一失败时修复 PR 分支，禁止绕过检查。
+- 仅在 CI 真正显示 completed/success 后称为通过；不得用仅有 Job 完成、workflow 尚在进行的状态宣称完全通过。
+- 详细步骤与无法本地运行的降级路径见 docs/DEVELOPMENT.md。GitHub Ruleset/branch protection 仍需管理员单独配置，流程文档并不自动强制仓库权限。

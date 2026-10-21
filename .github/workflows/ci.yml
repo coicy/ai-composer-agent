@@ -1,7 +1,19 @@
 name: CI
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+
+# Only the newest run for a PR (or main) should consume CI capacity.
+# This does not conceal real failures; completed failed checks remain visible.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
