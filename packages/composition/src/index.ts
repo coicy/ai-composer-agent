@@ -10,3 +10,7 @@ export type {TransposeCandidate} from './transformations/transpose.js';
 export {proposeArrangement,ARRANGEMENT_ROLES} from './arrangement/arrange.js';
 export type {ArrangementRole,ArrangementRequest,ArrangementContext,ArrangementProvider,ArrangementCandidate} from './arrangement/arrange.js';
 export {SeededArranger} from './arrangement/seeded-arranger.js';
+export {analyzeTonality,suggestChords} from './analysis/tonality.js';
+export type {KeyHypothesis,TonalProfile,ChordSuggestion,ScaleMode} from './analysis/tonality.js';
+export {evaluateArrangement} from './evaluation/arrangement.js';
+export type {ArrangementFinding,ArrangementAssessment,ArrangementMetrics} from './evaluation/arrangement.js';
