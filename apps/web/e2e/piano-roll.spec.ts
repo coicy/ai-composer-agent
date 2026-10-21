@@ -8,11 +8,14 @@ test('edit a note, change zoom, edit velocity, and undo in the browser',async({p
  await expect(note).toBeVisible();
  await expect(page.getByText(/revision 1 · 1 notes/)).toBeVisible();
  const leftBefore=await note.evaluate(e=>(e as HTMLElement).style.left);
+ const widthBefore=await note.evaluate(e=>(e as HTMLElement).style.width);
  await page.getByRole('combobox',{name:'水平缩放'}).selectOption('120');
  await expect(note).toHaveCSS('left','0px');
  expect(await note.evaluate(e=>(e as HTMLElement).style.left)).toBe(leftBefore);
+ expect(await note.evaluate(e=>(e as HTMLElement).style.width)).not.toBe(widthBefore);
  const bar=page.getByRole('slider',{name:/音符力度/}).first();
  await expect(bar).toHaveAttribute('aria-valuenow','90');
+ await bar.scrollIntoViewIfNeeded();
  const box=await bar.boundingBox();if(!box)throw new Error('no velocity bar');
  await page.mouse.move(box.x+box.width/2,box.y+2);
  await page.mouse.down();
@@ -30,6 +33,7 @@ test('marquee selection, one-transaction batch movement, undo and zoom',async({p
  await page.getByRole('button',{name:'+ 添加音符'}).click();
  const notes=page.locator('.note');
  await expect(notes).toHaveCount(2);
+ await notes.nth(0).scrollIntoViewIfNeeded();
  const first=await notes.nth(0).boundingBox(),second=await notes.nth(1).boundingBox();
  if(!first||!second)throw new Error('notes are outside visible scroll region');
  await page.getByRole('button',{name:'框选音符'}).click();
