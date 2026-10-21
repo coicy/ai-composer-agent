@@ -388,3 +388,13 @@ test('invalid project JSON is rejected and leaves existing MIDI unchanged',async
  await expect(page.getByRole('alert')).toContainText('invalid_project_file');
  await expect(page.locator('.note')).toHaveCount(1);
 });
+
+test('empty but structurally valid project JSON does not replace existing composition',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.locator('input[type=file]').setInputFiles({name:'empty.aic.json',mimeType:'application/json',
+  buffer:Buffer.from(JSON.stringify({format:'ai-composer-project-v1',project:{projectId:'empty',revision:0,ppq:480,tracks:[]}}))});
+ await expect(page.getByRole('alert')).toContainText('invalid_project_file');
+ await expect(page.locator('.note')).toHaveCount(1);
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(1);
+});

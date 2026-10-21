@@ -109,6 +109,7 @@ export function App(){
      throw new Error('invalid_project_file');
     imported=parsed.project as MusicProject;
    }else imported=importMidi(new Uint8Array(await file.arrayBuffer()));
+   if(imported.tracks.length===0)throw new Error('invalid_project_file');
    setSession(createSession(imported));regionRequest.current?.abort();setRegionCandidate(null);setRegionCandidates([]);
    setRegionSource(imported.tracks[0]!.trackId);setRegionTarget('');
    setCandidate(null);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);
