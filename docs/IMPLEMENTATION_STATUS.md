@@ -105,3 +105,8 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Review UI maps approved ordinals to actual stable IDs in chronological note order; existing manual protections are retained. All-protected proposals and ambiguous identical-note cases are blocked.
 - Offline parser, strict remote feedback schema, API validation and browser tests cover requested note ordinals, stale/invalid AI suggestions and protected MIDI persistence. Applying a draft never writes project edits.
 - See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
+
+## Objective candidate A/B difference report
+- Each scoped Seed candidate exposes a read-only evidence panel with added/removed notes, precise original-ID pitch changes, absolute pitch-shift magnitude and before/after maximum non-overlapping melodic leaps.
+- Pitch shifts are explicitly unavailable for fully replaced note IDs; reports never invent a best variant or an aesthetic quality score. Only selected-window note relationships are included in this diagnostic.
+- The comparison runs a Music Core ChangeSet dry-run, rejects stale revisions and target-scope violations, does not mutate the project, and is covered by unit and Chromium E2E tests. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.

@@ -121,3 +121,13 @@ The `POST /api/feedback` model receives only the user feedback string and a boun
 The UI displays the numbered notes with starting ticks and MIDI pitches for review. Only when the user presses **确认并应用建议约束** are the suggested ordinals resolved to stable IDs from the **current** project snapshot. Those IDs are combined with any existing manual protections; any all-protected or ambiguous-coincident-note proposal is rejected rather than silently overridden. A new model call or edited scope invalidates the old draft; approval copies the proposed protection to the editing controls but **does not generate or commit MIDI**.
 
 Actual scoped pitch-only generation still applies the independent `protectedNoteIds` and hard music-plan checks on server and client, and records approved ID protections in project provenance. These changes do not make vague stylistic instructions executable, nor do they enable arbitrary model access to the MusicProject.
+
+## Factual A/B comparisons for scoped Seed candidates
+
+A pure function `compareRegionCandidate(project,candidate)` now evaluates the candidate's **existing, validated Music Core ChangeSet** as a dry-run. It reports selected-window original/proposed MIDI note counts; added/removed stable note IDs; changed pitches for IDs existing on both sides; absolute pitch-change mean and maximum **only for identically identified notes**; and maximum leap between adjacent nonoverlapping notes before and after the proposed edit.
+
+It does not mutate the project, save an assessment, call a model, change candidate order, or infer musical quality. Stale revisions, out-of-target operations and invalid ChangeSets are rejected before a comparison is presented.
+
+In pitch-only revisions the preserved IDs allow precise semitone-shift comparisons. In full replacement, old note IDs are deleted and new IDs allocated, so there is **no justified pairing** and pitch-shift statistics show “不可按原 ID 对比”. Max-leap statistics use only notes fully within the selected window, with adjacent overlapped note pairs excluded; they do **not** include boundary notes here, unlike the strict maxLeap editing guard.
+
+The browser now shows compact objective metrics for every candidate in the 2–4 Seed bank, plus a detailed report for the selected candidate. Audition and explicit commit retain their existing behavior. No automatic scoring/ranking is added, because minimizing pitch change or leaps is not a general measure of musical quality.

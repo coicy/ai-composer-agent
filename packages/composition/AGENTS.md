@@ -87,3 +87,8 @@ src/
 - A natural-language interpreter may propose bounded 1-based `protectedNoteOrdinals`, never stable MIDI IDs. Zero-based or guessed indexes are not acceptable.
 - Users must explicitly approve before mapping positions to IDs; never mutate project or regenerate MIDI while merely interpreting feedback.
 - Reject duplicate, out-of-range, all-protected or ambiguous protected-note suggestions. Preserve manual protections and apply existing scoped pitch-only validation.
+
+## Read-only scoped candidate comparison
+- `compareRegionCandidate` computes evidence only after Music Core dry-run, never applies a commit and never selects/reorders candidates automatically.
+- Pitch-change distances require the *same stable note ID* before and after; when a track region has been rebuilt with new IDs, report null instead of guessing note correspondences.
+- Adjacent melodic-leap metrics here use nonoverlapping notes inside the selected window only; they are descriptive, distinct from hard guard evaluation at boundaries. Do not infer aesthetics/quality scores.

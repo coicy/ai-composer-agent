@@ -31,3 +31,5 @@ export {proposeSingleRole} from './arrangement/single-role.js';
 export type {SingleRoleProposal} from './arrangement/single-role.js';
 export {interpretFeedbackRules,validateFeedbackInput,validateFeedbackInterpretation,hasActionableFeedback} from './feedback/feedback.js';
 export type {FeedbackInterpretation} from './feedback/feedback.js';
+export {compareRegionCandidate} from './arrangement/compare-region.js';
+export type {RegionCandidateComparison} from './arrangement/compare-region.js';

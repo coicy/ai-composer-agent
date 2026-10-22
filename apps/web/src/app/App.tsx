@@ -8,6 +8,7 @@ import {createRemoteProvider} from '../features/agent/remote.js';
 import {createRemoteArranger} from '../features/agent/remote-arranger.js';
 import {requestRemoteFeedback} from '../features/agent/remote-feedback.js';
 import {ArrangementDiagnostics} from '../features/agent/ArrangementDiagnostics.js';
+import {RegionCandidateMetrics} from '../features/agent/RegionCandidateMetrics.js';
 import {HarmonyPlanEditor} from '../features/agent/HarmonyPlanEditor.js';
 import type {HarmonyPlanDraft} from '../features/agent/HarmonyPlanEditor.js';
 import {timelineFromDegrees} from '../features/agent/HarmonyPlanEditor.js';
@@ -719,10 +720,12 @@ export function App(){
     <strong>局部候选比较：{regionCandidates.length} 个方案（尚未提交）</strong>
     {regionCandidates.map((option,i)=><button type="button" key={option.seed} aria-pressed={regionCandidate===option}
      onClick={()=>{setRegionCandidate(option);setError('');}}>
-     方案 {i+1} · Seed {option.seed} · {option.notes.length} 音符</button>)}
+     方案 {i+1} · Seed {option.seed} · {option.notes.length} 音符
+     <RegionCandidateMetrics project={project} candidate={option} compact/></button>)}
     <p>切换候选可逐个试听；确认仅替换当前选定的候选与目标小节。</p>
    </section>}
    {regionCandidate&&<div className="scoped-review" role="region" aria-label="局部重编候选">
+    <RegionCandidateMetrics project={project} candidate={regionCandidate}/>
     <strong>{regionCandidate.editConstraint==='pitch_only'
      ?`待确认：仅更新 ${regionCandidate.changes.operations.length} 个音高，保留 ${regionCandidate.notes.length} 个音符的节奏、力度与 ID，Seed ${regionCandidate.seed}`
      :`待确认：${regionCandidate.removedNotes.length} 个旧音符将替换为 ${regionCandidate.notes.length} 个新音符，Seed ${regionCandidate.seed}`}</strong>
