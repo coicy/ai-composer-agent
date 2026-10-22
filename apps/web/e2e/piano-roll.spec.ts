@@ -877,5 +877,5 @@ test('an all-invalid scoped AI batch reports failed seeds with no commit action'
  await expect(page.getByRole('region',{name:'局部重编方案比较'})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'确认局部替换'})).toHaveCount(0);
  await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
- await page.getByRole('button',{name:'取消局部请求'}).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'取消局部请求'})).toHaveCount(0);
 });
