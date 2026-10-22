@@ -89,3 +89,13 @@ The offline `SeededArranger` preserves the selected prefix and samples determini
 Approved JSON project provenance can store `protectedPrefixCount` and `maxLeapSemitones` together with the `pitch_only` editing mode, and undo reverts both the notes and their generation record.
 
 **Scope limitation:** "keep the opening" here means a count of chronological notes in one continuous 1–4-bar target window, not an arbitrary set of note IDs or a form/phrase recognition model. "Reduce jumps" is specifically the numeric leap bound, not an AI claim of improved musical taste. More expressive feedback-to-constraint interpretation remains future work.
+
+## Feedback interpreter with explicit human approval
+
+The scoped editor now offers a separate **音乐反馈解释器**. Feedback is not a command to edit a MIDI project. An offline rules-only parser supports explicit phrases such as “保留前三个音” and “跳进不超过五个半音”; natural-language emotion words do not silently introduce a hard numeric musical threshold.
+
+Optionally, a local agent API at `POST /api/feedback` uses OpenAI Responses Structured Outputs to suggest only `{pitchOnly,protectedPrefixCount,maxLeapSemitones,explanation,unresolved}`. It sends **only feedback text and the number of target notes**, never the MIDI project or target IDs. Provider JSON is untrusted and independently checked by the service and client for exact keys, correct types, bounds and consistency. Calls are size limited, subject to local API origin/rate/key controls, and do not mutate anything.
+
+Both interpretations produce a review UI that lists the proposed editing mode, numerical constraints and unresolved ambiguity. The user must deliberately select **确认并应用建议约束** to copy suggestions into the existing controls, or **仅填入创作指令（不改约束）** to use subjective wording as a soft composition instruction. The first button is disabled when no actionable constraint was identified. Neither button creates notes or commits a project edit. Applying a draft invalidates outstanding scoped candidates; changing the feedback, project revision, edit target or time window makes prior suggestions stale.
+
+This is a bounded draft interpreter, **not full conversational music cognition**. “Better harmony”, “more tension”, etc. remain stylistic guidance without deterministic authorization. Model suggestions may be wrong; a reviewer can edit numeric values before generation, and all established pitch-only, note-lock, score-scope and plan checks still apply at final proposal and commit.
