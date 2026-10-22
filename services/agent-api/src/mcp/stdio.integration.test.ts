@@ -189,6 +189,122 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   expect(value(await tool('music.list_tracks',{sessionId:openedSession}))).toMatchObject({revision:7});
   passed('LLM candidate / Music Core dry-run / no unapproved write');
  });
+
+ it('validates a four-note C-major melody continuation without changing the snapshot',async()=>{
+  // Synthetic "external Agent" JSON. No LLM invocation occurs inside the MCP server.
+  // PPQ=480: source C4 E4 G4 E4; proposed continuation D4 F4 A4 G4.
+  const source=[60,64,67,64].map((pitch,i)=>({
+   noteId:'original-'+i,pitch,startTick:i*480,durationTicks:480,velocity:84+i
+  }));
+  const continuation=[62,65,69,67].map((pitch,i)=>({
+   pitch,startTick:1920+i*480,durationTicks:480,velocity:88+i
+  }));
+  const input:MusicProject={
+   projectId:'candidate-melody-c-major',revision:14,ppq:480,
+   tracks:[
+    {trackId:'lead',name:'C-major melody',locked:false,notes:source},
+    {trackId:'do-not-edit',name:'Locked harmony',locked:true,notes:[{
+     noteId:'protected',pitch:48,startTick:0,durationTicks:1920,velocity:75,locked:true
+    }]}
+   ]
+  };
+  const id=await open(input);
+  const base={sessionId:id,trackId:'lead',baseRevision:14,notes:continuation};
+  const context=value(await tool('music.inspect_notes',{
+   sessionId:id,trackId:'lead',startTick:0,endTick:1920
+  }));
+  expect(context.notes).toEqual(source);
+  const instruction=value(await tool('music.propose_midi',{
+   sessionId:id,trackId:'lead',startTick:1920,endTick:3840,
+   instruction:'Use a general-purpose LLM to continue the C-major motif for four beats',
+   mode:'append'
+  }));
+  expect(instruction).toMatchObject({
+   baseRevision:14,trackId:'lead',startTick:1920,endTick:3840,
+   mode:'append',notes:[]
+  });
+  const accepted=value(await tool('music.submit_candidate',base));
+  expect(accepted).toMatchObject({
+   projectId:'candidate-melody-c-major',baseRevision:14,trackId:'lead',
+   previewRevision:15,approved:false,applied:false
+  });
+  expect(accepted.notes).toEqual(continuation.map((note,i)=>({noteId:'mcp-preview-'+i,...note})));
+  expect((accepted.notes as {pitch:number;startTick:number;durationTicks:number}[]).map(n=>n.pitch)).toEqual([62,65,69,67]);
+  const repeated=value(await tool('music.submit_candidate',base));
+  expect(repeated.notes).toEqual(accepted.notes);
+  expect(repeated.applied).toBe(false);
+  const unchanged=value(await tool('music.inspect_notes',{
+   sessionId:id,trackId:'lead',startTick:0,endTick:3840
+  }));
+  expect(unchanged.notes).toEqual(source);
+  const locked=value(await tool('music.inspect_notes',{
+   sessionId:id,trackId:'do-not-edit',startTick:0,endTick:3840
+  }));
+  expect(locked.notes).toEqual(input.tracks[1]?.notes);
+  expect(value(await tool('music.list_tracks',{sessionId:id}))).toMatchObject({
+   revision:14,tracks:[
+    {trackId:'lead',locked:false,noteCount:4},
+    {trackId:'do-not-edit',locked:true,noteCount:1}
+   ]
+  });
+  expect(input.revision).toBe(14);
+  expect(input.tracks[0]?.notes).toEqual(source);
+  expect(value(await tool('music.close_snapshot',{sessionId:id}))).toEqual({closed:true});
+  passed('4-note C-major continuation / repeated dry-run / source and locked harmony intact');
+ });
+ it('returns explicit rejection errors for illegal externally supplied MIDI notes',async()=>{
+  const id=await open({...project,projectId:'midi-negative-matrix',revision:22});
+  const base={sessionId:id,trackId:'melody',baseRevision:22};
+  const good={pitch:60,startTick:480,durationTicks:480,velocity:90};
+  const badCases:{name:string;notes:unknown;expected:string}[]=[
+   {name:'negative pitch',notes:[{...good,pitch:-1}],expected:'invalid_integer'},
+   {name:'pitch above 127',notes:[{...good,pitch:128}],expected:'invalid_note'},
+   {name:'fractional pitch',notes:[{...good,pitch:60.5}],expected:'invalid_integer'},
+   {name:'negative start tick',notes:[{...good,startTick:-10}],expected:'invalid_integer'},
+   {name:'fractional start tick',notes:[{...good,startTick:480.5}],expected:'invalid_integer'},
+   {name:'zero duration',notes:[{...good,durationTicks:0}],expected:'invalid_note'},
+   {name:'negative duration',notes:[{...good,durationTicks:-480}],expected:'invalid_integer'},
+   {name:'zero velocity',notes:[{...good,velocity:0}],expected:'invalid_note'},
+   {name:'velocity above 127',notes:[{...good,velocity:128}],expected:'invalid_note'},
+   {name:'missing velocity',notes:[{pitch:60,startTick:480,durationTicks:480}],expected:'invalid_integer'},
+   {name:'unexpected locked field',notes:[{...good,locked:true}],expected:'unexpected_note_field'},
+   {name:'note after 256-bar safety window',notes:[{...good,startTick:480*4*256}],expected:'invalid_note'},
+   {name:'empty candidate',notes:[],expected:'empty_candidate'},
+   {name:'more than 64 notes',notes:Array.from({length:65},(_,i)=>({...good,startTick:480+i*480})),expected:'invalid_notes'}
+  ];
+  for(const item of badCases){
+   const returned=toolError(await tool('music.submit_candidate',{...base,notes:item.notes}));
+   expect(returned,item.name).toBe(item.expected);
+  }
+  const max64=Array.from({length:64},(_,i)=>({...good,startTick:480+i*480}));
+  const accepted=value(await tool('music.submit_candidate',{...base,notes:max64}));
+  expect((accepted.notes as unknown[])).toHaveLength(64);
+  expect(accepted).toMatchObject({baseRevision:22,previewRevision:23,approved:false,applied:false});
+  expect(value(await tool('music.list_tracks',{sessionId:id}))).toMatchObject({revision:22});
+  expect(value(await tool('music.inspect_notes',{
+   sessionId:id,trackId:'melody',startTick:0,endTick:480*80
+  })).notes).toEqual([sourceNote]);
+  expect(value(await tool('music.close_snapshot',{sessionId:id}))).toEqual({closed:true});
+  passed('14 malformed MIDI cases rejected / maximum 64-note candidate dry-run / revision unchanged');
+ });
+ it('denies locked-track, wrong-revision and revoked-session candidate submissions',async()=>{
+  const id=await open({...project,projectId:'candidate-authorization',revision:31});
+  const note={pitch:72,startTick:480,durationTicks:480,velocity:80};
+  const args={sessionId:id,trackId:'melody',baseRevision:31,notes:[note]};
+  expect(toolError(await tool('music.submit_candidate',{...args,trackId:'locked'}))).toBe('locked_track');
+  expect(toolError(await tool('music.submit_candidate',{...args,baseRevision:30}))).toBe('stale_revision');
+  expect(toolError(await tool('music.submit_candidate',{...args,baseRevision:32}))).toBe('stale_revision');
+  expect(toolError(await tool('music.submit_candidate',{...args,trackId:'absent'}))).toBe('track_not_found');
+  const unrelated=await open({...project,projectId:'different-project',revision:99});
+  expect(toolError(await tool('music.submit_candidate',{...args,sessionId:unrelated}))).toBe('stale_revision');
+  const okay=value(await tool('music.submit_candidate',args));
+  expect(okay).toMatchObject({baseRevision:31,previewRevision:32,approved:false,applied:false});
+  expect(value(await tool('music.list_tracks',{sessionId:id}))).toMatchObject({revision:31});
+  expect(value(await tool('music.close_snapshot',{sessionId:id}))).toEqual({closed:true});
+  expect(toolError(await tool('music.submit_candidate',args))).toBe('session_not_found');
+  expect(value(await tool('music.close_snapshot',{sessionId:unrelated}))).toEqual({closed:true});
+  passed('locked track / stale revisions / wrong project session / revoked session');
+ });
  it('rejects locked tracks, stale revisions, malformed MIDI and invalid scope',async()=>{
   const base={sessionId:openedSession,trackId:'melody',baseRevision:7,notes:submitted};
   expect(toolError(await tool('music.submit_candidate',{...base,baseRevision:8}))).toBe('stale_revision');
