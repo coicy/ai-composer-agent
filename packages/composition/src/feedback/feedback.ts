@@ -47,8 +47,8 @@ export function validateFeedbackInterpretation(value:unknown,noteCount:number):F
   prefix>16||prefix>=noteCount))throw new Error('invalid_feedback_interpretation');
  if(leap!==null&&(typeof leap!=='number'||!Number.isSafeInteger(leap)||leap<1||leap>24))
   throw new Error('invalid_feedback_interpretation');
- if(Array.isArray(ordinals)&&prefix!==null&&
-  new Set([...Array.from({length:prefix},(_,i)=>i+1),...ordinals]).size>=noteCount)
+ if(Array.isArray(ordinals)&&ordinals.length>0&&
+  new Set([...Array.from({length:prefix??0},(_,i)=>i+1),...ordinals]).size>=noteCount)
   throw new Error('invalid_feedback_interpretation');
  if(!value.pitchOnly&&(prefix!==null||leap!==null||(ordinals!==undefined&&ordinals.length>0)))throw new Error('invalid_feedback_interpretation');
  return {pitchOnly:value.pitchOnly,protectedPrefixCount:prefix as number|null,
