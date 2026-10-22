@@ -640,7 +640,7 @@ test('arbitrary note protection changes other pitches while preserving selected 
  };
  const before=await snapshot();
  const origin=before.tracks.find((t:{name:string})=>t.name==='AI 和声').notes;
- expect(origin).toHaveLength(2);
+ expect(origin).toHaveLength(8);
  await page.getByRole('checkbox',{name:'局部重编仅改音高'}).check();
  const protector=page.getByRole('group',{name:'指定保护音符'});
  await expect(protector.getByRole('checkbox')).toHaveCount(2);
@@ -653,6 +653,7 @@ test('arbitrary note protection changes other pitches while preserving selected 
  const after=await snapshot();
  const next=after.tracks.find((t:{name:string})=>t.name==='AI 和声').notes;
  expect(next[1]).toEqual(origin[1]);
+ expect(next.slice(2)).toEqual(origin.slice(2));
  expect(next[0].noteId).toBe(origin[0].noteId);
  expect(next[0].pitch).not.toBe(origin[0].pitch);
  expect(after.tracks[0]).toEqual(before.tracks[0]);
