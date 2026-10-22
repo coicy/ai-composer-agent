@@ -69,7 +69,7 @@ export function startMcpStdio(){
     return;
    }
    if(!req||req.jsonrpc!=='2.0'||typeof req.method!=='string'){
-    const id=req&&typeof req.id==='string'||req&&typeof req.id==='number'?req.id:null;
+    const id=req&&(typeof req.id==='string'||typeof req.id==='number')?req.id:null;
     stdout.write(JSON.stringify({jsonrpc:'2.0',id,error:{code:-32600,message:'Invalid Request'}})+'\n');
     return;
    }
