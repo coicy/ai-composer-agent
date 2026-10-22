@@ -451,3 +451,58 @@ test('scoped AI rejects a mismatched single role without modifying another part'
  await expect(page.getByRole('alert')).toContainText('invalid_single_role_output');
  await expect(page.getByRole('button',{name:'确认局部替换'})).toHaveCount(0);
 });
+
+test('scoped pitch-only iteration preserves note IDs, onset, duration and velocity in saved project',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ const snapshot=async()=>{
+  const download=page.waitForEvent('download');
+  await page.getByRole('button',{name:'导出工程 JSON'}).click();
+  const result=await download;
+  return JSON.parse(await readFile(await result.path(),'utf8')).project;
+ };
+ const before=await snapshot();
+ await page.getByRole('checkbox',{name:'局部重编仅改音高'}).check();
+ await page.getByRole('button',{name:'按种子局部重编（离线）'}).click();
+ const region=page.getByRole('region',{name:'局部重编候选'});
+ await expect(region).toContainText('仅更新');
+ await expect(region).toContainText('保留 2 个音符的节奏、力度与 ID');
+ await expect(page.locator('.region-ghost')).toHaveCount(2);
+ await page.getByRole('button',{name:'确认局部替换'}).click();
+ const after=await snapshot();
+ const original=before.tracks.find((t:{name:string})=>t.name==='AI 和声').notes;
+ const updated=after.tracks.find((t:{name:string})=>t.name==='AI 和声').notes;
+ const shape=(notes:typeof original)=>notes.map((n:{noteId:string;startTick:number;durationTicks:number;velocity:number})=>
+  [n.noteId,n.startTick,n.durationTicks,n.velocity]);
+ expect(shape(updated)).toEqual(shape(original));
+ expect(updated.some((n:{pitch:number},i:number)=>n.pitch!==original[i].pitch)).toBe(true);
+ expect(after.tracks[0]).toEqual(before.tracks[0]);
+ expect(after.tracks[2]).toEqual(before.tracks[2]);
+ expect(after.generationHistory.at(-1).editConstraint).toBe('pitch_only');
+ await page.getByRole('button',{name:'撤销'}).click();
+ const restored=await snapshot();
+ expect(restored.tracks).toEqual(before.tracks);
+});
+
+test('scoped AI pitch-only contract refuses changed timing/velocity and keeps original revision',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.getByRole('checkbox',{name:'局部重编仅改音高'}).check();
+ let seen:unknown;
+ await page.route('**/api/arrange',async route=>{
+  seen=route.request().postDataJSON();
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+   role:'harmony',notes:[{pitch:66,startTick:0,durationTicks:480,velocity:10}]
+  })});
+ });
+ await page.getByRole('button',{name:'AI 局部重编'}).click();
+ const request=seen as {editing?:{editConstraint?:string}};
+ expect(request.editing?.editConstraint).toBe('pitch_only');
+ await expect(page.getByRole('alert')).toContainText('pitch_only_rhythm_mismatch');
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toHaveCount(0);
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+});

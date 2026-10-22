@@ -173,6 +173,50 @@ describe('agent API',()=>{
   expect(await res.json()).toEqual({error:'generation_failed'});
   expect(src.tracks[1]?.notes).toHaveLength(1);
  });
+ it('enforces pitch-only scope using server derived originals and leaves project unchanged',async()=>{
+  const src={...project,tracks:[
+   {trackId:'melody',name:'Melody',locked:true,notes:[{noteId:'m',pitch:72,startTick:0,durationTicks:480,velocity:90}]},
+   {trackId:'h',name:'Existing',locked:false,notes:[{noteId:'prior',pitch:64,startTick:0,durationTicks:480,velocity:77}]},
+   {trackId:'b',name:'Bass',locked:true,notes:[{noteId:'bass',pitch:36,startTick:0,durationTicks:480,velocity:70}]}
+  ]};
+  let mode:unknown;
+  const arrangerFactory=()=>({id:'mock',async generate(ctx:{editing?:{editConstraint?:string}}){
+   mode=ctx.editing?.editConstraint;
+   return {role:'harmony',notes:[{pitch:67,startTick:0,durationTicks:480,velocity:77}]};
+  }});
+  const url=await launch({apiKey:'fake',arrangerFactory});
+  const request={project:src,sourceTrackId:'melody',startTick:0,endTick:1920,instruction:'keep rhythm',
+   editing:{targetTrackId:'h',targetRole:'harmony',editConstraint:'pitch_only'}};
+  const post=async(payload:unknown)=>fetch(url+'/api/arrange',{method:'POST',
+   headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+  const response=await post(request);
+  expect(response.status).toBe(200);
+  expect(mode).toBe('pitch_only');
+  expect(await response.json()).toEqual({role:'harmony',notes:[{pitch:67,startTick:0,durationTicks:480,velocity:77}]});
+  expect(src.tracks[1]!.notes[0]!.noteId).toBe('prior');
+  const invalid=await post({...request,editing:{...request.editing,editConstraint:'override'}});
+  expect(invalid.status).toBe(422);
+  expect((await invalid.json()).error).toBe('invalid_arrangement_editing');
+  const noNotes={...src,tracks:src.tracks.map(t=>t.trackId==='h'?{...t,notes:[]}:t)};
+  const empty=await post({...request,project:noNotes});
+  expect(empty.status).toBe(422);
+  expect((await empty.json()).error).toBe('pitch_only_requires_notes');
+ });
+ it('rejects a pitch-only response that alters existing velocity',async()=>{
+  const src={...project,tracks:[
+   {trackId:'melody',name:'M',locked:false,notes:[{noteId:'m',pitch:60,startTick:0,durationTicks:480,velocity:90}]},
+   {trackId:'h',name:'H',locked:false,notes:[{noteId:'h',pitch:64,startTick:0,durationTicks:480,velocity:88}]}
+  ]};
+  const arrangerFactory=()=>({id:'bad',async generate(){
+   return {role:'harmony',notes:[{pitch:65,startTick:0,durationTicks:480,velocity:70}]};
+  }});
+  const url=await launch({apiKey:'fake',arrangerFactory});
+  const response=await fetch(url+'/api/arrange',{method:'POST',headers:{'content-type':'application/json'},
+   body:JSON.stringify({project:src,sourceTrackId:'melody',startTick:0,endTick:1920,
+    instruction:'only pitches',editing:{targetTrackId:'h',targetRole:'harmony',editConstraint:'pitch_only'}})});
+  expect(response.status).toBe(502);
+  expect(await response.json()).toEqual({error:'generation_failed'});
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});

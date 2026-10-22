@@ -55,7 +55,7 @@ describe('scoped pitch-only contract',()=>{
    baseline.map((x,i)=>i===0?{...x,durationTicks:360}:x),
    baseline.map((x,i)=>i===0?{...x,velocity:77}:x)
   ])await expect(proposeRegionRegeneration(fake(raw(replacement)),req)).rejects.toThrow('pitch_only_rhythm_mismatch');
-  await expect(proposeRegionRegeneration(fake(raw(source.tracks[1]!.notes.slice(0,3))),req))
+  await expect(proposeRegionRegeneration(fake(raw(source.tracks[1]!.notes.slice(0,3).map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity})))),req))
    .rejects.toThrow('no_pitch_changes');
  });
  it('safely pairs chords sharing onset and duration without reassigning identities',async()=>{
