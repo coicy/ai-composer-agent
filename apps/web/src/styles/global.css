@@ -135,3 +135,13 @@ select{background:#1e293b;color:#e5e7eb;border:1px solid #475569;padding:9px;bor
 .protected-note-picker>.protected-note-option{min-width:240px;padding:5px 7px;
  border:1px solid #334b61;border-radius:5px;font-size:12px}
 .protected-note-picker input[type=checkbox]{width:auto;min-width:0}
+
+.region-variant-metrics{display:block;font-size:12px;color:#bbd4e9;margin-top:4px;text-align:left}
+.region-candidate-metrics{width:100%;padding:10px 12px;border:1px solid #4b667a;
+ border-radius:7px;background:#10263a}
+.region-candidate-metrics>strong{display:block;font-size:13px;margin-bottom:7px}
+.region-candidate-metrics dl{margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:7px 14px}
+.region-candidate-metrics dl>div{display:flex;flex-direction:column;gap:3px}
+.region-candidate-metrics dt{font-size:11px;color:#acc1d6}
+.region-candidate-metrics dd{margin:0;font-size:13px;font-variant-numeric:tabular-nums}
+.region-candidate-metrics p{font-size:11px;color:#aebed0;margin:9px 0 0}
