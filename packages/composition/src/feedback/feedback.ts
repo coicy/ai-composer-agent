@@ -1,6 +1,8 @@
 export interface FeedbackInterpretation {
  readonly pitchOnly:boolean;
  readonly protectedPrefixCount:number|null;
+ /** Explicit one-based note positions, not MIDI IDs. */
+ readonly protectedNoteOrdinals?:readonly number[];
  readonly maxLeapSemitones:number|null;
  readonly explanation:string;
  readonly unresolved:readonly string[];
@@ -31,18 +33,23 @@ const object=(v:unknown):v is Record<string,unknown>=>
 /** Untrusted model output: reject unknown fields, inaccurate ranges, oversize explanations. */
 export function validateFeedbackInterpretation(value:unknown,noteCount:number):FeedbackInterpretation{
  if(!Number.isSafeInteger(noteCount)||noteCount<1||noteCount>32)throw new Error('invalid_feedback_note_count');
- if(!object(value)||Object.keys(value).some(k=>!['pitchOnly','protectedPrefixCount','maxLeapSemitones','explanation','unresolved'].includes(k))||
+ if(!object(value)||Object.keys(value).some(k=>!['pitchOnly','protectedPrefixCount','protectedNoteOrdinals','maxLeapSemitones','explanation','unresolved'].includes(k))||
   typeof value.pitchOnly!=='boolean'||typeof value.explanation!=='string'||!value.explanation.trim()||
   value.explanation.length>400||!Array.isArray(value.unresolved)||value.unresolved.length>6||
   value.unresolved.some(s=>typeof s!=='string'||!s.trim()||s.length>180))
   throw new Error('invalid_feedback_interpretation');
  const prefix=value.protectedPrefixCount,leap=value.maxLeapSemitones;
+ const ordinals=value.protectedNoteOrdinals;
+ if(ordinals!==undefined&&(!Array.isArray(ordinals)||ordinals.length>16||
+  ordinals.some(n=>typeof n!=='number'||!Number.isSafeInteger(n)||n<1||n>noteCount)||
+  new Set(ordinals).size!==ordinals.length))throw new Error('invalid_feedback_interpretation');
  if(prefix!==null&&(typeof prefix!=='number'||!Number.isSafeInteger(prefix)||prefix<1||
   prefix>16||prefix>=noteCount))throw new Error('invalid_feedback_interpretation');
  if(leap!==null&&(typeof leap!=='number'||!Number.isSafeInteger(leap)||leap<1||leap>24))
   throw new Error('invalid_feedback_interpretation');
- if(!value.pitchOnly&&(prefix!==null||leap!==null))throw new Error('invalid_feedback_interpretation');
+ if(!value.pitchOnly&&(prefix!==null||leap!==null||(ordinals!==undefined&&ordinals.length>0)))throw new Error('invalid_feedback_interpretation');
  return {pitchOnly:value.pitchOnly,protectedPrefixCount:prefix as number|null,
+  ...(ordinals!==undefined?{protectedNoteOrdinals:[...(ordinals as number[])]}:{}),
   maxLeapSemitones:leap as number|null,explanation:value.explanation,
   unresolved:[...(value.unresolved as string[])]};
 }
@@ -61,6 +68,24 @@ export function interpretFeedbackRules(input:string,noteCount:number):FeedbackIn
  ];
  const leaps=[...feedback.matchAll(new RegExp(`(?:最大|相邻)?\\s*(?:音高)?跳进\\s*(?:不超过|不得超过|至多|最多|小于等于|限制(?:在|为|到)|≤|<=)\\s*(${NUMBER})\\s*(?:个)?\\s*半音`,'g'))];
  const reasons:string[]=[];
+ const explicitOrdinals:number[]=[];
+ const ordinalGroups=[...feedback.matchAll(new RegExp(
+  `(?:保留|固定|锁定|保持|不要改|不改)\\s*((?:第\\s*${NUMBER}\\s*(?:个)?\\s*(?:音符|音)?\\s*(?:、|和|及|与|,|，)?\\s*){1,16})`,'g'))];
+ for(const match of ordinalGroups){
+  for(const m of (match[1]??'').matchAll(new RegExp(`第\\s*(${NUMBER})`,'g'))){
+   const n=readNumber(m[1]??'');
+   if(n===null||n<1||n>noteCount){
+    reasons.push('指定音符序号超出当前选区或无法识别，需要人工确认。');
+   }else if(explicitOrdinals.includes(n)){
+    reasons.push('指定音符序号重复，需要人工确认。');
+   }else explicitOrdinals.push(n);
+  }
+ }
+ explicitOrdinals.sort((a,b)=>a-b);
+ if(explicitOrdinals.length>=noteCount){
+  explicitOrdinals.length=0;
+  reasons.push('不能保护整个片段，至少需要留下一个可修改音符。');
+ }
  const resolve=(matches:RegExpMatchArray[],max:number,label:string)=>{
   if(matches.length===0)return null;
   const nums=matches.map(m=>readNumber(m[1]??''));
@@ -75,14 +100,18 @@ export function interpretFeedbackRules(input:string,noteCount:number):FeedbackIn
  const prefix=resolve(prefixMatches,16,'保留开头音符');
  const leap=resolve(leaps,24,'最大跳进');
  const rhythm=/节奏(?:不变|保持|不要变|不改)|(?:保持|保留|不(?:要)?改变)\s*(?:原有|当前)?\s*(?:节奏|时值|力度)|仅(?:改变|修改|重写|调整)\s*音高|只(?:改变|修改|重写|调整)\s*音高/.test(feedback);
- const pitchOnly=prefix!==null||leap!==null||rhythm;
+ if(prefix!==null&&new Set([...Array.from({length:prefix},(_,i)=>i+1),...explicitOrdinals]).size>=noteCount){
+  explicitOrdinals.length=0;
+  reasons.push('开头保护与指定音符合并后覆盖全部音符，请手动调整。');
+ }
+ const pitchOnly=prefix!==null||leap!==null||rhythm||explicitOrdinals.length>0;
  if(!pitchOnly&&reasons.length===0)reasons.push('没有识别出可执行的数值约束；风格和情绪描述仍需人工判断。');
  if(pitchOnly&&/(更有张力|更丰富|太平|更流畅|更抒情|更激昂|更加戏剧化)/.test(feedback))
   reasons.push('情绪、张力等描述保留在原始指令中，尚未转换成强制音乐规则。');
  return validateFeedbackInterpretation({
-  pitchOnly,protectedPrefixCount:prefix,maxLeapSemitones:leap,
+  pitchOnly,protectedPrefixCount:prefix,protectedNoteOrdinals:explicitOrdinals,maxLeapSemitones:leap,
   explanation:pitchOnly?
-   `建议开启仅改音高${prefix===null?'':`；保留开头 ${prefix} 个音符`}${leap===null?'':`；跳进不超过 ${leap} 半音`}。需用户确认后才会更新编辑设置。`:
+   `建议开启仅改音高${prefix===null?'':`；保留开头 ${prefix} 个音符`}${explicitOrdinals.length?`；单独保护第 ${explicitOrdinals.join('、')} 个音符`:''}${leap===null?'':`；跳进不超过 ${leap} 半音`}。需用户确认后才会更新编辑设置。`:
    '未能从反馈中提取明确、可执行的音高编辑约束。',
   unresolved:reasons
  },noteCount);
