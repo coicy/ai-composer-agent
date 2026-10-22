@@ -16,6 +16,7 @@ const tools=[
  {name:'music.list_tracks',description:'Read track summaries from a previously opened snapshot.',inputSchema:{type:'object',properties:{sessionId:{type:'string'}},required:['sessionId'],additionalProperties:false}},
  {name:'music.inspect_notes',description:'Read bounded notes from an authorized snapshot track and tick range.',inputSchema:{type:'object',properties:{sessionId:{type:'string'},trackId:{type:'string'},startTick:{type:'integer'},endTick:{type:'integer'}},required:['sessionId','trackId','startTick','endTick'],additionalProperties:false}},
  {name:'music.propose_midi',description:'Create a deterministic, validated MIDI proposal for the selected snapshot region. Never commits. Does not use an internal LLM key.',inputSchema:{type:'object',properties:{sessionId:{type:'string'},trackId:{type:'string'},startTick:{type:'integer'},endTick:{type:'integer'},instruction:{type:'string'},mode:{type:'string',enum:['append','replace']}},required:['sessionId','trackId','startTick','endTick','instruction'],additionalProperties:false}},
+ {name:'music.submit_candidate',description:'Validate external Agent proposed MIDI notes without committing. Requires an existing snapshot session.',inputSchema:{type:'object',properties:{sessionId:{type:'string'},trackId:{type:'string'},baseRevision:{type:'integer'},notes:{type:'array',maxItems:64,items:{type:'object',properties:{pitch:{type:'integer'},startTick:{type:'integer'},durationTicks:{type:'integer'},velocity:{type:'integer'}},required:['pitch','startTick','durationTicks','velocity'],additionalProperties:false}}},required:['sessionId','trackId','baseRevision','notes'],additionalProperties:false}},
  {name:'music.close_snapshot',description:'Revoke an MCP snapshot session.',inputSchema:{type:'object',properties:{sessionId:{type:'string'}},required:['sessionId'],additionalProperties:false}}
 ] as const;
 function record(value:unknown):Record<string,unknown>{if(!value||typeof value!=='object'||Array.isArray(value))throw Error('invalid_arguments');return value as Record<string,unknown>;}
@@ -35,6 +36,13 @@ async function invoke(name:string,args:Record<string,unknown>){
  const {project}=session(args);
  if(name==='music.list_tracks')return content({projectId:project.projectId,revision:project.revision,tracks:project.tracks.map(t=>({trackId:t.trackId,name:t.name,locked:t.locked,noteCount:t.notes.length}))});
  const trackId=string(args.trackId),track=project.tracks.find(t=>t.trackId===trackId);if(!track)throw Error('track_not_found');
+ if(name==='music.submit_candidate'){
+  if(integer(args.baseRevision)!==project.revision)throw Error('stale_revision');
+  if(track.locked)throw Error('locked_track');
+  if(!Array.isArray(args.notes)||args.notes.length>64)throw Error('invalid_notes');
+  const notes=args.notes.map((n,i)=>{const v=record(n);const pitch=integer(v.pitch),startTick=integer(v.startTick),durationTicks=integer(v.durationTicks),velocity=integer(v.velocity);if(pitch>127||velocity<1||velocity>127||durationTicks===0||startTick+durationTicks>project.ppq*4*256)throw Error('invalid_note');return {noteId:`mcp-preview-${i}`,pitch,startTick,durationTicks,velocity};});
+  return content({projectId:project.projectId,baseRevision:project.revision,trackId,notes,approved:false,applied:false,warning:'Validated snapshot proposal only. Requires a future authorized live UI preview and user approval.'});
+ }
  const startTick=integer(args.startTick),endTick=integer(args.endTick);if(endTick<=startTick||endTick-startTick>project.ppq*4*16)throw Error('invalid_scope');
  if(name==='music.inspect_notes')return content({projectId:project.projectId,revision:project.revision,trackId,notes:track.notes.filter(n=>n.startTick<endTick&&n.startTick+n.durationTicks>startTick).slice(0,256),truncated:track.notes.filter(n=>n.startTick<endTick&&n.startTick+n.durationTicks>startTick).length>256});
  if(name==='music.propose_midi'){
