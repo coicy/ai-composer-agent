@@ -313,6 +313,7 @@ export function App(){
    kind:'scoped',sourceTrackId:pending.sourceTrackId,targetTrackIds:[pending.targetTrackId],
    startTick:pending.startTick,endTick:pending.endTick,seed:pending.seed,
    providerId:pending.providerId,instruction:regionInstruction,
+   ...(pending.editConstraint?{editConstraint:pending.editConstraint}:{}),
    ...(pending.plan?{planJson:JSON.stringify(pending.plan)}:{})
   };
   const applied=commitSession(session,{...pending.changes,generationRecord:record});
@@ -568,8 +569,10 @@ export function App(){
     <p>切换候选可逐个试听；确认仅替换当前选定的候选与目标小节。</p>
    </section>}
    {regionCandidate&&<div className="scoped-review" role="region" aria-label="局部重编候选">
-    <strong>待确认：{regionCandidate.removedNotes.length} 个旧音符将替换为 {regionCandidate.notes.length} 个新音符，Seed {regionCandidate.seed}</strong>
-    <p>只修改 {project.tracks.find(t=>t.trackId===regionCandidate.targetTrackId)?.name??'目标轨道'} 的第 {Math.floor(regionCandidate.startTick/(project.ppq*4))+1} 小节起指定范围。钢琴卷帘中蓝色为新音符，红色为待删除音符。</p>
+    <strong>{regionCandidate.editConstraint==='pitch_only'
+     ?`待确认：仅更新 ${regionCandidate.changes.operations.length} 个音高，保留 ${regionCandidate.notes.length} 个音符的节奏、力度与 ID，Seed ${regionCandidate.seed}`
+     :`待确认：${regionCandidate.removedNotes.length} 个旧音符将替换为 ${regionCandidate.notes.length} 个新音符，Seed ${regionCandidate.seed}`}</strong>
+    <p>只修改 {project.tracks.find(t=>t.trackId===regionCandidate.targetTrackId)?.name??'目标轨道'} 的第 {Math.floor(regionCandidate.startTick/(project.ppq*4))+1} 小节起指定范围。钢琴卷帘中蓝色为候选音高，红色为{regionCandidate.editConstraint==='pitch_only'?'待更新音符（不会被删除）':'待删除音符'}。</p>
     {regionCandidate.changes.baseRevision!==project.revision&&<p className="error">候选已过期，请重新生成。</p>}
     <button disabled={regionCandidate.changes.baseRevision!==project.revision} onClick={()=>void auditionScopedRegion()}>试听局部重编候选</button>
     <button disabled={regionCandidate.changes.baseRevision!==project.revision} onClick={approveScopedRegion}>确认局部替换</button>

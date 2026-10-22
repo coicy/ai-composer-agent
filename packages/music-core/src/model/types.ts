@@ -12,6 +12,8 @@ export interface GenerationRecord {
  readonly seedsByRole?:Readonly<Record<string,number>>;
  readonly providerId:string;
  readonly instruction:string;
+ /** Auditable hard editing mode for a scoped approved candidate. */
+ readonly editConstraint?:'pitch_only';
  readonly planJson?:string;
 }
 export interface MusicProject {readonly generationHistory?:readonly GenerationRecord[];readonly projectId:string;readonly revision:number;readonly ppq:number;readonly tracks:readonly MusicTrack[];}
