@@ -99,3 +99,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Target selection now supports individually protected MIDI note IDs, beyond protecting a chronological opening prefix. The browser lists current target notes in scope, captures Piano Roll multiselection, and ignores previous selections when scope/project changes.
 - Preflight rejects nonexisting, duplicated, out-of-range, all-protected, ambiguous identical notes, and non-pitch-only use. Hard checks keep protected pitches and ID mappings immutable across seeded and remote proposals; models receive indices only.
 - Approved JSON provenance saves these IDs; source and other parts remain untouched, and undo/redo retain previous behavior. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
+
+## Explicit numbered-note feedback suggestions
+- The feedback interpreter can now conservatively propose protected one-based target-note ordinals, without reading note IDs or selecting editing targets.
+- Review UI maps approved ordinals to actual stable IDs in chronological note order; existing manual protections are retained. All-protected proposals and ambiguous identical-note cases are blocked.
+- Offline parser, strict remote feedback schema, API validation and browser tests cover requested note ordinals, stale/invalid AI suggestions and protected MIDI persistence. Applying a draft never writes project edits.
+- See docs/SCOPED_ARRANGEMENT_REGENERATION.md.

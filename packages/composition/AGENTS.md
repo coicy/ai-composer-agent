@@ -82,3 +82,8 @@ src/
 - In pitch-only scoped edits, `protectedNoteIds` must be validated against all fully-contained target notes before invoking a model. Up to 32 unique IDs; no entire-window protection.
 - Combine IDs with protected-prefix notes; preserve each guarded note's pitch, onset, duration, velocity and stable identity. Reject mixed protected/unprotected duplicate notes indistinguishable without IDs.
 - External models receive only protected original indices; stable note identifiers remain strictly local for commit, audit and undo. Do not weaken these checks for random seed variation.
+
+## Feedback-proposed note ordinals
+- A natural-language interpreter may propose bounded 1-based `protectedNoteOrdinals`, never stable MIDI IDs. Zero-based or guessed indexes are not acceptable.
+- Users must explicitly approve before mapping positions to IDs; never mutate project or regenerate MIDI while merely interpreting feedback.
+- Reject duplicate, out-of-range, all-protected or ambiguous protected-note suggestions. Preserve manual protections and apply existing scoped pitch-only validation.
