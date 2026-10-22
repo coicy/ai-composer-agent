@@ -43,10 +43,12 @@ function parseArrangementRequest(value:unknown):ArrangementRequest{
  if(body.editing!==undefined){
   if(!body.editing||typeof body.editing!=='object'||Array.isArray(body.editing))throw new Error('invalid_arrangement_editing');
   const value=body.editing as Record<string,unknown>;
-  if(Object.keys(value).some(k=>k!=='targetTrackId'&&k!=='targetRole')||
-   typeof value.targetTrackId!=='string'||!['harmony','bass','accompaniment'].includes(value.targetRole as string))
+  if(Object.keys(value).some(k=>k!=='targetTrackId'&&k!=='targetRole'&&k!=='editConstraint')||
+   typeof value.targetTrackId!=='string'||!['harmony','bass','accompaniment'].includes(value.targetRole as string)||
+   (value.editConstraint!==undefined&&value.editConstraint!=='pitch_only'))
    throw new Error('invalid_arrangement_editing');
-  editing={targetTrackId:value.targetTrackId,targetRole:value.targetRole as 'harmony'|'bass'|'accompaniment'};
+  editing={targetTrackId:value.targetTrackId,targetRole:value.targetRole as 'harmony'|'bass'|'accompaniment',
+   ...(value.editConstraint?{editConstraint:'pitch_only' as const}:{})};
  }
  return {project,sourceTrackId:body.sourceTrackId,startTick,endTick,instruction:body.instruction,plan,seed:body.seed as number|undefined,editing};
 }
@@ -75,7 +77,8 @@ export function createAgentServer(options:ServerOptions={}){
     const provider=(options.arrangerFactory??createOpenAIArranger)({apiKey:options.apiKey,model:options.model??'gpt-4.1-mini'});
     if(request.editing){
      const candidate=await proposeRegionRegeneration(provider,{
-      ...request,targetTrackId:request.editing.targetTrackId,targetRole:request.editing.targetRole
+      ...request,targetTrackId:request.editing.targetTrackId,targetRole:request.editing.targetRole,
+      editConstraint:request.editing.editConstraint
      },controller.signal);
      reply(res,200,{role:candidate.targetRole,notes:candidate.notes.map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity}))});
     }else{
