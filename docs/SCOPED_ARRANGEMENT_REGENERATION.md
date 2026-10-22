@@ -74,3 +74,18 @@ The seeded offline provider chooses alternative pitches from a deterministic rol
 The remote OpenAI provider receives an explicit strict pitch-only prompt and unchanged target-original musical properties. Server and browser **both** check timing/velocity after generation, and the loopback API refuses altered data. If the model ignores the constraint, it must be retried or the constraint explicitly disabled by the user; no silent adjustment.
 
 **Limitations:** The first implementation preserves all notes in one contiguous 1–4 bar window, not arbitrary noncontiguous Note IDs. A chord inversion can be changed only when the new pitches meet any chosen hard plan. Same-seed reproducibility applies to the local deterministic provider, not remotely hosted model output.
+
+## Iterative feedback: protected opening and bounded melodic motion
+
+Following the explicit `pitch_only` mode, the editor now provides two **structured, auditable feedback constraints**; arbitrary natural-language instructions do not silently authorize or synthesize them:
+
+- `protectedPrefixCount`: an integer from 0–16, strictly fewer than the count of eligible original notes. The earliest target notes are ordered by `startTick`, then pitch, then original ID. Their **pitches must remain identical**. No note onset, duration, velocity or identity is changed.
+- `maxLeapSemitones`: an optional integer from 1–24. For adjacent notes **whose audible durations do not overlap**, the absolute pitch difference cannot exceed this amount. The check includes the closest preceding and following untouched target notes at the selection boundary. This is a simplified monophonic-motion heuristic, not a full chord voicing or voice-leading evaluator; overlapping notes are not compared as melodic jumps.
+
+Both rules are **only legal when `editConstraint: 'pitch_only'` is active**. Invalid, out-of-range, non-integer, or unsupported-mode requests are rejected *before* calling the provider; a prefix encompassing every target note is also rejected as it cannot form a pitch-only edit. If a generated phrase changes a protected note or exceeds the allowed melodic jump, the **entire candidate** is rejected, without silent pitch repair or relaxation.
+
+The offline `SeededArranger` preserves the selected prefix and samples deterministic alternative pitches within applicable register/scale/chord, preceding note, and following boundary constraints. Failure to find an alternative yields `unrealizable_feedback_constraint`. Different Seeds can produce different revisions without modifying the approved original until explicit selection, audition and confirmation. The remote model receives only the bounded, server-verified feedback parameters plus read-only music context. Server and browser independently validate the final notes.
+
+Approved JSON project provenance can store `protectedPrefixCount` and `maxLeapSemitones` together with the `pitch_only` editing mode, and undo reverts both the notes and their generation record.
+
+**Scope limitation:** "keep the opening" here means a count of chronological notes in one continuous 1–4-bar target window, not an arbitrary set of note IDs or a form/phrase recognition model. "Reduce jumps" is specifically the numeric leap bound, not an AI claim of improved musical taste. More expressive feedback-to-constraint interpretation remains future work.

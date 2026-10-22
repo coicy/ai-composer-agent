@@ -82,3 +82,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Composition checks exact onset/duration/velocity multiplicity, retains original note IDs and creates only `update_note.pitch` operations rather than delete/readd. Locked/crossing/empty/dense target ranges are rejected before provider invocation.
 - API and browser independently validate strict one-role MIDI output, preserve hard HarmonyPlan checks and use the same read-only context; offline mode varies pitches within allowed boundaries without modifying rhythm.
 - Committed project provenance includes the scoped editing constraint, and tests cover invalid output, polyphonic matching, revision safety, undo, and JSON export. Musical/artistic outcome is not yet benchmarked.
+
+## Iterative feedback constraints: protected prefix and nonoverlapping-note jump limit
+- Pitch-only scoped regeneration accepts a protected chronological prefix (0–16 notes) and optional 1–24 semitone maximum jump for consecutive nonoverlapping notes, with untouched boundary neighbor checks.
+- Both rules are enforced deterministically *after* model output validation and preflight, in server and client pipelines; malformed parameters or attempts to apply these to unrestricted edits are rejected before provider invocation. Offline Seed candidates follow these same rules.
+- Editor exposes explicit numeric controls only when pitch-only mode is enabled. Accepted scoped generation JSON provenance stores the active values, and project undo restores prior MIDI and provenance.
+- This is a bounded structural feedback primitive, not free-form semantic understanding or verified musical improvement. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
