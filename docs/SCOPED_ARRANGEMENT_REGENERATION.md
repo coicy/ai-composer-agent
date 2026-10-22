@@ -131,3 +131,11 @@ It does not mutate the project, save an assessment, call a model, change candida
 In pitch-only revisions the preserved IDs allow precise semitone-shift comparisons. In full replacement, old note IDs are deleted and new IDs allocated, so there is **no justified pairing** and pitch-shift statistics show “不可按原 ID 对比”. Max-leap statistics use only notes fully within the selected window, with adjacent overlapped note pairs excluded; they do **not** include boundary notes here, unlike the strict maxLeap editing guard.
 
 The browser now shows compact objective metrics for every candidate in the 2–4 Seed bank, plus a detailed report for the selected candidate. Audition and explicit commit retain their existing behavior. No automatic scoring/ranking is added, because minimizing pitch change or leaps is not a general measure of musical quality.
+
+## Evidence-bound AI feedback suggestions
+
+A generated feedback proposal is **not** proof that the user's words authorized numerical edit rules. For every AI interpretation, `reconcileFeedbackInterpretation` compares the model-proposed prefix count, maximum melodic leap and individual protected note ordinals against explicit quantities independently recognized in the original feedback text. Unsupported proposals are removed from the hard-constraint draft and explained under `unresolved`. The editing mode itself also needs a grounded pitch-only/rhythm-preserving request or a valid explicit numeric protection.
+
+Reconciliation runs on **both** the loopback API and the browser before showing an AI draft. The user still must explicitly approve the reviewed draft before any scoped provider call or project change. Subjective wording (e.g., 'more tension') stays a creative instruction and cannot silently turn into a numerical MIDI guard.
+
+The deterministic offline parser is intentionally conservative: a genuinely explicit but unfamiliar phrase may not be recognized, in which case the user can set the numeric controls manually. This is preferable to fabricating an enforceable constraint; it does not provide natural-language coverage guarantees.
