@@ -107,3 +107,86 @@ describe('scoped pitch-only contract',()=>{
   expect(validateGenerationRecord({...record,editConstraint:'bad' as never})).toBe(false);
  });
 });
+
+describe('structured iterative feedback in pitch-only scope',()=>{
+ const project:MusicProject={projectId:'feedback',revision:9,ppq:480,tracks:[
+  {trackId:'src',name:'Source',locked:true,notes:[n('m',70,0)]},
+  {trackId:'target',name:'Harmony',locked:false,notes:[
+   n('opening',60,0),n('second',62,480),n('ending',65,960),n('outside',67,2200)
+  ]},
+  {trackId:'other',name:'Bass',locked:true,notes:[n('bass',40,0)]}
+ ]};
+ const base={project,sourceTrackId:'src',targetTrackId:'target',targetRole:'harmony' as const,
+  editConstraint:'pitch_only' as const,startTick:0,endTick:1920,instruction:'keep the opening, smooth the ending',
+  seed:19501,protectedPrefixCount:2,maxLeapSemitones:5};
+ const raw3=(p0:number,p1:number,p2:number)=>({role:'harmony',notes:[
+  {pitch:p0,startTick:0,durationTicks:480,velocity:80},
+  {pitch:p1,startTick:480,durationTicks:480,velocity:80},
+  {pitch:p2,startTick:960,durationTicks:480,velocity:80}
+ ]});
+ it('preserves opening identities and changes only permitted later pitches',async()=>{
+  const candidate=await proposeRegionRegeneration(fake(raw3(60,62,67)),base);
+  expect(candidate.protectedPrefixCount).toBe(2);
+  expect(candidate.maxLeapSemitones).toBe(5);
+  expect(candidate.changes.operations).toEqual([
+   {type:'update_note',trackId:'target',noteId:'ending',changes:{pitch:67}}
+  ]);
+  const applied=applyChangeSet(project,candidate.changes);
+  expect(applied.ok).toBe(true);
+  if(applied.ok){
+   expect(applied.project.tracks[1]!.notes.map(x=>x.noteId)).toEqual(['opening','second','ending','outside']);
+   expect(applied.project.tracks[1]!.notes.map(x=>x.pitch)).toEqual([60,62,67,67]);
+   expect(applied.project.tracks[0]).toEqual(project.tracks[0]);
+   expect(applied.project.tracks[2]).toEqual(project.tracks[2]);
+  }
+ });
+ it('rejects generated changes to protected opening, even if the rhythm matches',async()=>{
+  await expect(proposeRegionRegeneration(fake(raw3(61,62,67)),base))
+   .rejects.toThrow('protected_note_changed');
+  await expect(proposeRegionRegeneration(fake(raw3(60,63,67)),base))
+   .rejects.toThrow('protected_note_changed');
+ });
+ it('checks leaps between sequential notes and into untouched following boundary',async()=>{
+  await expect(proposeRegionRegeneration(fake(raw3(60,62,75)),base))
+   .rejects.toThrow('leap_constraint_violation');
+  const brokenBoundary={...base,project:{...project,tracks:project.tracks.map(t=>
+   t.trackId==='target'?{...t,notes:t.notes.map(n=>n.noteId==='outside'?{...n,pitch:95}:n)}:t)}};
+  await expect(proposeRegionRegeneration(fake(raw3(60,62,67)),brokenBoundary))
+   .rejects.toThrow('leap_constraint_violation');
+ });
+ it('validates malformed constraint scope before calling the model',async()=>{
+  let called=0;
+  const spy:ArrangementProvider={id:'spy',async generate(){called++;throw new Error('unexpected');}};
+  await expect(proposeRegionRegeneration(spy,{...base,protectedPrefixCount:3}))
+   .rejects.toThrow('invalid_protected_prefix');
+  await expect(proposeRegionRegeneration(spy,{...base,protectedPrefixCount:17}))
+   .rejects.toThrow('invalid_protected_prefix');
+  await expect(proposeRegionRegeneration(spy,{...base,maxLeapSemitones:0}))
+   .rejects.toThrow('invalid_leap_constraint');
+  await expect(proposeRegionRegeneration(spy,{...base,maxLeapSemitones:30}))
+   .rejects.toThrow('invalid_leap_constraint');
+  await expect(proposeRegionRegeneration(spy,{...base,editConstraint:undefined}))
+   .rejects.toThrow('feedback_requires_pitch_only');
+  expect(called).toBe(0);
+ });
+ it('makes deterministic seeded iterations satisfying both feedback constraints',async()=>{
+  const first=await proposeRegionRegeneration(new SeededArranger(),base);
+  const second=await proposeRegionRegeneration(new SeededArranger(),base);
+  expect(first.notes).toEqual(second.notes);
+  expect(first.notes.slice(0,2).map(x=>x.pitch)).toEqual([60,62]);
+  const pitches=first.notes.map(x=>x.pitch);
+  expect(Math.abs(pitches[2]!-pitches[1]!)).toBeLessThanOrEqual(5);
+  expect(Math.abs(67-pitches[2]!)).toBeLessThanOrEqual(5);
+  expect(first.changes.operations).toHaveLength(1);
+ });
+ it('records feedback parameters only with scoped pitch-only provenance',()=>{
+  const record={recordId:'feedback-1',kind:'scoped' as const,sourceTrackId:'src',
+   targetTrackIds:['target'],startTick:0,endTick:1920,providerId:'seeded',
+   instruction:'keep two',editConstraint:'pitch_only' as const,
+   protectedPrefixCount:2,maxLeapSemitones:5};
+  expect(validateGenerationRecord(record)).toBe(true);
+  expect(validateGenerationRecord({...record,protectedPrefixCount:17})).toBe(false);
+  expect(validateGenerationRecord({...record,maxLeapSemitones:0})).toBe(false);
+  expect(validateGenerationRecord({...record,editConstraint:undefined})).toBe(false);
+ });
+});

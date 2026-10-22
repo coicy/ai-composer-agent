@@ -217,6 +217,39 @@ describe('agent API',()=>{
   expect(response.status).toBe(502);
   expect(await response.json()).toEqual({error:'generation_failed'});
  });
+ it('enforces protected opening and melodic leap feedback before returning scoped output',async()=>{
+  const original={noteId:'a',pitch:60,startTick:0,durationTicks:480,velocity:80};
+  const second={noteId:'b',pitch:62,startTick:480,durationTicks:480,velocity:80};
+  const third={noteId:'c',pitch:65,startTick:960,durationTicks:480,velocity:80};
+  const src={...project,tracks:[
+   {trackId:'melody',name:'M',locked:true,notes:[{noteId:'src',pitch:70,startTick:0,durationTicks:480,velocity:80}]},
+   {trackId:'h',name:'H',locked:false,notes:[original,second,third]}
+  ]};
+  let ctxSeen:unknown;
+  const factory=()=>({id:'mock',async generate(ctx:{editing?:unknown}){
+   ctxSeen=ctx.editing;
+   return {role:'harmony',notes:[
+    {pitch:60,startTick:0,durationTicks:480,velocity:80},
+    {pitch:62,startTick:480,durationTicks:480,velocity:80},
+    {pitch:67,startTick:960,durationTicks:480,velocity:80}
+   ]};
+  }});
+  const url=await launch({apiKey:'fake',arrangerFactory:factory});
+  const payload={project:src,sourceTrackId:'melody',startTick:0,endTick:1920,
+   instruction:'preserve opening',editing:{targetTrackId:'h',targetRole:'harmony',
+    editConstraint:'pitch_only',protectedPrefixCount:2,maxLeapSemitones:5}};
+  const post=async(body:unknown)=>fetch(url+'/api/arrange',{method:'POST',
+   headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  const good=await post(payload);
+  expect(good.status).toBe(200);
+  expect(ctxSeen).toMatchObject({protectedPrefixCount:2,maxLeapSemitones:5});
+  const invalid=await post({...payload,editing:{...payload.editing,maxLeapSemitones:100}});
+  expect(invalid.status).toBe(422);
+  expect((await invalid.json()).error).toBe('invalid_arrangement_editing');
+  const noMode=await post({...payload,editing:{...payload.editing,editConstraint:undefined}});
+  expect(noMode.status).toBe(422);
+  expect((await noMode.json()).error).toBe('invalid_arrangement_editing');
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});

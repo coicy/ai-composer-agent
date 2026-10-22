@@ -506,3 +506,59 @@ test('scoped AI pitch-only contract refuses changed timing/velocity and keeps or
  await expect(page.getByRole('region',{name:'局部重编候选'})).toHaveCount(0);
  await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
 });
+
+test('structured feedback keeps first note and limits jumps in seeded one-role iteration',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ const snapshot=async()=>{
+  const p=page.waitForEvent('download');
+  await page.getByRole('button',{name:'导出工程 JSON'}).click();
+  const download=await p;return JSON.parse(await readFile(await download.path(),'utf8')).project;
+ };
+ const before=await snapshot();
+ await page.getByRole('checkbox',{name:'局部重编仅改音高'}).check();
+ await page.getByRole('spinbutton',{name:'保留开头音符数'}).fill('1');
+ await page.getByRole('spinbutton',{name:'最大跳进半音数'}).fill('12');
+ await page.getByRole('button',{name:'按种子局部重编（离线）'}).click();
+ const proposal=page.getByRole('region',{name:'局部重编候选'});
+ await expect(proposal).toContainText('保留开头 1 音');
+ await expect(proposal).toContainText('最大跳进 12 半音');
+ await page.getByRole('button',{name:'确认局部替换'}).click();
+ const after=await snapshot();
+ const prev=before.tracks.find((t:{name:string})=>t.name==='AI 和声').notes;
+ const next=after.tracks.find((t:{name:string})=>t.name==='AI 和声').notes;
+ expect(next[0]).toEqual(prev[0]);
+ expect(next.map((n:{noteId:string})=>n.noteId)).toEqual(prev.map((n:{noteId:string})=>n.noteId));
+ expect(next.some((n:{pitch:number},i:number)=>n.pitch!==prev[i].pitch)).toBe(true);
+ expect(after.generationHistory.at(-1).protectedPrefixCount).toBe(1);
+ expect(after.generationHistory.at(-1).maxLeapSemitones).toBe(12);
+ await page.getByRole('button',{name:'撤销'}).click();
+ expect((await snapshot()).tracks).toEqual(before.tracks);
+});
+
+test('remote scoped feedback refuses changing protected opening without mutating the project',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.getByRole('checkbox',{name:'局部重编仅改音高'}).check();
+ await page.getByRole('spinbutton',{name:'保留开头音符数'}).fill('1');
+ let seen:unknown;
+ await page.route('**/api/arrange',async route=>{
+  seen=route.request().postDataJSON();
+  const data=seen as {project:{tracks:{trackId:string;notes:{pitch:number;startTick:number;durationTicks:number;velocity:number}[]}[]},editing:{targetTrackId:string}};
+  const originals=data.project.tracks.find(t=>t.trackId===data.editing.targetTrackId)!.notes;
+  const notes=originals.map((n,i)=>({pitch:n.pitch+(i===0?1:2),startTick:n.startTick,
+   durationTicks:n.durationTicks,velocity:n.velocity})).filter(n=>n.startTick<1920);
+  await route.fulfill({status:200,contentType:'application/json',
+   body:JSON.stringify({role:'harmony',notes})});
+ });
+ await page.getByRole('button',{name:'AI 局部重编'}).click();
+ const request=seen as {editing?:{protectedPrefixCount?:number}};
+ expect(request.editing?.protectedPrefixCount).toBe(1);
+ await expect(page.getByRole('alert')).toContainText('protected_note_changed');
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'确认局部替换'})).toHaveCount(0);
+});
