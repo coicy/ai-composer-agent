@@ -688,5 +688,5 @@ test('protected note selection is scoped to the current bar and cannot carry sta
  await page.getByRole('spinbutton',{name:'局部重编起始小节'}).fill('2');
  await expect(picker).toContainText('当前 0 个');
  await page.getByRole('spinbutton',{name:'局部重编起始小节'}).fill('1');
- await expect(picker).toContainText('当前 1 个');
+ await expect(picker).toContainText('当前 0 个');
 });

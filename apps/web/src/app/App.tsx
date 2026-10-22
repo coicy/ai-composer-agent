@@ -113,6 +113,7 @@ export function App(){
   setRegionPending(false);
   setRegionCandidate(null);
   setRegionCandidates([]);
+  setRegionProtectedSelection({key:'',ids:[]});
  },[project.revision]);
  const STEP=Math.max(1,Math.round(project.ppq/4));
  const viewport={ppq:project.ppq,pixelsPerQuarter:CELL,rowHeight:ROW,topPitch:TOP_PITCH};
@@ -588,11 +589,11 @@ export function App(){
    <p>AI 定向生成时只返回所选声部的 MIDI 音符，不再生成多余的三轨；其他声部仍作为只读参考。</p>
    <p>先在工程中创建或导入至少两条轨道，选择只读主旋律与需要改写的既有轨道。范围外的音符、其他轨道与锁定音符不会被改变。</p>
    <p>局部 AI 重编会参考目标声部前后音符，以及其他保留声部的音符，用于衔接与避免声部冲突；这些参考内容不会被授权修改。</p>
-   <label>参考旋律 <select aria-label="局部重编参考轨道" value={regionSourceId} onChange={e=>{setRegionSource(e.target.value);setRegionTarget('');invalidateRegion();}}>
+   <label>参考旋律 <select aria-label="局部重编参考轨道" value={regionSourceId} onChange={e=>{setRegionSource(e.target.value);setRegionTarget('');setRegionProtectedSelection({key:'',ids:[]});invalidateRegion();}}>
     {project.tracks.map(t=><option key={t.trackId} value={t.trackId}>{t.name}</option>)}
    </select></label>
    <label>目标轨道 <select aria-label="局部重编目标轨道" value={regionTargetId} disabled={regionTargets.length===0}
-    onChange={e=>{const id=e.target.value;setRegionTarget(id);const name=project.tracks.find(t=>t.trackId===id)?.name??'';
+    onChange={e=>{const id=e.target.value;setRegionTarget(id);setRegionProtectedSelection({key:'',ids:[]});const name=project.tracks.find(t=>t.trackId===id)?.name??'';
      if(name.includes('低音'))setRegionRole('bass');else if(name.includes('伴奏'))setRegionRole('accompaniment');else if(name.includes('和声'))setRegionRole('harmony');
      invalidateRegion();}}>
     {regionTargets.length===0?<option value="">暂无目标轨道</option>:regionTargets.map(t=><option key={t.trackId} value={t.trackId}>{t.name}</option>)}
@@ -601,9 +602,9 @@ export function App(){
     <option value="harmony">和声</option><option value="bass">低音</option><option value="accompaniment">伴奏</option>
    </select></label>
    <label>起始小节 <input type="number" aria-label="局部重编起始小节" min={1} max={64} value={regionStartBar}
-    onChange={e=>{setRegionStartBar(Number(e.target.value));invalidateRegion();}}/></label>
+    onChange={e=>{setRegionStartBar(Number(e.target.value));setRegionProtectedSelection({key:'',ids:[]});invalidateRegion();}}/></label>
    <label>长度 <input type="number" aria-label="局部重编小节数" min={1} max={4} value={regionBars}
-    onChange={e=>{setRegionBars(Number(e.target.value));invalidateRegion();}}/></label>
+    onChange={e=>{setRegionBars(Number(e.target.value));setRegionProtectedSelection({key:'',ids:[]});invalidateRegion();}}/></label>
    <label>Seed <input type="number" aria-label="局部重编随机种子" min={0} max={4294967295} step={1} value={regionSeed}
     onChange={e=>{setRegionSeed(Number(e.target.value));invalidateRegion();}}/></label>
    <label><input type="checkbox" aria-label="局部重编仅改音高" checked={regionPitchOnly}
