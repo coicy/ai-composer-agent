@@ -519,6 +519,7 @@ export function App(){
   </section>
   <section className="scoped-arrangement-panel" aria-label="局部重新编配">
    <strong>局部重新编配 · 保留其他声部与小节</strong>
+   <p>AI 定向生成时只返回所选声部的 MIDI 音符，不再生成多余的三轨；其他声部仍作为只读参考。</p>
    <p>先在工程中创建或导入至少两条轨道，选择只读主旋律与需要改写的既有轨道。范围外的音符、其他轨道与锁定音符不会被改变。</p>
    <p>局部 AI 重编会参考目标声部前后音符，以及其他保留声部的音符，用于衔接与避免声部冲突；这些参考内容不会被授权修改。</p>
    <label>参考旋律 <select aria-label="局部重编参考轨道" value={regionSourceId} onChange={e=>{setRegionSource(e.target.value);setRegionTarget('');invalidateRegion();}}>
