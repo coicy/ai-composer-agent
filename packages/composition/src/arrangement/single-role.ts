@@ -21,7 +21,8 @@ export async function proposeSingleRole(
 ):Promise<SingleRoleProposal>{
  const {project,sourceTrackId,targetTrackId,targetRole,startTick,endTick}=request;
  const context=prepareArrangementContext({
-  ...request,editing:{targetTrackId,targetRole,editConstraint:request.editConstraint}
+  ...request,editing:{targetTrackId,targetRole,editConstraint:request.editConstraint,
+   protectedPrefixCount:request.protectedPrefixCount,maxLeapSemitones:request.maxLeapSemitones}
  });
  // Includes input bounds, source existence, target locks, crossing notes, and plan validation.
  const raw=await provider.generate(context,signal);

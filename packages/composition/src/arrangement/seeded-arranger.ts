@@ -16,9 +16,19 @@ export class SeededArranger implements ArrangementProvider{
    if(!originals.length)throw new Error('pitch_only_requires_notes');
    const plan=context.plan;
    const events=plan?effectiveChordEvents(plan):[];
-   const pitches=originals.map(original=>{
+   const generatedPitches:number[]=[];
+   const prefix=context.editing.protectedPrefixCount??0;
+   const leap=context.editing.maxLeapSemitones;
+   const preceding=[...context.editing.before].sort((a,b)=>
+    b.startTick+b.durationTicks-(a.startTick+a.durationTicks)||a.pitch-b.pitch)[0];
+   const following=[...context.editing.after].sort((a,b)=>a.startTick-b.startTick||a.pitch-b.pitch)[0];
+   for(const [index,original] of originals.entries()){
     const eligible:number[]=[];
+    const previous=index===0?preceding:originals[index-1];
+    const previousPitch=index===0?preceding?.pitch:generatedPitches[index-1];
+    const next=index===originals.length-1?following:undefined;
     for(let pitch=0;pitch<=127;pitch++){
+     if(index<prefix&&pitch!==original.pitch)continue;
      const cls=pitch%12;
      if(plan){
       const range=plan.registers[role];
@@ -38,15 +48,20 @@ export class SeededArranger implements ArrangementProvider{
        if(firstEvents.some(event=>cls!==chordPitchClassesAtBeat(plan,event.startBeat)[event.inversion]))continue;
       }
      }
+     if(leap!==undefined&&previous&&previousPitch!==undefined&&
+      previous.startTick+previous.durationTicks<=original.startTick&&
+      Math.abs(pitch-previousPitch)>leap)continue;
+     if(leap!==undefined&&next&&original.startTick+original.durationTicks<=next.startTick&&
+      Math.abs(pitch-next.pitch)>leap)continue;
      eligible.push(pitch);
     }
-    const changed=eligible.filter(p=>p!==original.pitch);
-    if(!changed.length)throw new Error('unrealizable_harmony_plan');
-    changed.sort((a,b)=>Math.abs(a-original.pitch)-Math.abs(b-original.pitch)||a-b);
-    return changed[Math.floor(rng()*Math.min(6,changed.length))]!;
-   });
+    const possible=index<prefix?eligible:eligible.filter(p=>p!==original.pitch);
+    if(!possible.length)throw new Error('unrealizable_feedback_constraint');
+    possible.sort((a,b)=>Math.abs(a-original.pitch)-Math.abs(b-original.pitch)||a-b);
+    generatedPitches.push(index<prefix?original.pitch:possible[Math.floor(rng()*Math.min(6,possible.length))]!);
+   }
    return {role,notes:originals.map((note,i)=>({
-    pitch:pitches[i]!,startTick:note.startTick,durationTicks:note.durationTicks,velocity:note.velocity
+    pitch:generatedPitches[i]!,startTick:note.startTick,durationTicks:note.durationTicks,velocity:note.velocity
    }))};
   }
   const step=context.plan?.timeline?context.ppq:context.ppq*2;

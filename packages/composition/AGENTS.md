@@ -67,3 +67,8 @@ src/
 - When `editConstraint:'pitch_only'` is selected, require nonempty <=32 unlocked original target notes fully within the window **before provider calls**.
 - Model output timing, durations, velocity and note count must match the exact multiset of original notes. Preserve original Note IDs and commit only `update_note` operations whose sole changed key is `pitch`, with no-op changes rejected.
 - Never repair a timing violation, relax harmony hard rules, or transform full regeneration into rhythm-locked mode implicitly. Explicit user opt-in only.
+
+## Iterative feedback hard constraints
+- `protectedPrefixCount` is a count of chronological original target notes, not a note ID list. Protected pitches must not change; the value must be less than original target note count.
+- `maxLeapSemitones` bounds adjacent **non-overlapping** pitches in a pitch-only passage (including nearest untouched boundary notes). Do not interpret it as a complete harmonic voice-leading guarantee.
+- Both require `editConstraint:'pitch_only'`, are checked before provider invocation where possible and again after MIDI output, and must not be weakened to improve a sample. Persist approved feedback settings in provenance.
