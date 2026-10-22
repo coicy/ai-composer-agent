@@ -1,5 +1,6 @@
 import {createInterface} from 'node:readline';
 import {stdin,stdout} from 'node:process';
+import {randomUUID} from 'node:crypto';
 import {validateProject} from '@ai-composer/music-core';
 import {proposeWithProvider,SeededProvider} from '@ai-composer/composition';
 import type {MusicProject} from '@ai-composer/music-core';
@@ -27,7 +28,7 @@ async function invoke(name:string,args:Record<string,unknown>){
   if(!validateProject(args.project as MusicProject))throw Error('invalid_project');
   if(sessions.size>=MAX_SESSIONS)throw Error('session_limit');
   const project=structuredClone(args.project as MusicProject);
-  const sessionId=crypto.randomUUID();sessions.set(sessionId,{project,expires:Date.now()+TTL});
+  const sessionId=randomUUID();sessions.set(sessionId,{project,expires:Date.now()+TTL});
   return content({sessionId,projectId:project.projectId,revision:project.revision,expiresInSeconds:TTL/1000,warning:'Snapshot only; no live browser synchronization or commit capability'});
  }
  if(name==='music.close_snapshot'){const id=string(args.sessionId);return content({closed:sessions.delete(id)});}
