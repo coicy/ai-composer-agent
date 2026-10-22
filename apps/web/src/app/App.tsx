@@ -53,6 +53,8 @@ export function App(){
  const [regionBars,setRegionBars]=useState(1);
  const [regionSeed,setRegionSeed]=useState(19501);
  const [regionPitchOnly,setRegionPitchOnly]=useState(false);
+ const [regionProtectedPrefixCount,setRegionProtectedPrefixCount]=useState(0);
+ const [regionMaxLeap,setRegionMaxLeap]=useState(0);
  const [regionInstruction,setRegionInstruction]=useState('保留其他声部，给选定声部在指定小节写一个新的动机变化。');
  const [regionCandidate,setRegionCandidate]=useState<RegionRegenerationCandidate|null>(null);
  const [regionCandidates,setRegionCandidates]=useState<readonly RegionRegenerationCandidate[]>([]);
@@ -285,7 +287,9 @@ export function App(){
    project:snapshot,sourceTrackId:regionSourceId,targetTrackId:regionTargetId,targetRole:regionRole,
    startTick,endTick:startTick+regionBars*snapshot.ppq*4,
    instruction:regionInstruction,seed:regionSeed,
-   ...(regionPitchOnly?{editConstraint:'pitch_only' as const}:{}),
+   ...(regionPitchOnly?{editConstraint:'pitch_only' as const,
+    ...(regionProtectedPrefixCount>0?{protectedPrefixCount:regionProtectedPrefixCount}:{}),
+    ...(regionMaxLeap>0?{maxLeapSemitones:regionMaxLeap}:{})}:{}),
    ...(reuseApprovedPlan&&savedHarmonyPlan?{plan:savedHarmonyPlan.plan}:{})
   };
   try{
@@ -314,6 +318,8 @@ export function App(){
    startTick:pending.startTick,endTick:pending.endTick,seed:pending.seed,
    providerId:pending.providerId,instruction:regionInstruction,
    ...(pending.editConstraint?{editConstraint:pending.editConstraint}:{}),
+   ...(pending.protectedPrefixCount!==undefined?{protectedPrefixCount:pending.protectedPrefixCount}:{}),
+   ...(pending.maxLeapSemitones!==undefined?{maxLeapSemitones:pending.maxLeapSemitones}:{}),
    ...(pending.plan?{planJson:JSON.stringify(pending.plan)}:{})
   };
   const applied=commitSession(session,{...pending.changes,generationRecord:record});
@@ -546,6 +552,14 @@ export function App(){
    <label><input type="checkbox" aria-label="局部重编仅改音高" checked={regionPitchOnly}
     onChange={e=>{setRegionPitchOnly(e.target.checked);invalidateRegion();}}/>
     保留当前片段的所有节奏、时值、力度和音符 ID，仅重新生成音高</label>
+   {regionPitchOnly&&<div className="feedback-constraints" role="group" aria-label="局部反馈约束">
+    <label>保留乐句开头音符数 <input aria-label="保留开头音符数" type="number" min={0} max={16} step={1}
+     value={regionProtectedPrefixCount} onChange={e=>{setRegionProtectedPrefixCount(Number(e.target.value));invalidateRegion();}}/></label>
+    <label>相邻非重叠音符最大跳进（半音，0 为不限） <input aria-label="最大跳进半音数" type="number"
+     min={0} max={24} step={1} value={regionMaxLeap}
+     onChange={e=>{setRegionMaxLeap(Number(e.target.value));invalidateRegion();}}/></label>
+    <p>保留开头按起音顺序选取；最大跳进只约束不重叠的连续音符及选区边缘衔接。不会自动推断自由文本里的数值要求。</p>
+   </div>}
    <textarea aria-label="局部重编指令" rows={2} maxLength={2000} value={regionInstruction}
     onChange={e=>{setRegionInstruction(e.target.value);invalidateRegion();}}/>
    {savedHarmonyPlan?<label><input type="checkbox" checked={reuseApprovedPlan} onChange={e=>{setReuseApprovedPlan(e.target.checked);invalidateRegion();}}/>继承已批准和声规划（{savedHarmonyPlan.recordId}）</label>:
@@ -572,6 +586,10 @@ export function App(){
     <strong>{regionCandidate.editConstraint==='pitch_only'
      ?`待确认：仅更新 ${regionCandidate.changes.operations.length} 个音高，保留 ${regionCandidate.notes.length} 个音符的节奏、力度与 ID，Seed ${regionCandidate.seed}`
      :`待确认：${regionCandidate.removedNotes.length} 个旧音符将替换为 ${regionCandidate.notes.length} 个新音符，Seed ${regionCandidate.seed}`}</strong>
+    {regionCandidate.editConstraint==='pitch_only'&&
+     (regionCandidate.protectedPrefixCount||regionCandidate.maxLeapSemitones)&&
+     <p>反馈约束：保留开头 {regionCandidate.protectedPrefixCount??0} 音；
+      {regionCandidate.maxLeapSemitones?'最大跳进 '+regionCandidate.maxLeapSemitones+' 半音':'不限制跳进'}。</p>}
     <p>只修改 {project.tracks.find(t=>t.trackId===regionCandidate.targetTrackId)?.name??'目标轨道'} 的第 {Math.floor(regionCandidate.startTick/(project.ppq*4))+1} 小节起指定范围。钢琴卷帘中蓝色为候选音高，红色为{regionCandidate.editConstraint==='pitch_only'?'待更新音符（不会被删除）':'待删除音符'}。</p>
     {regionCandidate.changes.baseRevision!==project.revision&&<p className="error">候选已过期，请重新生成。</p>}
     <button disabled={regionCandidate.changes.baseRevision!==project.revision} onClick={()=>void auditionScopedRegion()}>试听局部重编候选</button>
