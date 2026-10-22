@@ -139,3 +139,13 @@ A generated feedback proposal is **not** proof that the user's words authorized 
 Reconciliation runs on **both** the loopback API and the browser before showing an AI draft. The user still must explicitly approve the reviewed draft before any scoped provider call or project change. Subjective wording (e.g., 'more tension') stays a creative instruction and cannot silently turn into a numerical MIDI guard.
 
 The deterministic offline parser is intentionally conservative: a genuinely explicit but unfamiliar phrase may not be recognized, in which case the user can set the numeric controls manually. This is preferable to fabricating an enforceable constraint; it does not provide natural-language coverage guarantees.
+
+## Failure-tolerant Seed banks for scoped regeneration
+
+A **new**, opt-in domain API `proposeRegionVariantBatch` returns `{candidates,failures}`. Each generated Seed still runs the original strict one-role MIDI contract, score/lock scope verification, Music Core dry-run and optional HarmonyPlan/pitch-only/protected-note checks. An invalid candidate never enters the approved list and no project mutation occurs during generation.
+
+**Shared invalid inputs fail the whole batch before any provider call:** invalid uint32 base Seed, count outside 2–4, invalid project/source/target, locked/cross-boundary notes, malformed HarmonyPlan or impossible input protection constraints. **Individual generation failures**—such as a model returning the wrong role, malformed MIDI, or an infeasible seed-specific pitch proposal—do not erase valid candidates from other Seeds. Failed Seed values are returned alongside **allowlisted error codes**, never raw provider responses or credentials. A request cancellation fails the whole batch and discards unpublished partial results.
+
+The browser's existing scoped multi-seed buttons now use this API. It displays verified candidates and failed Seeds separately, including the 0-valid case with no approval button. The older `proposeRegionVariants` strict all-or-nothing API remains exported for backwards compatibility. The user can preview, audition and explicitly approve **only** independently validated candidate ChangeSets. The project revision and authorized target region remain binding at approval.
+
+This is failure tolerance, **not automatic repairing, relaxing or ranking**. A failed candidate's hard music constraints stay enforced; Seed-conditioned offline generation is deterministic, whereas model results are not guaranteed repeatable.

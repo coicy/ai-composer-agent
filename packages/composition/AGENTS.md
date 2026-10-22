@@ -97,3 +97,7 @@ src/
 - For model-interpreted edits, validate schema **and** independently corroborate proposed prefix/jump/ordinal quantities in the actual user feedback text before presenting any hard-edit recommendation. Demote unsupported fields to unresolved.
 - Vague sentiment cannot authorize a new numeric MIDI limit or pitch-only mode. Server and browser use the same pure reconciliation contract; drafts still need user approval.
 - Never claim the conservative offline phrase patterns cover all possible Chinese or English formulations. Users can enter missing numeric preferences explicitly.
+
+## Failure-tolerant scoped variant generation
+- `proposeRegionVariantBatch` is a distinct opt-in workflow: shared illegal edits, locks, plans, bad seeds and cancellation must reject the entire batch; individual Seed-specific malformed/invalid generations may be reported separately without discarding other valid ChangeSets.
+- Publish only independently validated proposals; report sanitized/allowlisted error codes, never model responses or secrets. Do not relax hard musical constraints or treat zero valid candidates as an approval success. Preserve strict `proposeRegionVariants` API compatibility.
