@@ -27,6 +27,7 @@ function content(value:unknown){return {content:[{type:'text',text:JSON.stringif
 async function invoke(name:string,args:Record<string,unknown>){
  if(name==='music.open_snapshot'){
   if(!validateProject(args.project as MusicProject))throw Error('invalid_project');
+  if(JSON.stringify(args.project).length>MAX_LINE)throw Error('project_too_large');
   if(sessions.size>=MAX_SESSIONS)throw Error('session_limit');
   const project=structuredClone(args.project as MusicProject);
   const sessionId=randomUUID();sessions.set(sessionId,{project,expires:Date.now()+TTL});
@@ -40,7 +41,7 @@ async function invoke(name:string,args:Record<string,unknown>){
   if(integer(args.baseRevision)!==project.revision)throw Error('stale_revision');
   if(track.locked)throw Error('locked_track');
   if(!Array.isArray(args.notes)||args.notes.length>64)throw Error('invalid_notes');
-  const notes=args.notes.map((n,i)=>{const v=record(n);const pitch=integer(v.pitch),startTick=integer(v.startTick),durationTicks=integer(v.durationTicks),velocity=integer(v.velocity);if(pitch>127||velocity<1||velocity>127||durationTicks===0||startTick+durationTicks>project.ppq*4*256)throw Error('invalid_note');return {noteId:`mcp-preview-${i}`,pitch,startTick,durationTicks,velocity};});
+  const notes=args.notes.map((n,i)=>{const v=record(n);if(Object.keys(v).some(k=>!['pitch','startTick','durationTicks','velocity'].includes(k)))throw Error('unexpected_note_field');const pitch=integer(v.pitch),startTick=integer(v.startTick),durationTicks=integer(v.durationTicks),velocity=integer(v.velocity);if(pitch>127||velocity<1||velocity>127||durationTicks===0||startTick+durationTicks>project.ppq*4*256)throw Error('invalid_note');return {noteId:`mcp-preview-${i}`,pitch,startTick,durationTicks,velocity};});
   return content({projectId:project.projectId,baseRevision:project.revision,trackId,notes,approved:false,applied:false,warning:'Validated snapshot proposal only. Requires a future authorized live UI preview and user approval.'});
  }
  const startTick=integer(args.startTick),endTick=integer(args.endTick);if(endTick<=startTick||endTick-startTick>project.ppq*4*16)throw Error('invalid_scope');
@@ -61,6 +62,7 @@ export function startMcpStdio(){
    req=JSON.parse(line) as Request;
    if(!req||req.jsonrpc!=='2.0'||typeof req.method!=='string')throw Error('invalid_request');
    if(req.id===undefined)return;
+   if(typeof req.id!=='string'&&typeof req.id!=='number')throw Error('invalid_request_id');
    let result:unknown;
    if(req.method==='initialize')result={protocolVersion:'2025-03-26',capabilities:{tools:{listChanged:false}},serverInfo:{name:'ai-composer-mcp',version:'0.1.0'}};
    else if(req.method==='ping')result={};
