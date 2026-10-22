@@ -5,6 +5,7 @@ from collections import defaultdict,Counter
 from html.parser import HTMLParser
 import mido
 from midi_reference_facets import enrich_catalog,format_report
+from midi_reference_targets import evaluate_targets,format_targets
 
 HERE=pathlib.Path(__file__).resolve().parent
 OUT=HERE/'reference-output'
@@ -137,6 +138,10 @@ def main():
  coverage=enrich_catalog(items,lambda rel:(OUT/rel).read_bytes())
  (OUT/'coverage.json').write_text(json.dumps(coverage,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  (OUT/'COVERAGE.md').write_text(format_report(coverage),encoding='utf-8')
+ targets=evaluate_targets(items)
+ (OUT/'targets.json').write_text(json.dumps(targets,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+ (OUT/'TARGETS.md').write_text(format_targets(targets),encoding='utf-8')
+ print('TARGET_STATUS',targets['status_counts'],flush=True)
  print('FACET_COVERAGE',coverage['capabilities'],flush=True)
  print('MISSING_METERS',coverage['missing_priority_meters'],flush=True)
  manifest={'total_styles':len(RHYTHM)+len(GAME)+len(SCORE),'total_sampling_buckets':len(groups),'total_files':len(items),'style_counts':{k:len(groups[k]) for k in sorted(groups)},'items':items,
@@ -145,14 +150,15 @@ def main():
  'selection':'GMD beat-type performances; typical BPM, duration, mostly 4/4, differing drummers when available; game tracks selected by named context; Mutopia by canonical style and public-domain notation.',
  'facets_schema':'ai-composer-reference-facets-v1',
  'sampling_disclaimer':'meter_* buckets are facet probes, NOT musical style classes; 1-item probes are insufficient to represent a style.',
- 'coverage_file':'coverage.json'}
+ 'coverage_file':'coverage.json',
+ 'targets_file':'targets.json'}
  (OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  lines=['# Representative MIDI reference catalog','',str(len(RHYTHM)+len(GAME)+len(SCORE))+' original indexing groups plus '+str(len(groups)-len(RHYTHM)-len(GAME)-len(SCORE))+' **meter-only probe buckets**; '+str(len(items))+' original MIDI files.','','The meter-only buckets have 1 or 3 samples; a single rare meter example is **not a representative style**.','','## Tracks','']
  for style in sorted(groups):
   lines+=['### '+style,'']
   for x in groups[style]:lines.append('- '+x['file']+' — '+x['title']+' · '+x['license']+' · '+str(x['analysis']['note_count'])+' note-ons · '+x['source_page'])
   lines.append('')
- lines+=['## Coverage','', 'See COVERAGE.md and coverage.json. Feature dimensions are independent; no verified genre, mode, swing or form claims are inferred from MIDI alone.', '','## Usage','', '1. Hear the originals in an external General MIDI player.', '2. In ai-composer-agent use Import MIDI; verify note content and track division, not instrument/tempo fidelity.', '3. Feed feature summaries to an external LLM Agent rather than pasting entire copyrighted music into context.', '4. Preserve source and license information from manifest.json.', '', 'These original MIDI bytes have NOT been quantized, normalized, edited or re-exported.']
+ lines+=['## Coverage','', 'See COVERAGE.md, coverage.json, TARGETS.md and targets.json. Feature dimensions are independent; no verified genre, mode, swing or form claims are inferred from MIDI alone.', '','## Usage','', '1. Hear the originals in an external General MIDI player.', '2. In ai-composer-agent use Import MIDI; verify note content and track division, not instrument/tempo fidelity.', '3. Feed feature summaries to an external LLM Agent rather than pasting entire copyrighted music into context.', '4. Preserve source and license information from manifest.json.', '', 'These original MIDI bytes have NOT been quantized, normalized, edited or re-exported.']
  (OUT/'README.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
  with zipfile.ZipFile(HERE/'representative_midi_references.zip','w',zipfile.ZIP_DEFLATED) as z:
   for p in sorted(OUT.rglob('*')):
