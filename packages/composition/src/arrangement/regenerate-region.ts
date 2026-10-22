@@ -22,6 +22,7 @@ export interface RegionRegenerationCandidate {
  readonly targetRole:ArrangementRole;
  readonly editConstraint?:'pitch_only';
  readonly protectedPrefixCount?:number;
+ readonly protectedNoteIds?:readonly string[];
  readonly maxLeapSemitones?:number;
  readonly seed?:number;
  readonly startTick:number;
