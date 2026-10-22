@@ -32,20 +32,26 @@ describe('OpenAI arrangement API adapter',()=>{
  });
  it('passes protected neighbor notes without note IDs or writable track metadata',async()=>{
   const responseBody={status:'completed',output:[{type:'message',content:[{type:'output_text',
-   text:JSON.stringify(raw)}]}]};
+   text:JSON.stringify({role:'harmony',notes:[note]})}]}]};
   let observed:unknown;
   const fetcher=async(_url:string|URL|Request,init?:RequestInit)=>{
    const body=JSON.parse(String(init?.body));
    observed=JSON.parse(body.input);
+   expect(body.text.format.name).toBe('midi_role_v1');
+   expect(body.text.format.schema.required).toEqual(['role','notes']);
+   expect(body.text.format.schema.properties.tracks).toBeUndefined();
+   expect(body.text.format.schema.properties.role.enum).toEqual(['harmony','bass','accompaniment']);
+   expect(body.instructions).toContain('ONE scoped MIDI part');
+   expect(body.max_output_tokens).toBe(2500);
    return new Response(JSON.stringify(responseBody),{status:200});
   };
   const provider=createOpenAIArranger({apiKey:'fake-key',model:'test-model',fetcher:fetcher as typeof fetch});
   const near={noteId:'SECRET_TARGET_NEIGHBOR',pitch:64,startTick:0,durationTicks:480,velocity:85};
   const protectedNote={noteId:'SECRET_OTHER_TRACK',pitch:40,startTick:0,durationTicks:480,velocity:70};
-  await provider.generate({...context,editing:{
+  expect(await provider.generate({...context,editing:{
    targetTrackId:'SECRET_TARGET_TRACK',targetRole:'harmony',before:[near],
    original:[],after:[],protectedParts:[{trackIndex:2,notes:[protectedNote]}]
-  }});
+  }})).toEqual({role:'harmony',notes:[note]});
   const input=observed as {editingScope?:{targetRole:string;targetBefore:unknown[];protectedParts:unknown[]}};
   expect(input.editingScope?.targetRole).toBe('harmony');
   expect(input.editingScope?.targetBefore).toEqual([{pitch:64,startTick:0,durationTicks:480,velocity:85}]);
