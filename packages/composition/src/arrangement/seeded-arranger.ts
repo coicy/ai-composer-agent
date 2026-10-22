@@ -18,6 +18,7 @@ export class SeededArranger implements ArrangementProvider{
    const events=plan?effectiveChordEvents(plan):[];
    const generatedPitches:number[]=[];
    const prefix=context.editing.protectedPrefixCount??0;
+   const selectedIds=new Set(context.editing.protectedNoteIds??[]);
    const leap=context.editing.maxLeapSemitones;
    const preceding=[...context.editing.before].sort((a,b)=>
     b.startTick+b.durationTicks-(a.startTick+a.durationTicks)||a.pitch-b.pitch)[0];
@@ -28,7 +29,7 @@ export class SeededArranger implements ArrangementProvider{
     const previousPitch=index===0?preceding?.pitch:generatedPitches[index-1];
     const next=index===originals.length-1?following:undefined;
     for(let pitch=0;pitch<=127;pitch++){
-     if(index<prefix&&pitch!==original.pitch)continue;
+     if((index<prefix||selectedIds.has(original.noteId))&&pitch!==original.pitch)continue;
      const cls=pitch%12;
      if(plan){
       const range=plan.registers[role];
@@ -55,10 +56,11 @@ export class SeededArranger implements ArrangementProvider{
       Math.abs(pitch-next.pitch)>leap)continue;
      eligible.push(pitch);
     }
-    const possible=index<prefix?eligible:eligible.filter(p=>p!==original.pitch);
+    const guarded=index<prefix||selectedIds.has(original.noteId);
+    const possible=guarded?eligible:eligible.filter(p=>p!==original.pitch);
     if(!possible.length)throw new Error('unrealizable_feedback_constraint');
     possible.sort((a,b)=>Math.abs(a-original.pitch)-Math.abs(b-original.pitch)||a-b);
-    generatedPitches.push(index<prefix?original.pitch:possible[Math.floor(rng()*Math.min(6,possible.length))]!);
+    generatedPitches.push(guarded?original.pitch:possible[Math.floor(rng()*Math.min(6,possible.length))]!);
    }
    return {role,notes:originals.map((note,i)=>({
     pitch:generatedPitches[i]!,startTick:note.startTick,durationTicks:note.durationTicks,velocity:note.velocity
