@@ -687,9 +687,9 @@ export function App(){
       指定音符：{activeFeedbackDraft.value.protectedNoteOrdinals?.length?
        activeFeedbackDraft.value.protectedNoteOrdinals.map(i=>`第${i}个音符`).join('、'):'无'}；
       最大跳进：{activeFeedbackDraft.value.maxLeapSemitones??'不设置'} 半音</p>
-     {activeFeedbackDraft.value.protectedNoteOrdinals?.length>0&&
+     {(activeFeedbackDraft.value.protectedNoteOrdinals??[]).length>0&&
       <p>音符映射预览（起点→音高）：
-       {activeFeedbackDraft.value.protectedNoteOrdinals.map(i=>{
+       {(activeFeedbackDraft.value.protectedNoteOrdinals??[]).map(i=>{
         const n=displayedProtectableNotes[i-1];
         return n?`第${i}个：${n.startTick} → MIDI ${n.pitch}`:`第${i}个已失效`;
        }).join('；')}</p>}
