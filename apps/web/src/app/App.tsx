@@ -52,6 +52,7 @@ export function App(){
  const [regionStartBar,setRegionStartBar]=useState(1);
  const [regionBars,setRegionBars]=useState(1);
  const [regionSeed,setRegionSeed]=useState(19501);
+ const [regionPitchOnly,setRegionPitchOnly]=useState(false);
  const [regionInstruction,setRegionInstruction]=useState('保留其他声部，给选定声部在指定小节写一个新的动机变化。');
  const [regionCandidate,setRegionCandidate]=useState<RegionRegenerationCandidate|null>(null);
  const [regionCandidates,setRegionCandidates]=useState<readonly RegionRegenerationCandidate[]>([]);
@@ -284,6 +285,7 @@ export function App(){
    project:snapshot,sourceTrackId:regionSourceId,targetTrackId:regionTargetId,targetRole:regionRole,
    startTick,endTick:startTick+regionBars*snapshot.ppq*4,
    instruction:regionInstruction,seed:regionSeed,
+   ...(regionPitchOnly?{editConstraint:'pitch_only' as const}:{}),
    ...(reuseApprovedPlan&&savedHarmonyPlan?{plan:savedHarmonyPlan.plan}:{})
   };
   try{
@@ -540,6 +542,9 @@ export function App(){
     onChange={e=>{setRegionBars(Number(e.target.value));invalidateRegion();}}/></label>
    <label>Seed <input type="number" aria-label="局部重编随机种子" min={0} max={4294967295} step={1} value={regionSeed}
     onChange={e=>{setRegionSeed(Number(e.target.value));invalidateRegion();}}/></label>
+   <label><input type="checkbox" aria-label="局部重编仅改音高" checked={regionPitchOnly}
+    onChange={e=>{setRegionPitchOnly(e.target.checked);invalidateRegion();}}/>
+    保留当前片段的所有节奏、时值、力度和音符 ID，仅重新生成音高</label>
    <textarea aria-label="局部重编指令" rows={2} maxLength={2000} value={regionInstruction}
     onChange={e=>{setRegionInstruction(e.target.value);invalidateRegion();}}/>
    {savedHarmonyPlan?<label><input type="checkbox" checked={reuseApprovedPlan} onChange={e=>{setReuseApprovedPlan(e.target.checked);invalidateRegion();}}/>继承已批准和声规划（{savedHarmonyPlan.recordId}）</label>:

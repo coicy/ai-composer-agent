@@ -52,7 +52,7 @@ export function createArrangementEditingContext(
    distance(a,startTick,endTick)-distance(b,startTick,endTick)||byTime(a,b)).slice(0,MAX_PART_NOTES).sort(byTime);
   if(notes.length)protectedParts.push({trackIndex,notes:clone(notes)});
  }
- return {targetTrackId:intent.targetTrackId,targetRole:intent.targetRole,
+ return {targetTrackId:intent.targetTrackId,targetRole:intent.targetRole,editConstraint:intent.editConstraint,
   before:clone(before),original:clone([...original].sort(byTime).slice(0,MAX_ORIGINAL)),
   after:clone(after),protectedParts};
 }
