@@ -9,6 +9,8 @@
 - 所有变更通过 music-core 命令执行器，`baseRevision` + 授权范围 + 锁检查 + 原子提交；AI 变更先 preview，显式批准后应用；支持撤销。
 - 外来内容与 AI 返回不可信；密钥不能放前端、仓库或日志；不得虚报已实现功能或测试。
 
+- **D-006（2026-10-22）**：提供外部 Agent + MCP 及内部通用 LLM API + key 两种入口；必须遵守 `docs/DUAL_ENTRY_AND_SECRET_SECURITY.md`，凭据不能写入仓库、日志或工程文件；MCP 不可绕过用户批准。
+
 ## 权威次序
 1. 用户最新明确裁决。
 2. `docs/DECISIONS.md` 中 accepted。
