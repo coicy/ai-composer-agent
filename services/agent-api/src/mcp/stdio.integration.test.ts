@@ -186,7 +186,7 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
    sessionId:openedSession,trackId:'melody',startTick:0,endTick:1920
   }));
   expect(reread.notes).toEqual([sourceNote]);
-  expect(value(await tool('music.list_tracks',{sessionId:openedSession})).toMatchObject({revision:7});
+  expect(value(await tool('music.list_tracks',{sessionId:openedSession}))).toMatchObject({revision:7});
   passed('LLM candidate / Music Core dry-run / no unapproved write');
  });
  it('rejects locked tracks, stale revisions, malformed MIDI and invalid scope',async()=>{
