@@ -27,3 +27,5 @@ export {findReusableHarmonyPlan} from './arrangement/reuse-plan.js';
 export type {ReusablePlan} from './arrangement/reuse-plan.js';
 export {createArrangementEditingContext} from './arrangement/editing-context.js';
 export type {ArrangementEditingContext,ArrangementEditingIntent,ProtectedPartContext} from './arrangement/editing-context.js';
+export {proposeSingleRole} from './arrangement/single-role.js';
+export type {SingleRoleProposal} from './arrangement/single-role.js';

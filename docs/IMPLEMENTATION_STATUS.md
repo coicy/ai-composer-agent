@@ -70,3 +70,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - API sends only validated target track/role intent; the server independently derives protected context, checks locks and crossing notes before the model invocation, and serializes note music fields without stable note IDs.
 - Model is advised about phrase continuity and preserving other parts; only the chosen target role may be applied as a single revision-checked ChangeSet. Music quality remains untested against real arrangements.
 - See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
+
+## Scoped single-role output (current)
+- Explicit local editing intent now selects a one-role schema `{role,notes}` rather than generating discarded parts in all three roles; full initial AI arrangement retains `{tracks:[...]}`.
+- Shared composition preflight verifies source melody and locked/cross-boundary target before model invocation. Client/server independently validate the selected role, MIDI fields/timing/quantity and that role's hard HarmonyPlan constraints.
+- Seeded offline demonstration uses the role-specific deterministic stream; E2E and API tests ensure a malicious or legacy three-track payload cannot be committed as a scoped edit.
+- No real-model token-cost measurements or listening assessment yet. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.

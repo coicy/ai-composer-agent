@@ -136,18 +136,16 @@ describe('agent API',()=>{
   let calls=0;
   const arrangerFactory=()=>({id:'mock',async generate(ctx:{editing?:unknown}){
    calls++;editing=ctx.editing;
-   return {tracks:[
-    {role:'harmony',notes:[{pitch:67,startTick:1920,durationTicks:480,velocity:75}]},
-    {role:'bass',notes:[{pitch:36,startTick:1920,durationTicks:480,velocity:75}]},
-    {role:'accompaniment',notes:[{pitch:55,startTick:1920,durationTicks:480,velocity:75}]}
-   ]};
+   return {role:'harmony',notes:[{pitch:67,startTick:1920,durationTicks:480,velocity:75}]};
   }});
   const url=await launch({apiKey:'fake',arrangerFactory});
   const payload={project:source,sourceTrackId:'melody',startTick:1920,endTick:3840,instruction:'replace harmony',
    editing:{targetTrackId:'harmony',targetRole:'harmony'}};
   const post=async(body:unknown)=>fetch(url+'/api/arrange',{method:'POST',headers:{'content-type':'application/json'},
    body:JSON.stringify(body)});
-  expect((await post(payload)).status).toBe(200);
+  const success=await post(payload);
+  expect(success.status).toBe(200);
+  expect(await success.json()).toEqual({role:'harmony',notes:[{pitch:67,startTick:1920,durationTicks:480,velocity:75}]});
   expect(editing).toMatchObject({
    targetRole:'harmony',original:[old],protectedParts:[{trackIndex:2,notes:[bass]}]
   });
@@ -159,6 +157,21 @@ describe('agent API',()=>{
   expect(locked.status).toBe(422);
   expect((await locked.json()).error).toBe('track_locked');
   expect(calls).toBe(1);
+ });
+ it('rejects invalid one-role outputs without partially updating existing tracks',async()=>{
+  const melody={noteId:'source',pitch:64,startTick:0,durationTicks:480,velocity:90};
+  const src={...project,tracks:[
+   {trackId:'melody',name:'Melody',locked:false,notes:[melody]},
+   {trackId:'h',name:'Existing harmony',locked:false,notes:[{noteId:'old',pitch:67,startTick:0,durationTicks:480,velocity:80}]}
+  ]};
+  const factory=()=>({id:'bad',async generate(){return {tracks:[{role:'harmony',notes:[]}]};}});
+  const url=await launch({apiKey:'fake',arrangerFactory:factory});
+  const res=await fetch(url+'/api/arrange',{method:'POST',headers:{'content-type':'application/json'},
+   body:JSON.stringify({project:src,sourceTrackId:'melody',startTick:0,endTick:1920,instruction:'rewrite',
+    editing:{targetTrackId:'h',targetRole:'harmony'}})});
+  expect(res.status).toBe(502);
+  expect(await res.json()).toEqual({error:'generation_failed'});
+  expect(src.tracks[1]?.notes).toHaveLength(1);
  });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};

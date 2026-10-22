@@ -37,3 +37,19 @@ The client sends only `{editing:{targetTrackId,targetRole}}` to the loopback age
 Only numeric musical note fields (pitch, startTick, durationTicks, velocity) and a read-only track index are serialized into the OpenAI Responses API input. Stable IDs, track names and writable commands are not included in `editingScope`. Existing source-melody output validation, hard HarmonyPlan constraints, music-core dry-run and atomic approval remain in force. The model still returns all three roles for protocol compatibility; only the requested target role can become a scoped ChangeSet.
 
 Limitations: this is additional *generation context*, not proof of sophisticated voice-leading or orchestration. It does not expose entire large projects to the model or permit editing preserved parts; live-model musical quality is unverified.
+
+## Single-role targeted generation protocol (current)
+
+The prior three-track `/api/arrange` response remains the contract for **initial full arrangement only**. When `editing:{targetTrackId,targetRole}` is present, the server now invokes `proposeRegionRegeneration` and its shared preflight, then requests a **single part**. Scoped output is strictly:
+
+```json
+{"role":"harmony","notes":[{"pitch":64,"startTick":0,"durationTicks":480,"velocity":80}]}
+```
+
+Exactly one matching `role` and 1–64 MIDI notes must appear. The server **and browser independently reject** a three-track payload, any other role, note IDs, edit commands, malformed notes, illegal MIDI values, and out-of-scope notes. The response never grants permission to modify the source melody or other existing parts.
+
+The browser continues using the existing `/api/arrange` route and `createRemoteArranger` transport; the server branches on validated editing intent, returns only the selected part, and emits the selected-role Structured Outputs schema to OpenAI. The model still receives read-only melody/neighbor/protected-part musical context but **does not** generate unused harmony/bass/accompaniment. This reduces output schema/volume; cost and quality reductions are not empirically measured.
+
+Local `SeededArranger` now emits only the requested role when editing intent is present, using the **same role-index-derived RNG stream** as its legacy three-part version. A role-specific plan check applies scale/chords/registers/inversions only to the newly generated part; otherwise, an ungenerated bass part might erroneously fail an inversion check.
+
+The API keeps the full existing MusicProject snapshot as untrusted input in its local prototype context. It does not provide hosted multi-user authentication. The final `delete_note` + `add_note` ChangeSet still runs through Music Core dry-run and revision-checked explicit confirmation, leaving locks, source/other tracks and out-of-region material untouched.

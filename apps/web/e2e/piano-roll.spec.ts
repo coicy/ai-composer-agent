@@ -317,10 +317,8 @@ test('scoped remote proposal outside selected time window is rejected without mu
  await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
  await page.getByRole('button',{name:'确认新增 3 轨'}).click();
  await page.route('**/api/arrange',async route=>{
-  const tracks=['harmony','bass','accompaniment'].map(role=>({
-   role,notes:[{pitch:60,startTick:9600,durationTicks:480,velocity:80}]
-  }));
-  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({tracks})});
+  await route.fulfill({status:200,contentType:'application/json',
+   body:JSON.stringify({role:'harmony',notes:[{pitch:60,startTick:9600,durationTicks:480,velocity:80}]})});
  });
  await page.getByRole('button',{name:'AI 局部重编'}).click();
  await expect(page.getByRole('alert')).toContainText('arrangement_note_outside_scope');
@@ -407,12 +405,8 @@ test('remote scoped regeneration sends target intent, then previews only the sel
  let received:unknown;
  await page.route('**/api/arrange',async route=>{
   received=route.request().postDataJSON();
-  const tracks=[
-   {role:'harmony',notes:[{pitch:67,startTick:0,durationTicks:480,velocity:80}]},
-   {role:'bass',notes:[{pitch:36,startTick:0,durationTicks:480,velocity:80}]},
-   {role:'accompaniment',notes:[{pitch:55,startTick:0,durationTicks:480,velocity:80}]}
-  ];
-  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({tracks})});
+  await route.fulfill({status:200,contentType:'application/json',
+   body:JSON.stringify({role:'harmony',notes:[{pitch:67,startTick:0,durationTicks:480,velocity:80}]})});
  });
  await page.getByRole('button',{name:'AI 局部重编'}).click();
  const payload=received as {editing?:unknown};
@@ -423,4 +417,37 @@ test('remote scoped regeneration sends target intent, then previews only the sel
  await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
  await page.getByRole('combobox',{name:'当前轨道'}).selectOption('melody');
  await expect(page.locator('.note')).toHaveCount(1);
+});
+
+test('scoped AI rejects a three-role legacy payload when only one role is authorized',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.route('**/api/arrange',async route=>{
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+   tracks:['harmony','bass','accompaniment'].map(role=>({role,notes:[
+    {pitch:64,startTick:0,durationTicks:480,velocity:70}
+   ]}))
+  })});
+ });
+ await page.getByRole('button',{name:'AI 局部重编'}).click();
+ await expect(page.getByRole('alert')).toContainText('invalid_single_role_output');
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toHaveCount(0);
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+});
+
+test('scoped AI rejects a mismatched single role without modifying another part',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.route('**/api/arrange',async route=>{
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+   role:'bass',notes:[{pitch:36,startTick:0,durationTicks:480,velocity:75}]
+  })});
+ });
+ await page.getByRole('button',{name:'AI 局部重编'}).click();
+ await expect(page.getByRole('alert')).toContainText('invalid_single_role_output');
+ await expect(page.getByRole('button',{name:'确认局部替换'})).toHaveCount(0);
 });

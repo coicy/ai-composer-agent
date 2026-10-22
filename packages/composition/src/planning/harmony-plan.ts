@@ -132,11 +132,12 @@ export function isStepwisePassingTone(notes:readonly MidiNote[],index:number,pla
  return tones.has(pc(previous.pitch))&&tones.has(pc(next.pitch))&&!tones.has(pc(current.pitch));
 }
 /** Hard rules apply to all overlapping chord windows. A passing-tone exception is narrowly defined by adjacent voices. */
-export function checkHarmonyPlan(plan:HarmonyPlan,tracks:readonly MusicTrack[],startTick:number,endTick:number,ppq:number):PlanFinding[]{
+export function checkHarmonyPlan(plan:HarmonyPlan,tracks:readonly MusicTrack[],startTick:number,endTick:number,ppq:number,onlyRole?:ArrangementRole):PlanFinding[]{
  const findings:PlanFinding[]=[];
  const scale=new Set(scalePitchClasses(plan));
  const events=effectiveChordEvents(plan);
  for(const [i,role] of ROLES.entries()){
+  if(onlyRole!==undefined&&role!==onlyRole)continue;
   const track=tracks[i];
   if(!track)throw new Error('invalid_arrangement_track');
   const count={scale:0,chords:0,registers:0,inversions:0};

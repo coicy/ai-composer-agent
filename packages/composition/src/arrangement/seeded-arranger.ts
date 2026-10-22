@@ -11,7 +11,9 @@ export class SeededArranger implements ArrangementProvider{
  async generate(context:ArrangementContext):Promise<unknown>{
   const step=context.plan?.timeline?context.ppq:context.ppq*2;
   const sources=[...context.sourceNotes].sort((a,b)=>a.startTick-b.startTick);
-  return {tracks:ARRANGEMENT_ROLES.map((role:ArrangementRole,roleIndex:number)=>{
+  const roles:readonly ArrangementRole[]=context.editing?[context.editing.targetRole]:ARRANGEMENT_ROLES;
+  const generated=roles.map((role:ArrangementRole)=>{
+   const roleIndex=ARRANGEMENT_ROLES.indexOf(role);
    const notes=[];
    const rng=context.seed===undefined?null:prng((context.seed^Math.imul(roleIndex+1,0x9e3779b9))>>>0);
    for(let tick=context.startTick;tick<context.endTick;tick+=step){
@@ -42,6 +44,7 @@ export class SeededArranger implements ArrangementProvider{
     notes.push({pitch:generated,startTick:tick,durationTicks:actualDuration,velocity});
    }
    return {role,notes};
-  })};
+  });
+  return context.editing?{role:context.editing.targetRole,notes:generated[0]!.notes}:{tracks:generated};
  }
 }

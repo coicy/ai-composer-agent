@@ -57,3 +57,8 @@ src/
 - Build neighbor and protected-part context exclusively from validated MusicProject; never trust client-supplied note arrays or apply model-proposed modifications to protected tracks.
 - Bound target before/after/original notes and other-part note counts. Keep original note IDs internal; serialize only musical note properties to provider inputs.
 - Lock and cross-boundary checks must occur before requesting a model completion. Scoped proposals may change only the chosen target track and time range.
+
+## Single-role output boundary
+- Initial three-track arrangement **must** retain `{tracks:[harmony,bass,accompaniment]}`.
+- A scoped edit **must** return exactly `{role,notes}` matching the requested existing target role; never implicitly accept or project three-track model outputs.
+- Apply only the selected role's hard music-plan checks, and rerun all preflight/MIDI validations before a dry-run; the source and protected tracks remain read-only. No model-owned IDs or ChangeSets.
