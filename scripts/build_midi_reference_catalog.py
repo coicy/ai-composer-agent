@@ -153,8 +153,8 @@ def main():
    page='https://www.mutopiaproject.org/cgibin/piece-info.cgi?id='+str(piece_id)
    html_page=fetch(page,500_000).decode('utf-8','replace')
    # Release is conditional on each specific edition asserting Public Domain.
-   plain=re.sub(r'\\s+',' ',html.unescape(re.sub(r'<[^>]+>',' ',html_page)))
-   if not re.search(r'Copyright:\\s*Public Domain',plain,re.IGNORECASE):
+   plain=re.sub(r'\s+',' ',html.unescape(re.sub(r'<[^>]+>',' ',html_page)))
+   if not re.search(r'Copyright:\s*Public Domain',plain,re.IGNORECASE):
     raise RuntimeError('No work-specific Public Domain declaration: '+page)
    if piece_id not in MUTOPIA_EDITORS:raise RuntimeError('Missing edition editor attribution: '+page)
    links=MidiLinks();links.feed(html_page)
