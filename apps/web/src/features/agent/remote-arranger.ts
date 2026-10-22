@@ -9,6 +9,7 @@ export function createRemoteArranger(project:ArrangementRequest['project']):Arra
     ...(context.editing?{editing:{targetTrackId:context.editing.targetTrackId,targetRole:context.editing.targetRole,
      ...(context.editing.editConstraint?{editConstraint:context.editing.editConstraint}:{}),
      ...(context.editing.protectedPrefixCount!==undefined?{protectedPrefixCount:context.editing.protectedPrefixCount}:{}),
+     ...(context.editing.protectedNoteIds?.length?{protectedNoteIds:context.editing.protectedNoteIds}:{ }),
      ...(context.editing.maxLeapSemitones!==undefined?{maxLeapSemitones:context.editing.maxLeapSemitones}:{})}}:{})})
   });}catch{
    if(signal?.aborted)throw new Error('generation_cancelled');
