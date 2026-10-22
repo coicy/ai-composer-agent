@@ -135,7 +135,9 @@ def build_coverage(items):
  return {
   'schema':'ai-composer-reference-coverage-v1',
   'total_midi':len(items),
-  'original_index_groups':dict(sorted(groups.items())),
+  'original_index_groups':{k:v for k,v in sorted(groups.items()) if not k.startswith('meter_')},
+  'meter_probe_buckets':{k:v for k,v in sorted(groups.items()) if k.startswith('meter_')},
+  'sampling_bucket_counts':dict(sorted(groups.items())),
   'evidence_source_counts':dict(sorted(sources.items())),
   'source_style_labels':dict(sorted(styles.items())),
   'known_distinct_drummers_by_bucket':{k:len(v) for k,v in sorted(performers.items())},
@@ -172,7 +174,8 @@ def format_report(coverage):
  lines=['# 多维 MIDI 覆盖矩阵（自动生成）','',
         '> MIDI 事件证据与未验证风格严格分离；文件夹名不是互斥的流派标签。','',
         f"- MIDI 文件数：{coverage['total_midi']}",
-        f"- 原有索引组数：{len(coverage['original_index_groups'])}",
+        f"- 原有风格/场景索引组数：{len(coverage['original_index_groups'])}",
+        f"- 拍号专项采样桶数：{len(coverage['meter_probe_buckets'])}",
         '','## 拍号覆盖','','| 拍号 | MIDI 数量 | 结果 |','|---|---:|---|']
  for m,n in coverage['priority_meters'].items():
   lines.append(f'| {m} | {n} | '+('已有证据' if n else '**待补充**')+' |')
