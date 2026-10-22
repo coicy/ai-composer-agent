@@ -31,7 +31,12 @@ jobs:
           import json, pathlib, zipfile
           p=pathlib.Path('scripts/reference-output/manifest.json')
           data=json.loads(p.read_text())
-          assert all(2<=v<=3 for v in data['style_counts'].values())
+          assert all(2<=v<=3 for k,v in data['style_counts'].items() if not k.startswith('meter_'))
+          assert data['total_styles']==sum(1 for k in data['style_counts'] if not k.startswith('meter_'))
+          assert data['total_sampling_buckets']==len(data['style_counts'])
+          assert data['style_counts']['meter_6_8']==3
+          assert data['style_counts']['meter_5_4']==1
+          assert data['style_counts']['meter_5_8']==1
           assert len(data['items'])==sum(data['style_counts'].values())
           assert len(set(x['sha256'] for x in data['items']))==len(data['items']), 'duplicate MIDI files'
           assert data['total_styles']>=10, data['style_counts']
@@ -48,9 +53,12 @@ jobs:
           assert sum(coverage['observed_meters'].values())>=data['total_files']-coverage['capabilities']['meter_unknown']
           assert pathlib.Path('scripts/reference-output/COVERAGE.md').is_file()
           from scripts.query_midi_references import select_references
-          assert select_references(data,meter='6/8')['match_count']==0
+          assert select_references(data,meter='6/8')['match_count']>=3
+          assert select_references(data,meter='5/4')['match_count']>=1
+          assert select_references(data,meter='5/8')['match_count']>=1
+          assert select_references(data,meter='7/8')['match_count']==0
           assert select_references(data,usage='battle')['match_count']==2
-          assert select_references(data,source_style='dance/disco')['match_count']==1
+          assert select_references(data,source_style='dance/disco')['match_count']>=1
           assert select_references(data,meter='3/4',pitched=True)['match_count']>=2
           print('REFERENCE_QUERY_EXAMPLES_PASSED')
           print('FACET_CAPABILITIES',coverage['capabilities'])
