@@ -94,3 +94,8 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Added a model-backed `POST /api/feedback` strict-schema proposal API, exposing only user feedback text and selected target note count (no MIDI or identifiers). Both server and browser check untrusted output.
 - A scoped editor review panel requires explicit approval to copy recommended settings into existing edit controls. Choosing text-only changes the creative prompt without adding hard rules. This stage never starts generation or edits the project, and stale drafts are invalidated.
 - No genuine human listening study or universal free-form feedback understanding; see docs/SCOPED_ARRANGEMENT_REGENERATION.md.
+
+## Individual protected notes for scoped pitch-only changes
+- Target selection now supports individually protected MIDI note IDs, beyond protecting a chronological opening prefix. The browser lists current target notes in scope, captures Piano Roll multiselection, and ignores previous selections when scope/project changes.
+- Preflight rejects nonexisting, duplicated, out-of-range, all-protected, ambiguous identical notes, and non-pitch-only use. Hard checks keep protected pitches and ID mappings immutable across seeded and remote proposals; models receive indices only.
+- Approved JSON provenance saves these IDs; source and other parts remain untouched, and undo/redo retain previous behavior. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
