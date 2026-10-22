@@ -3,7 +3,7 @@ import {playProject} from '@ai-composer/audio-engine';
 import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes,tickToX,xToQuantizedTick,pitchToY,yToPitch,makeMoveOperations,makeVelocityOperations} from '@ai-composer/piano-roll';
 import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
-import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,proposeArrangementVariants,combineArrangementVariants,SeededArranger,proposeRegionRegeneration,proposeRegionVariants,findReusableHarmonyPlan,ARRANGEMENT_ROLES,interpretFeedbackRules,hasActionableFeedback,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel,chordEventLabel,effectiveChordEvents} from '@ai-composer/composition';
+import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,proposeArrangementVariants,combineArrangementVariants,SeededArranger,proposeRegionRegeneration,proposeRegionVariantBatch,findReusableHarmonyPlan,ARRANGEMENT_ROLES,interpretFeedbackRules,hasActionableFeedback,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel,chordEventLabel,effectiveChordEvents} from '@ai-composer/composition';
 import {createRemoteProvider} from '../features/agent/remote.js';
 import {createRemoteArranger} from '../features/agent/remote-arranger.js';
 import {requestRemoteFeedback} from '../features/agent/remote-feedback.js';
@@ -65,6 +65,7 @@ export function App(){
  const feedbackRequest=useRef<AbortController|null>(null);
  const [regionCandidate,setRegionCandidate]=useState<RegionRegenerationCandidate|null>(null);
  const [regionCandidates,setRegionCandidates]=useState<readonly RegionRegenerationCandidate[]>([]);
+ const [regionFailures,setRegionFailures]=useState<readonly {seed:number;reason:string}[]>([]);
  const [regionVariantCount,setRegionVariantCount]=useState(3);
  const [reuseApprovedPlan,setReuseApprovedPlan]=useState(true);
  const [regionPending,setRegionPending]=useState(false);
@@ -113,7 +114,7 @@ export function App(){
   regionRequest.current=null;
   setRegionPending(false);
   setRegionCandidate(null);
-  setRegionCandidates([]);
+  setRegionCandidates([]);setRegionFailures([]);
   setRegionProtectedSelection({key:'',ids:[]});
  },[project.revision]);
  const STEP=Math.max(1,Math.round(project.ppq/4));
@@ -287,7 +288,7 @@ export function App(){
   regionRequest.current=null;
   setRegionPending(false);
   setRegionCandidate(null);
-  setRegionCandidates([]);
+  setRegionCandidates([]);setRegionFailures([]);
  }
  async function analyzeFeedback(useModel:boolean){
   if(!regionTargetId||feedbackNoteCount<1||feedbackNoteCount>32){
@@ -379,13 +380,14 @@ export function App(){
   try{
    const provider=useModel?createRemoteArranger(snapshot):new SeededArranger();
    if(multiple){
-    const variants=await proposeRegionVariants(provider,request,regionVariantCount,controller.signal);
+    const batch=await proposeRegionVariantBatch(provider,request,regionVariantCount,controller.signal);
     if(regionRequest.current!==controller||controller.signal.aborted)return;
-    setRegionCandidates(variants);setRegionCandidate(variants[0]!);
+    setRegionCandidates(batch.candidates);setRegionFailures(batch.failures);
+    setRegionCandidate(batch.candidates[0]??null);
    }else{
     const proposal=await proposeRegionRegeneration(provider,request,controller.signal);
     if(regionRequest.current!==controller||controller.signal.aborted)return;
-    setRegionCandidates([]);setRegionCandidate(proposal);
+    setRegionCandidates([]);setRegionFailures([]);setRegionCandidate(proposal);
    }
    setActiveTrack(regionTargetId);
    setSelected(null);setSelectedNoteIds([]);setError('');
@@ -716,6 +718,11 @@ export function App(){
     <button disabled={regionPending||!regionTargetId||!regionInstruction.trim()} onClick={()=>void proposeScopedRegion(true)}>AI 局部重编</button>
     {regionPending&&<button onClick={invalidateRegion}>取消局部请求</button>}
    </div>
+   {regionFailures.length>0&&<section className="region-variant-failures" role="region" aria-label="局部候选失败种子">
+    <strong>候选验证：{regionCandidates.length} 组通过、{regionFailures.length} 组未通过（未提交）</strong>
+    <ul>{regionFailures.map(failure=><li key={failure.seed}>Seed {failure.seed} · {failure.reason}</li>)}</ul>
+    <p>未通过的种子没有被修复或加入候选；仅通过校验的方案可试听和确认。模型服务内部错误不会在这里显示敏感详情。</p>
+   </section>}
    {regionCandidates.length>0&&<section className="scoped-variants" role="region" aria-label="局部重编方案比较">
     <strong>局部候选比较：{regionCandidates.length} 个方案（尚未提交）</strong>
     {regionCandidates.map((option,i)=><button type="button" key={option.seed} aria-pressed={regionCandidate===option}
