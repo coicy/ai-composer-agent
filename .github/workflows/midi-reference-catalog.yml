@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/build_midi_reference_catalog.py'
       - 'scripts/midi_reference_facets.py'
+      - 'scripts/midi_reference_targets.py'
       - 'scripts/test_midi_reference_facets.py'
       - 'scripts/query_midi_references.py'
       - 'docs/MIDI_STYLE_TAXONOMY_REVIEW.md'
@@ -52,6 +53,19 @@ jobs:
           assert coverage['capabilities']['pitched_material']>=1
           assert sum(coverage['observed_meters'].values())>=data['total_files']-coverage['capabilities']['meter_unknown']
           assert pathlib.Path('scripts/reference-output/COVERAGE.md').is_file()
+          targets=json.loads(pathlib.Path('scripts/reference-output/targets.json').read_text())
+          by_id={row['id']:row for row in targets['targets']}
+          assert len(by_id)>=24
+          assert by_id['meter_6_8']['samples']>=3
+          assert by_id['meter_6_8']['status']=='partial', by_id['meter_6_8']
+          assert by_id['meter_5_4']['status']=='partial'
+          assert by_id['meter_5_8']['status']=='partial'
+          assert by_id['meter_7_8']['status']=='missing'
+          assert by_id['mode_dorian']['status']=='missing'
+          assert by_id['game_battle']['status']=='partial'
+          assert pathlib.Path('scripts/reference-output/TARGETS.md').is_file()
+          print('TARGET_STATUS',targets['status_counts'])
+
           from scripts.query_midi_references import select_references
           assert select_references(data,meter='6/8')['match_count']>=3
           assert select_references(data,meter='5/4')['match_count']>=1
@@ -79,4 +93,6 @@ jobs:
             scripts/reference-output/README.md
             scripts/reference-output/coverage.json
             scripts/reference-output/COVERAGE.md
+            scripts/reference-output/targets.json
+            scripts/reference-output/TARGETS.md
           retention-days: 14
