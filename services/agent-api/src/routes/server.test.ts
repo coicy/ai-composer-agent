@@ -283,6 +283,22 @@ describe('agent API',()=>{
   expect(res.status).toBe(502);
   expect(await res.json()).toEqual({error:'generation_failed'});
  });
+ it('accepts review-only protected note ordinal feedback and rejects malformed suggestions',async()=>{
+  const good=()=>({id:'test',async interpret(){return {
+   pitchOnly:true,protectedPrefixCount:null,protectedNoteOrdinals:[2,4],maxLeapSemitones:null,
+   explanation:'Keep the second and fourth notes',unresolved:[]
+  };}});
+  const url=await launch({apiKey:'fake',feedbackFactory:good});
+  const post=async(feedback:string,noteCount=6)=>fetch(url+'/api/feedback',{
+   method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({feedback,noteCount})
+  });
+  const response=await post('保留第2和第4个音符');
+  expect(response.status).toBe(200);
+  expect((await response.json()).protectedNoteOrdinals).toEqual([2,4]);
+  const malformed=await post('保留第2个音符',3);
+  expect(malformed.status).toBe(502);
+  expect(await malformed.json()).toEqual({error:'generation_failed'});
+ });
  it('validates explicitly protected MIDI note IDs before scoped model invocation',async()=>{
   const notes=[
    {noteId:'first',pitch:60,startTick:0,durationTicks:480,velocity:80},

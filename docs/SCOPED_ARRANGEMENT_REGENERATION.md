@@ -111,3 +111,13 @@ For anonymous model output the composition layer matches MIDI notes by the exact
 The offline deterministic SeededArranger respects these notes for every seed. The approved generation record stores `protectedNoteIds` for auditing inside the project JSON (not ordinary MIDI), and undo restores the previous project. If target track, scope or project revision changes, the browser stops applying stale selections; invalid IDs are still rejected server-side.
 
 This is positional MIDI protection, not high-level musical motif recognition. Protecting a note's pitch is not the same as copying an immutable musical phrase across voices.
+
+## Explicit numbered notes in feedback interpretation
+
+The review-only `FeedbackInterpretation` may propose `protectedNoteOrdinals`: a list of up to 16 distinct **one-based positions** referring to notes in the currently selected target window. Supported offline examples include “保留第2个音符” and “保留第2和第4个音符.” A position is counted by note onset, then pitch, then stable ID for deterministic tie-breaking. This differs from `protectedPrefixCount`, which protects the first N notes.
+
+The `POST /api/feedback` model receives only the user feedback string and a bounded note count (1–32). It **does not receive note IDs** and cannot instruct the editor to mutate tracks. It may return a suggested array of ordinal numbers, subject to strict type, range, uniqueness, combined prefix coverage, and no-extra-fields validation. Unsupported or ambiguous requests become `unresolved`, not guessed IDs.
+
+The UI displays the numbered notes with starting ticks and MIDI pitches for review. Only when the user presses **确认并应用建议约束** are the suggested ordinals resolved to stable IDs from the **current** project snapshot. Those IDs are combined with any existing manual protections; any all-protected or ambiguous-coincident-note proposal is rejected rather than silently overridden. A new model call or edited scope invalidates the old draft; approval copies the proposed protection to the editing controls but **does not generate or commit MIDI**.
+
+Actual scoped pitch-only generation still applies the independent `protectedNoteIds` and hard music-plan checks on server and client, and records approved ID protections in project provenance. These changes do not make vague stylistic instructions executable, nor do they enable arbitrary model access to the MusicProject.

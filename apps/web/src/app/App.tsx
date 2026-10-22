@@ -315,6 +315,32 @@ export function App(){
   const draft=activeFeedbackDraft;
   if(!draft)return;
   if(withConstraints&&!hasActionableFeedback(draft.value))return;
+  if(withConstraints){
+   const ordinals=draft.value.protectedNoteOrdinals??[];
+   const mapped=ordinals.map(i=>displayedProtectableNotes[i-1]?.noteId);
+   if(mapped.some(id=>!id)){
+    setError('指定音符无法对应当前选区，请重新解释反馈');return;
+   }
+   const current=new Set(regionProtectedNoteIds);
+   mapped.forEach(id=>current.add(id!));
+   const prefix=draft.value.protectedPrefixCount??0;
+   displayedProtectableNotes.slice(0,prefix).forEach(n=>current.add(n.noteId));
+   if(current.size>=displayedProtectableNotes.length){
+    setError('反馈保护条件覆盖全部音符，至少需要保留一个可修改音符');return;
+   }
+   const protectedSet=new Set(current);
+   for(const n of displayedProtectableNotes){
+    const coincident=displayedProtectableNotes.filter(other=>
+     other.pitch===n.pitch&&other.startTick===n.startTick&&other.durationTicks===n.durationTicks&&
+     other.velocity===n.velocity);
+    if(coincident.some(x=>protectedSet.has(x.noteId))&&coincident.some(x=>!protectedSet.has(x.noteId))){
+     setError('存在完全相同的重叠音符，无法只保护其中一个，请手动调整');return;
+    }
+   }
+   if(ordinals.length){
+    setRegionProtectedSelection({key:regionProtectionKey,ids:[...current]});
+   }
+  }
   invalidateRegion();
   setRegionInstruction(feedbackText);
   if(withConstraints){
@@ -658,7 +684,15 @@ export function App(){
      <p>{activeFeedbackDraft.value.explanation}</p>
      <p>仅改音高：{activeFeedbackDraft.value.pitchOnly?'建议':'未建议'}；
       开头保护：{activeFeedbackDraft.value.protectedPrefixCount??'无'}；
+      指定音符：{activeFeedbackDraft.value.protectedNoteOrdinals?.length?
+       activeFeedbackDraft.value.protectedNoteOrdinals.map(i=>`第${i}个音符`).join('、'):'无'}；
       最大跳进：{activeFeedbackDraft.value.maxLeapSemitones??'不设置'} 半音</p>
+     {(activeFeedbackDraft.value.protectedNoteOrdinals??[]).length>0&&
+      <p>音符映射预览（起点→音高）：
+       {(activeFeedbackDraft.value.protectedNoteOrdinals??[]).map(i=>{
+        const n=displayedProtectableNotes[i-1];
+        return n?`第${i}个：${n.startTick} → MIDI ${n.pitch}`:`第${i}个已失效`;
+       }).join('；')}</p>}
      {activeFeedbackDraft.value.unresolved.length>0&&<p>仍需判断：{activeFeedbackDraft.value.unresolved.join('；')}</p>}
      <button type="button" disabled={!hasActionableFeedback(activeFeedbackDraft.value)}
       onClick={()=>applyFeedbackDraft(true)}>确认并应用建议约束</button>

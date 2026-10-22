@@ -691,3 +691,59 @@ test('protected note selection is scoped to the current bar and cannot carry sta
  await page.getByRole('spinbutton',{name:'局部重编起始小节'}).fill('1');
  await expect(picker).toContainText('当前 0 个');
 });
+
+test('feedback draft protects one numbered note only after approval and seed revision keeps it unchanged',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ const exported=async()=>{
+  const download=page.waitForEvent('download');
+  await page.getByRole('button',{name:'导出工程 JSON'}).click();
+  const file=await download;
+  return JSON.parse(await readFile(await file.path(),'utf8')).project;
+ };
+ const before=await exported();
+ const harmony=before.tracks.find((t:{name:string})=>t.name==='AI 和声');
+ const sorted=[...harmony.notes].filter(n=>n.startTick<1920)
+  .sort((a,b)=>a.startTick-b.startTick||a.pitch-b.pitch||a.noteId.localeCompare(b.noteId));
+ expect(sorted).toHaveLength(2);
+ const protectedId=sorted[1].noteId;
+ await page.getByRole('textbox',{name:'音乐反馈意见'}).fill('保留第2个音符，只改音高');
+ await page.getByRole('button',{name:'规则解释（离线）'}).click();
+ const draft=page.getByRole('region',{name:'反馈解释草案'});
+ await expect(draft).toContainText('第2个音符');
+ await expect(draft).toContainText('音符映射预览');
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
+ await page.getByRole('button',{name:'确认并应用建议约束'}).click();
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).toBeChecked();
+ const protectedGroup=page.getByRole('group',{name:'指定保护音符'});
+ await expect(protectedGroup.getByRole('checkbox',{name:'保护第2个目标音符'})).toBeChecked();
+ await page.getByRole('button',{name:'按种子局部重编（离线）'}).click();
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toContainText('另外保护 1 个指定音符');
+ await page.getByRole('button',{name:'确认局部替换'}).click();
+ const after=await exported();
+ const updated=after.tracks.find((t:{name:string})=>t.name==='AI 和声');
+ expect(updated.notes.find((n:{noteId:string})=>n.noteId===protectedId)).toEqual(
+  harmony.notes.find((n:{noteId:string})=>n.noteId===protectedId));
+ expect(after.generationHistory.at(-1).protectedNoteIds).toContain(protectedId);
+ expect(after.tracks[0]).toEqual(before.tracks[0]);
+});
+
+test('malicious AI feedback ordinal suggestions are rejected before any edit',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.route('**/api/feedback',async route=>{
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+   pitchOnly:true,protectedPrefixCount:null,protectedNoteOrdinals:[99],
+   maxLeapSemitones:null,explanation:'Invalid selection',unresolved:[]
+  })});
+ });
+ await page.getByRole('textbox',{name:'音乐反馈意见'}).fill('保留第2个音符');
+ await page.getByRole('button',{name:'AI 解释反馈'}).click();
+ await expect(page.getByRole('alert')).toContainText('invalid_feedback_interpretation');
+ await expect(page.getByRole('region',{name:'反馈解释草案'})).toHaveCount(0);
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
+});
