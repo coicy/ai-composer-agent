@@ -4,6 +4,7 @@ import io
 import unittest
 import mido
 from midi_reference_facets import analyze_reference,build_coverage,_meter_metadata
+from query_midi_references import select_references
 
 def midi_fixture(percussion=False,meter=None,velocity=(70,90),key=None):
  m=mido.MidiFile(ticks_per_beat=480);t=mido.MidiTrack();m.tracks.append(t)
@@ -72,6 +73,21 @@ class ReferenceFacetTests(unittest.TestCase):
   self.assertEqual(c['capabilities']['drum_only'],1)
   self.assertEqual(c['capabilities']['pitched_material'],1)
   self.assertEqual(c['capabilities']['expert_verified_mode'],0)
+ def test_reference_queries_do_not_conflate_facets(self):
+  drum=midi_fixture(percussion=True,meter='4/4')
+  game=midi_fixture(meter='3/4')
+  items=[dict(item(drum,'jazz',{'style':'jazz/fusion'}),
+              title='A',license='CC BY 4.0',
+              facets=analyze_reference(item(drum,'jazz',{'style':'jazz/fusion'}),drum)),
+         dict(item(game,'game_town'),title='B',license='CC0-1.0',
+              facets=analyze_reference(item(game,'game_town'),game))]
+  catalog={'items':items}
+  self.assertEqual(select_references(catalog,meter='4/4',pitched=False)['match_count'],1)
+  self.assertEqual(select_references(catalog,usage='town',pitched=True)['match_count'],1)
+  self.assertEqual(select_references(catalog,source_style='jazz/fusion')['match_count'],1)
+  self.assertEqual(select_references(catalog,meter='6/8')['match_count'],0)
+  self.assertIsNone(select_references(catalog,meter='4/4')['matches'][0]['verified_mode'])
+  with self.assertRaises(ValueError):select_references(catalog,limit=0)
  def test_invalid_meters_not_inferred(self):
   self.assertEqual(_meter_metadata('6-8'),'6/8')
   for bad in ('C','0/4','7/3',None):
