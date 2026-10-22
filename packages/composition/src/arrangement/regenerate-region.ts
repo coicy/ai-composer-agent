@@ -9,6 +9,8 @@ export interface RegionRegenerationRequest extends ArrangementRequest {
  readonly targetTrackId:string;
  readonly targetRole:ArrangementRole;
  readonly editConstraint?:'pitch_only';
+ readonly protectedPrefixCount?:number;
+ readonly maxLeapSemitones?:number;
 }
 export interface RegionRegenerationCandidate {
  readonly label:string;
@@ -18,6 +20,8 @@ export interface RegionRegenerationCandidate {
  readonly targetTrackId:string;
  readonly targetRole:ArrangementRole;
  readonly editConstraint?:'pitch_only';
+ readonly protectedPrefixCount?:number;
+ readonly maxLeapSemitones?:number;
  readonly seed?:number;
  readonly startTick:number;
  readonly endTick:number;
@@ -28,7 +32,7 @@ export interface RegionRegenerationCandidate {
 export async function proposeRegionRegeneration(
  provider:ArrangementProvider,request:RegionRegenerationRequest,signal?:AbortSignal
 ):Promise<RegionRegenerationCandidate>{
- const {project,sourceTrackId,targetTrackId,targetRole,startTick,endTick,editConstraint}=request;
+ const {project,sourceTrackId,targetTrackId,targetRole,startTick,endTick,editConstraint,protectedPrefixCount,maxLeapSemitones}=request;
  if(!validateProject(project))throw new Error('invalid_project');
  if(!ARRANGEMENT_ROLES.includes(targetRole))throw new Error('invalid_arrangement_role');
  if(editConstraint!==undefined&&editConstraint!=='pitch_only')throw new Error('invalid_edit_constraint');
@@ -59,6 +63,8 @@ export async function proposeRegionRegeneration(
   if(old.size!==incoming.size||[...old].some(([k,v])=>incoming.get(k)?.length!==v.length))
    throw new Error('pitch_only_rhythm_mismatch');
   const replacement:MidiNote[]=[];
+  const protectedIds=new Set([...overlap].sort((a,b)=>a.startTick-b.startTick||a.pitch-b.pitch||
+   a.noteId.localeCompare(b.noteId)).slice(0,protectedPrefixCount??0).map(n=>n.noteId));
   operations=[];
   for(const [keyName,oldGroup] of old){
    const newGroup=incoming.get(keyName)!;
@@ -66,8 +72,23 @@ export async function proposeRegionRegeneration(
    newGroup.sort((a,b)=>a.pitch-b.pitch);
    for(let i=0;i<oldGroup.length;i++){
     const prior=oldGroup[i]!,next=newGroup[i]!;
+    if(protectedIds.has(prior.noteId)&&prior.pitch!==next.pitch)throw new Error('protected_note_changed');
     replacement.push({...prior,pitch:next.pitch});
     if(prior.pitch!==next.pitch)operations.push({type:'update_note',trackId:targetTrackId,noteId:prior.noteId,changes:{pitch:next.pitch}});
+   }
+  }
+  if(maxLeapSemitones!==undefined){
+   const before=target.notes.filter(n=>n.startTick+n.durationTicks<=startTick)
+    .sort((a,b)=>(b.startTick+b.durationTicks)-(a.startTick+a.durationTicks)||a.pitch-b.pitch)[0];
+   const after=target.notes.filter(n=>n.startTick>=endTick)
+    .sort((a,b)=>a.startTick-b.startTick||a.pitch-b.pitch)[0];
+   const ordered=[...(before?[before]:[]),...replacement,...(after?[after]:[])]
+    .sort((a,b)=>a.startTick-b.startTick||a.pitch-b.pitch||a.noteId.localeCompare(b.noteId));
+   for(let index=1;index<ordered.length;index++){
+    const previous=ordered[index-1]!,current=ordered[index]!;
+    if(previous.startTick+previous.durationTicks<=current.startTick&&
+     Math.abs(previous.pitch-current.pitch)>maxLeapSemitones)
+     throw new Error('leap_constraint_violation');
    }
   }
   if(operations.length===0)throw new Error('no_pitch_changes');
@@ -86,7 +107,7 @@ export async function proposeRegionRegeneration(
  return {
   label:`局部重编 · ${targetRole} · Seed ${request.seed??'未指定'}`,
   providerId:provider.id,plan:generated.plan,
-  sourceTrackId,targetTrackId,targetRole,editConstraint,seed:request.seed,
+  sourceTrackId,targetTrackId,targetRole,editConstraint,protectedPrefixCount,maxLeapSemitones,seed:request.seed,
   startTick,endTick,notes,removedNotes:overlap,changes
  };
 }

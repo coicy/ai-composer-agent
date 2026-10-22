@@ -7,6 +7,10 @@ export interface ArrangementEditingIntent {
  readonly targetRole:ArrangementRole;
  /** Preserve every original note's ID, onset, duration and velocity; generated notes may change pitch only. */
  readonly editConstraint?:'pitch_only';
+ /** Keep this many earliest target notes at the same pitch (pitch-only mode). */
+ readonly protectedPrefixCount?:number;
+ /** Maximum absolute semitone jump between adjacent non-overlapping notes. */
+ readonly maxLeapSemitones?:number;
 }
 export interface ProtectedPartContext {
  readonly trackIndex:number;
@@ -31,6 +35,15 @@ export function createArrangementEditingContext(
 ):ArrangementEditingContext{
  if(!intent||!ROLES.includes(intent.targetRole))throw new Error('invalid_arrangement_role');
  if(intent.editConstraint!==undefined&&intent.editConstraint!=='pitch_only')throw new Error('invalid_edit_constraint');
+ if(intent.protectedPrefixCount!==undefined&&
+  (!Number.isSafeInteger(intent.protectedPrefixCount)||intent.protectedPrefixCount<0||intent.protectedPrefixCount>16))
+  throw new Error('invalid_protected_prefix');
+ if(intent.maxLeapSemitones!==undefined&&
+  (!Number.isSafeInteger(intent.maxLeapSemitones)||intent.maxLeapSemitones<1||intent.maxLeapSemitones>24))
+  throw new Error('invalid_leap_constraint');
+ if(intent.editConstraint!=='pitch_only'&&
+  (intent.protectedPrefixCount!==undefined||intent.maxLeapSemitones!==undefined))
+  throw new Error('feedback_requires_pitch_only');
  if(typeof intent.targetTrackId!=='string'||!intent.targetTrackId)throw new Error('target_track_not_found');
  if(sourceTrackId===intent.targetTrackId)throw new Error('source_track_is_target');
  const target=project.tracks.find(t=>t.trackId===intent.targetTrackId);
@@ -40,6 +53,8 @@ export function createArrangementEditingContext(
  if(original.some(n=>n.locked))throw new Error('locked_note_in_range');
  if(intent.editConstraint==='pitch_only'&&original.length===0)throw new Error('pitch_only_requires_notes');
  if(intent.editConstraint==='pitch_only'&&original.length>MAX_ORIGINAL)throw new Error('pitch_only_region_too_dense');
+ if(intent.protectedPrefixCount!==undefined&&intent.protectedPrefixCount>=original.length)
+  throw new Error('invalid_protected_prefix');
  if(original.some(n=>n.startTick<startTick||end(n)>endTick))throw new Error('cross_boundary_note');
  const before=target.notes.filter(n=>end(n)<=startTick)
   .sort((a,b)=>end(b)-end(a)||byTime(a,b)).slice(0,MAX_NEIGHBORS).sort(byTime);
@@ -53,6 +68,7 @@ export function createArrangementEditingContext(
   if(notes.length)protectedParts.push({trackIndex,notes:clone(notes)});
  }
  return {targetTrackId:intent.targetTrackId,targetRole:intent.targetRole,editConstraint:intent.editConstraint,
+  protectedPrefixCount:intent.protectedPrefixCount,maxLeapSemitones:intent.maxLeapSemitones,
   before:clone(before),original:clone([...original].sort(byTime).slice(0,MAX_ORIGINAL)),
   after:clone(after),protectedParts};
 }
