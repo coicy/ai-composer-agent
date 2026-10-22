@@ -119,3 +119,12 @@ select{background:#1e293b;color:#e5e7eb;border:1px solid #475569;padding:9px;bor
 .feedback-constraints label{display:flex;gap:8px;align-items:center}
 .feedback-constraints input[type=number]{max-width:84px}
 .feedback-constraints p{width:100%;margin:2px 0;color:#b8c7dc;font-size:12px}
+
+.feedback-interpreter{display:flex;flex-wrap:wrap;align-items:center;gap:9px;width:100%;
+ background:#0f2336;border:1px solid #486987;border-radius:7px;padding:12px}
+.feedback-interpreter>strong,.feedback-interpreter>p,.feedback-interpreter>textarea{width:100%}
+.feedback-interpreter>p,.feedback-draft>p{font-size:12px;color:#bdd0e3;margin:2px 0}
+.feedback-actions{display:flex;flex-wrap:wrap;gap:8px}
+.feedback-draft{display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%;
+ background:#152f42;border:1px solid #6e91aa;border-radius:7px;padding:12px}
+.feedback-draft>strong,.feedback-draft>p{width:100%}
