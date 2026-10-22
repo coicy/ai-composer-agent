@@ -264,7 +264,7 @@ describe('agent API',()=>{
   expect(ok.status).toBe(200);
   expect(await ok.json()).toEqual({pitchOnly:true,protectedPrefixCount:1,maxLeapSemitones:5,
    explanation:'保留首音，控制跳进',unresolved:[]});
-  expect(seen).toEqual({feedback:'保留第一个音，不超过五个半音',noteCount:3});
+  expect(seen).toEqual({feedback:'保留第一个音，跳进不超过五个半音',noteCount:3});
   const unknown=await send({feedback:'保留首音',noteCount:3,editTrackId:'melody'});
   expect(unknown.status).toBe(422);
   expect((await unknown.json()).error).toBe('invalid_request');
