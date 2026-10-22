@@ -83,7 +83,8 @@ function parseArranged(raw:unknown,project:MusicProject,sourceTrackId:string,sta
  if(byRole.size!==ARRANGEMENT_ROLES.length)throw new Error('missing_arrangement_role');
  return ARRANGEMENT_ROLES.map(role=>byRole.get(role)!);
 }
-export async function proposeArrangement(provider:ArrangementProvider,request:ArrangementRequest,signal?:AbortSignal):Promise<ArrangementCandidate>{
+/** Shared preflight for whole-arrangement and one-role scoped proposals. */
+export function prepareArrangementContext(request:ArrangementRequest):ArrangementContext{
  const {project,sourceTrackId,startTick,endTick,instruction}=request;
  if(!validateProject(project))throw new Error('invalid_project');
  if(!Number.isSafeInteger(startTick)||!Number.isSafeInteger(endTick)||startTick<0||endTick<=startTick||endTick-startTick>project.ppq*4*4)throw new Error('invalid_arrangement_scope');
@@ -108,6 +109,14 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
   createArrangementEditingContext(project,sourceTrackId,request.editing,startTick,endTick);
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
   sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing};
+ return context;
+}
+
+export async function proposeArrangement(provider:ArrangementProvider,request:ArrangementRequest,signal?:AbortSignal):Promise<ArrangementCandidate>{
+ const context=prepareArrangementContext(request);
+ const {project,sourceTrackId,startTick,endTick}=request;
+ const {plan}=context;
+ const selected=context.sourceNotes;
  const raw=await provider.generate(context,signal);
  if(signal?.aborted)throw new Error('generation_cancelled');
  const tracks=parseArranged(raw,project,sourceTrackId,startTick,endTick);

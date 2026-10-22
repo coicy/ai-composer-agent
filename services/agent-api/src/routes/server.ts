@@ -1,6 +1,6 @@
 import {createServer,type IncomingMessage,type ServerResponse} from 'node:http';
 import {validateProject} from '@ai-composer/music-core';
-import {proposeWithProvider,proposeArrangement,ARRANGEMENT_ROLES} from '@ai-composer/composition';
+import {proposeWithProvider,proposeArrangement,proposeRegionRegeneration,ARRANGEMENT_ROLES} from '@ai-composer/composition';
 import type {CompositionRequest,ArrangementRequest} from '@ai-composer/composition';
 import {validateHarmonyPlan} from '@ai-composer/composition';
 import {createOpenAIProvider} from '../providers/openai.js';
@@ -73,9 +73,16 @@ export function createAgentServer(options:ServerOptions={}){
    if(req.url==='/api/arrange'){
     const request=parseArrangementRequest(body);
     const provider=(options.arrangerFactory??createOpenAIArranger)({apiKey:options.apiKey,model:options.model??'gpt-4.1-mini'});
-    const candidate=await proposeArrangement(provider,request,controller.signal);
-    const tracks=candidate.tracks.map((t,i)=>({role:ARRANGEMENT_ROLES[i],notes:t.notes.map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity}))}));
-    reply(res,200,{tracks});
+    if(request.editing){
+     const candidate=await proposeRegionRegeneration(provider,{
+      ...request,targetTrackId:request.editing.targetTrackId,targetRole:request.editing.targetRole
+     },controller.signal);
+     reply(res,200,{role:candidate.targetRole,notes:candidate.notes.map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity}))});
+    }else{
+     const candidate=await proposeArrangement(provider,request,controller.signal);
+     const tracks=candidate.tracks.map((t,i)=>({role:ARRANGEMENT_ROLES[i],notes:t.notes.map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity}))}));
+     reply(res,200,{tracks});
+    }
    }else{
     const request=parseRequest(body);
     const provider=(options.providerFactory??createOpenAIProvider)({apiKey:options.apiKey,model:options.model??'gpt-4.1-mini'});

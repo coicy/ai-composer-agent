@@ -1,6 +1,7 @@
 import {applyChangeSet,validateProject} from '@ai-composer/music-core';
 import type {ChangeSet,MidiNote,MusicProject,NoteOperation} from '@ai-composer/music-core';
-import {ARRANGEMENT_ROLES,proposeArrangement} from './arrange.js';
+import {ARRANGEMENT_ROLES} from './arrange.js';
+import {proposeSingleRole} from './single-role.js';
 import type {ArrangementProvider,ArrangementRequest,ArrangementRole} from './arrange.js';
 
 /** Unlike initial arrangement, this updates only one existing track and one time window. */
@@ -39,9 +40,8 @@ export async function proposeRegionRegeneration(
  if(overlap.some(n=>n.startTick<startTick||n.startTick+n.durationTicks>endTick))
   throw new Error('cross_boundary_note');
  // Perform the complete source, scope, plan and generated-MIDI checks before any edits.
- const generated=await proposeArrangement(provider,{...request,editing:{targetTrackId,targetRole}},signal);
- const roleIndex=ARRANGEMENT_ROLES.indexOf(targetRole);
- const notes=generated.tracks[roleIndex]!.notes;
+ const generated=await proposeSingleRole(provider,request,signal);
+ const notes=generated.notes;
  const oldIds=new Set(target.notes.map(n=>n.noteId));
  if(notes.some(n=>oldIds.has(n.noteId)))throw new Error('generated_note_id_collision');
  const operations:NoteOperation[]=[
@@ -53,7 +53,7 @@ export async function proposeRegionRegeneration(
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  return {
   label:`局部重编 · ${targetRole} · Seed ${request.seed??'未指定'}`,
-  providerId:generated.providerId,plan:generated.plan,
+  providerId:provider.id,plan:generated.plan,
   sourceTrackId,targetTrackId,targetRole,seed:request.seed,
   startTick,endTick,notes,removedNotes:overlap,changes
  };
