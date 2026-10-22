@@ -29,7 +29,7 @@ export {createArrangementEditingContext} from './arrangement/editing-context.js'
 export type {ArrangementEditingContext,ArrangementEditingIntent,ProtectedPartContext} from './arrangement/editing-context.js';
 export {proposeSingleRole} from './arrangement/single-role.js';
 export type {SingleRoleProposal} from './arrangement/single-role.js';
-export {interpretFeedbackRules,validateFeedbackInput,validateFeedbackInterpretation,hasActionableFeedback} from './feedback/feedback.js';
+export {interpretFeedbackRules,validateFeedbackInput,validateFeedbackInterpretation,hasActionableFeedback,reconcileFeedbackInterpretation} from './feedback/feedback.js';
 export type {FeedbackInterpretation} from './feedback/feedback.js';
 export {compareRegionCandidate} from './arrangement/compare-region.js';
 export type {RegionCandidateComparison} from './arrangement/compare-region.js';

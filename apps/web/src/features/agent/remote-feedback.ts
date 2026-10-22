@@ -1,4 +1,4 @@
-import {validateFeedbackInterpretation} from '@ai-composer/composition';
+import {reconcileFeedbackInterpretation} from '@ai-composer/composition';
 import type {FeedbackInterpretation} from '@ai-composer/composition';
 /** Interpretive output is never authoritative; the UI requires explicit review. */
 export async function requestRemoteFeedback(feedback:string,noteCount:number,signal?:AbortSignal):Promise<FeedbackInterpretation>{
@@ -15,5 +15,5 @@ export async function requestRemoteFeedback(feedback:string,noteCount:number,sig
   throw new Error(typeof body.error==='string'?body.error:'feedback_failed');
  }
  const raw=await response.json() as unknown;
- return validateFeedbackInterpretation(raw,noteCount);
+ return reconcileFeedbackInterpretation(feedback,noteCount,raw);
 }

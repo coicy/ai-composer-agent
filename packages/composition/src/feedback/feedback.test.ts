@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {interpretFeedbackRules,validateFeedbackInput,validateFeedbackInterpretation,hasActionableFeedback} from './feedback.js';
+import {interpretFeedbackRules,validateFeedbackInput,validateFeedbackInterpretation,hasActionableFeedback,reconcileFeedbackInterpretation} from './feedback.js';
 describe('reviewable musical feedback interpretation',()=>{
  it('parses explicit Chinese constraints without inventing stylistic numeric values',()=>{
   const out=interpretFeedbackRules('保留前三个音，后面跳进不超过五个半音，节奏不变',8);
@@ -75,5 +75,56 @@ describe('feedback for explicitly numbered protected notes',()=>{
   expect(out.protectedNoteOrdinals).toEqual([]);
   expect(out.unresolved.join('')).toContain('超出');
   expect(interpretFeedbackRules('保留第1和第2个音符',2).protectedNoteOrdinals).toEqual([]);
+ });
+});
+
+describe('evidence reconciliation of AI feedback',()=>{
+ const suggest=(more:Record<string,unknown>={})=>({
+  pitchOnly:true,protectedPrefixCount:2,protectedNoteOrdinals:[],maxLeapSemitones:5,
+  explanation:'AI interpretation',unresolved:[],...more
+ });
+ it('never converts subjective style requests into invented hard MIDI constraints',()=>{
+  const actual=reconcileFeedbackInterpretation('让第二小节更有张力，更戏剧化',5,suggest({
+   protectedNoteOrdinals:[3]
+  }));
+  expect(actual).toMatchObject({pitchOnly:false,protectedPrefixCount:null,
+   protectedNoteOrdinals:[],maxLeapSemitones:null});
+  expect(actual.unresolved.join('')).toContain('原文');
+  expect(hasActionableFeedback(actual)).toBe(false);
+ });
+ it('accepts only explicitly grounded numerical and ordinal requests',()=>{
+  const actual=reconcileFeedbackInterpretation(
+   '保留前两个音，保留第4个音符，最大跳进不超过五个半音，节奏不变',6,
+   suggest({protectedNoteOrdinals:[4]})
+  );
+  expect(actual).toMatchObject({pitchOnly:true,protectedPrefixCount:2,
+   protectedNoteOrdinals:[4],maxLeapSemitones:5,
+   explanation:'AI interpretation',unresolved:[]});
+ });
+ it('demotes only unsupported suggestions, preserving supported user constraints',()=>{
+  const actual=reconcileFeedbackInterpretation('保留前两个音，保持节奏',5,suggest({
+   protectedNoteOrdinals:[3],maxLeapSemitones:8
+  }));
+  expect(actual.pitchOnly).toBe(true);
+  expect(actual.protectedPrefixCount).toBe(2);
+  expect(actual.protectedNoteOrdinals).toEqual([]);
+  expect(actual.maxLeapSemitones).toBeNull();
+  expect(actual.unresolved.length).toBeGreaterThanOrEqual(2);
+  expect(actual.explanation).toContain('撤回');
+ });
+ it('treats an explicitly numbered first note as equivalent to prefix one only',()=>{
+  const actual=reconcileFeedbackInterpretation('保留第一个音，跳进不超过五个半音',4,
+   suggest({protectedPrefixCount:1,protectedNoteOrdinals:[],maxLeapSemitones:5}));
+  expect(actual.protectedPrefixCount).toBe(1);
+  expect(actual.maxLeapSemitones).toBe(5);
+ });
+ it('rejects invalid model output before reconciliation and bounds unresolved claims',()=>{
+  expect(()=>reconcileFeedbackInterpretation('保持节奏',4,suggest({maxLeapSemitones:99})))
+   .toThrow('invalid_feedback_interpretation');
+  const actual=reconcileFeedbackInterpretation('太平淡了',5,suggest({
+   unresolved:['一','二','三','四','五','六']
+  }));
+  expect(actual.unresolved.length).toBeLessThanOrEqual(6);
+  expect(actual.unresolved[0]).toContain('原文');
  });
 });

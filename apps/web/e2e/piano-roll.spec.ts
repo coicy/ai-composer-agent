@@ -618,7 +618,9 @@ test('AI feedback suggestion stays a draft, rejects invalid data and stale draft
  await input.fill('保留开头一个音');
  await page.getByRole('button',{name:'AI 解释反馈'}).click();
  const draft=page.getByRole('region',{name:'反馈解释草案'});
- await expect(draft).toContainText('AI 建议');
+ await expect(draft).toContainText('缺少反馈原文中的明确依据');
+ await expect(draft).toContainText('开头保护：1');
+ await expect(draft).toContainText('最大跳进：不设置');
  await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
  await input.fill('改写意见');
  await expect(draft).toHaveCount(0);
@@ -784,4 +786,48 @@ test('full replacement comparison reports deleted and added notes without invent
  await expect(evidence).toContainText('不可按原 ID 对比');
  await expect(evidence).toContainText('不是音乐质量评分');
  await expect(page.getByRole('button',{name:'确认局部替换'})).toBeEnabled();
+});
+
+test('subjective AI feedback cannot invent enforceable numeric rules even if model output is well-formed',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.route('**/api/feedback',async route=>{
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+   pitchOnly:true,protectedPrefixCount:1,protectedNoteOrdinals:[],
+   maxLeapSemitones:6,explanation:'把主观反馈伪装成音符保护规则',unresolved:[]
+  })});
+ });
+ await page.getByRole('textbox',{name:'音乐反馈意见'}).fill('让音乐更丰富、更有张力');
+ await page.getByRole('button',{name:'AI 解释反馈'}).click();
+ const draft=page.getByRole('region',{name:'反馈解释草案'});
+ await expect(draft).toContainText('缺少反馈原文中的明确依据');
+ await expect(draft).toContainText('仅改音高：未建议');
+ await expect(draft).toContainText('最大跳进：不设置');
+ await expect(page.getByRole('button',{name:'确认并应用建议约束'})).toBeDisabled();
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+});
+
+test('AI feedback review preserves explicit prefix protection but strips an invented leap limit',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.route('**/api/feedback',async route=>{
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+   pitchOnly:true,protectedPrefixCount:1,protectedNoteOrdinals:[],
+   maxLeapSemitones:4,explanation:'AI 自动添加了跳进限制',unresolved:[]
+  })});
+ });
+ await page.getByRole('textbox',{name:'音乐反馈意见'}).fill('保留开头一个音，节奏不变');
+ await page.getByRole('button',{name:'AI 解释反馈'}).click();
+ const draft=page.getByRole('region',{name:'反馈解释草案'});
+ await expect(draft).toContainText('开头保护：1');
+ await expect(draft).toContainText('最大跳进：不设置');
+ await page.getByRole('button',{name:'确认并应用建议约束'}).click();
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).toBeChecked();
+ await expect(page.getByRole('spinbutton',{name:'保留开头音符数'})).toHaveValue('1');
+ await expect(page.getByRole('spinbutton',{name:'最大跳进半音数'})).toHaveValue('0');
 });

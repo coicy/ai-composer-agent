@@ -119,3 +119,53 @@ export function interpretFeedbackRules(input:string,noteCount:number):FeedbackIn
   unresolved:reasons
  },noteCount);
 }
+
+/**
+ * Ground a model's read-only proposal in explicitly stated user text.
+ * The model can explain vague styling, but cannot invent enforceable numeric MIDI constraints.
+ * Unsupported fields are demoted to unresolved, never silently turned into an edit.
+ */
+export function reconcileFeedbackInterpretation(
+ feedback:string,noteCount:number,value:unknown
+):FeedbackInterpretation{
+ const input=validateFeedbackInput(feedback,noteCount);
+ const proposed=validateFeedbackInterpretation(value,noteCount);
+ const supported=interpretFeedbackRules(input.feedback,noteCount);
+ const unresolved:string[]=[];
+ let demoted=false;
+ let prefix=proposed.protectedPrefixCount;
+ if(prefix!==null&&prefix!==supported.protectedPrefixCount&&
+  !(prefix===1&&supported.protectedNoteOrdinals?.includes(1))){
+  prefix=null;demoted=true;
+  unresolved.push('AI 建议的开头保护数量缺少反馈原文中的明确依据，未转换为硬约束。');
+ }
+ let leap=proposed.maxLeapSemitones;
+ if(leap!==null&&leap!==supported.maxLeapSemitones){
+  leap=null;demoted=true;
+  unresolved.push('AI 建议的最大跳进数量缺少反馈原文中的明确依据，未转换为硬约束。');
+ }
+ const allowed=new Set(supported.protectedNoteOrdinals??[]);
+ const ordinals=(proposed.protectedNoteOrdinals??[]).filter(n=>{
+  if(allowed.has(n))return true;
+  demoted=true;
+  return false;
+ });
+ if(ordinals.length!==(proposed.protectedNoteOrdinals??[]).length)
+  unresolved.push('AI 建议的指定音符序号没有得到原文支持，未转换为音符保护。');
+ const pitchOnly=proposed.pitchOnly&&supported.pitchOnly;
+ if(proposed.pitchOnly&&!supported.pitchOnly){
+  demoted=true;
+  unresolved.push('原文没有明确要求仅改音高或保护节奏，AI 不得自行启用此编辑模式。');
+ }
+ if(!pitchOnly){prefix=null;leap=null;ordinals.length=0;}
+ const explanation=demoted?
+  '已根据用户反馈原文核对 AI 建议；缺少明确依据的编辑约束已撤回。请以草案列出的数值为准。':
+  proposed.explanation;
+ const merged=[...unresolved,...proposed.unresolved,...supported.unresolved];
+ const distinct=[...new Set(merged)].slice(0,6);
+ return validateFeedbackInterpretation({
+  pitchOnly,protectedPrefixCount:prefix,
+  ...(proposed.protectedNoteOrdinals!==undefined?{protectedNoteOrdinals:ordinals}:{}),maxLeapSemitones:leap,
+  explanation,unresolved:distinct
+ },noteCount);
+}
