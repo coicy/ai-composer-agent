@@ -14,3 +14,7 @@ Show ghost-note preview, require user confirmation, and let music-core recheck r
 - Remote proposals are untrusted and are revalidated with `proposeRegionRegeneration` before display.
 - Blue ghost notes and red deletion markers are non-mutating; audition via a temporary `applyChangeSet` result; only approval commits, and revision changes invalidate previews.
 - Do not silently reapply a previous HarmonyPlan: it is not persisted with imported MIDI or MusicProject in this prototype.
+
+## Pitch-only scoped regeneration
+- Checkbox input is explicit authorization for updating pitch only. The client sends only `editConstraint:'pitch_only'`, not editable model note IDs. The composition validator reconstructs exact original time/duration/velocity and commits `update_note.pitch` operations.
+- Do not claim `pending-delete` means deletion while pitch-only mode is enabled; its preview marks the existing notes being updated. Never auto-relax this constraint if remote output fails.

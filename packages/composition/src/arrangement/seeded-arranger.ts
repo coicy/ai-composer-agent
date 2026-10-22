@@ -1,6 +1,6 @@
 import type {ArrangementProvider,ArrangementContext,ArrangementRole} from './arrange.js';
 import {ARRANGEMENT_ROLES} from './arrange.js';
-import {chordPitchClassesAtBeat,chordAtBeat,scalePitchClasses} from '../planning/harmony-plan.js';
+import {chordPitchClassesAtBeat,chordAtBeat,scalePitchClasses,effectiveChordEvents} from '../planning/harmony-plan.js';
 function prng(seed:number):()=>number{
  let state=seed>>>0;
  return ()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
@@ -9,6 +9,46 @@ function prng(seed:number):()=>number{
 export class SeededArranger implements ArrangementProvider{
  readonly id='seeded-arranger-dev';
  async generate(context:ArrangementContext):Promise<unknown>{
+  if(context.editing?.editConstraint==='pitch_only'){
+   const role=context.editing.targetRole,roleIndex=ARRANGEMENT_ROLES.indexOf(role);
+   const rng=prng(((context.seed??0)^Math.imul(roleIndex+1,0x9e3779b9))>>>0);
+   const originals=[...context.editing.original].sort((a,b)=>a.startTick-b.startTick||a.pitch-b.pitch||a.noteId.localeCompare(b.noteId));
+   if(!originals.length)throw new Error('pitch_only_requires_notes');
+   const plan=context.plan;
+   const events=plan?effectiveChordEvents(plan):[];
+   const pitches=originals.map(original=>{
+    const eligible:number[]=[];
+    for(let pitch=0;pitch<=127;pitch++){
+     const cls=pitch%12;
+     if(plan){
+      const range=plan.registers[role];
+      if(plan.enforcement.registers==='hard'&&(pitch<range.minPitch||pitch>range.maxPitch))continue;
+      if(plan.enforcement.scale==='hard'&&!scalePitchClasses(plan).includes(cls))continue;
+      if(plan.enforcement.chords==='hard'&&events.some(event=>{
+       const from=context.startTick+event.startBeat*context.ppq,to=from+event.durationBeats*context.ppq;
+       return original.startTick<to&&original.startTick+original.durationTicks>from&&
+        !chordPitchClassesAtBeat(plan,event.startBeat).includes(cls);
+      }))continue;
+      if(role==='bass'&&plan.enforcement.inversions==='hard'){
+       const firstEvents=events.filter(event=>{
+        const from=context.startTick+event.startBeat*context.ppq,to=from+event.durationBeats*context.ppq;
+        return original.startTick>=from&&original.startTick<to&&
+         originals.filter(n=>n.startTick>=from&&n.startTick<to)[0]===original;
+       });
+       if(firstEvents.some(event=>cls!==chordPitchClassesAtBeat(plan,event.startBeat)[event.inversion]))continue;
+      }
+     }
+     eligible.push(pitch);
+    }
+    const changed=eligible.filter(p=>p!==original.pitch);
+    if(!changed.length)throw new Error('unrealizable_harmony_plan');
+    changed.sort((a,b)=>Math.abs(a-original.pitch)-Math.abs(b-original.pitch)||a-b);
+    return changed[Math.floor(rng()*Math.min(6,changed.length))]!;
+   });
+   return {role,notes:originals.map((note,i)=>({
+    pitch:pitches[i]!,startTick:note.startTick,durationTicks:note.durationTicks,velocity:note.velocity
+   }))};
+  }
   const step=context.plan?.timeline?context.ppq:context.ppq*2;
   const sources=[...context.sourceNotes].sort((a,b)=>a.startTick-b.startTick);
   const roles:readonly ArrangementRole[]=context.editing?[context.editing.targetRole]:ARRANGEMENT_ROLES;

@@ -5,6 +5,8 @@ import type {ArrangementRole} from './arrange.js';
 export interface ArrangementEditingIntent {
  readonly targetTrackId:string;
  readonly targetRole:ArrangementRole;
+ /** Preserve every original note's ID, onset, duration and velocity; generated notes may change pitch only. */
+ readonly editConstraint?:'pitch_only';
 }
 export interface ProtectedPartContext {
  readonly trackIndex:number;
@@ -28,6 +30,7 @@ export function createArrangementEditingContext(
  project:MusicProject,sourceTrackId:string,intent:ArrangementEditingIntent,startTick:number,endTick:number
 ):ArrangementEditingContext{
  if(!intent||!ROLES.includes(intent.targetRole))throw new Error('invalid_arrangement_role');
+ if(intent.editConstraint!==undefined&&intent.editConstraint!=='pitch_only')throw new Error('invalid_edit_constraint');
  if(typeof intent.targetTrackId!=='string'||!intent.targetTrackId)throw new Error('target_track_not_found');
  if(sourceTrackId===intent.targetTrackId)throw new Error('source_track_is_target');
  const target=project.tracks.find(t=>t.trackId===intent.targetTrackId);
@@ -35,6 +38,8 @@ export function createArrangementEditingContext(
  if(target.locked)throw new Error('track_locked');
  const original=target.notes.filter(n=>n.startTick<endTick&&end(n)>startTick);
  if(original.some(n=>n.locked))throw new Error('locked_note_in_range');
+ if(intent.editConstraint==='pitch_only'&&original.length===0)throw new Error('pitch_only_requires_notes');
+ if(intent.editConstraint==='pitch_only'&&original.length>MAX_ORIGINAL)throw new Error('pitch_only_region_too_dense');
  if(original.some(n=>n.startTick<startTick||end(n)>endTick))throw new Error('cross_boundary_note');
  const before=target.notes.filter(n=>end(n)<=startTick)
   .sort((a,b)=>end(b)-end(a)||byTime(a,b)).slice(0,MAX_NEIGHBORS).sort(byTime);
@@ -47,7 +52,7 @@ export function createArrangementEditingContext(
    distance(a,startTick,endTick)-distance(b,startTick,endTick)||byTime(a,b)).slice(0,MAX_PART_NOTES).sort(byTime);
   if(notes.length)protectedParts.push({trackIndex,notes:clone(notes)});
  }
- return {targetTrackId:intent.targetTrackId,targetRole:intent.targetRole,
+ return {targetTrackId:intent.targetTrackId,targetRole:intent.targetRole,editConstraint:intent.editConstraint,
   before:clone(before),original:clone([...original].sort(byTime).slice(0,MAX_ORIGINAL)),
   after:clone(after),protectedParts};
 }

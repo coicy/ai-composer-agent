@@ -12,6 +12,7 @@ export function validateGenerationRecord(record:GenerationRecord):boolean {
   !integer(record.startTick)||record.startTick<0||!integer(record.endTick)||record.endTick<=record.startTick||
   typeof record.providerId!=='string'||!record.providerId||record.providerId.length>120||
   typeof record.instruction!=='string'||record.instruction.length>2000||
+  (record.editConstraint!==undefined&&(record.kind!=='scoped'||record.editConstraint!=='pitch_only'))||
   (record.seed!==undefined&&(!integer(record.seed)||record.seed<0||record.seed>0xffffffff)))return false;
  if(record.seedsByRole!==undefined){
   const seeds=record.seedsByRole;

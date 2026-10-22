@@ -53,3 +53,24 @@ The browser continues using the existing `/api/arrange` route and `createRemoteA
 Local `SeededArranger` now emits only the requested role when editing intent is present, using the **same role-index-derived RNG stream** as its legacy three-part version. A role-specific plan check applies scale/chords/registers/inversions only to the newly generated part; otherwise, an ungenerated bass part might erroneously fail an inversion check.
 
 The API keeps the full existing MusicProject snapshot as untrusted input in its local prototype context. It does not provide hosted multi-user authentication. The final `delete_note` + `add_note` ChangeSet still runs through Music Core dry-run and revision-checked explicit confirmation, leaving locks, source/other tracks and out-of-region material untouched.
+
+## Pitch-only edit mode: multi-round melodic variation while keeping the approved rhythm
+
+A scoped request may specify `editConstraint:'pitch_only'`. The editor exposes this as **局部重编仅改音高**. This mode is intended for cases such as “Keep bar 1 and the existing accompaniment; revise only the pitches of the harmony in bar 2 without changing its rhythm.”
+
+This is an actual **Music Core operation constraint**, not merely prompt text. The target window must contain 1–32 fully-contained unlocked notes. A missing, dense, locked, or boundary-crossing selection is rejected **before calling a provider**.
+
+For a valid response `{role,notes}`, all new notes must reproduce the exact multiset of:
+- `startTick`
+- `durationTicks`
+- `velocity`
+
+The model **must not** return note IDs. For simultaneous notes with the same onset, length and velocity, the validator pairs old/new notes in ascending pitch order, using stable note IDs as tie breakers for original notes. It rejects count or rhythm/velocity discrepancies, malformed MIDI and entirely unchanged outputs.
+
+Instead of `delete_note + add_note`, the generated candidate contains **only `update_note` operations changing `pitch`**. Original note IDs, rhythm, duration, velocity, notes outside the selected window and all protected tracks are retained. The candidate is dry-run against Music Core and does not write the project before explicit approval; revision checks, undo and redo remain effective. An approved provenance record stores `editConstraint:'pitch_only'` in the project JSON (not standard MIDI).
+
+The seeded offline provider chooses alternative pitches from a deterministic role-specific pseudorandom stream while copying timing, length and velocity from the authoritative target notes. If strict HarmonyPlan constraints are active, it searches within permitted scale, overlapping chord membership, instrument register and first-onset bass inversion; if no feasible pitch exists, it rejects instead of weakening a hard rule. This remains a demonstration algorithm, not evidence of musical quality.
+
+The remote OpenAI provider receives an explicit strict pitch-only prompt and unchanged target-original musical properties. Server and browser **both** check timing/velocity after generation, and the loopback API refuses altered data. If the model ignores the constraint, it must be retried or the constraint explicitly disabled by the user; no silent adjustment.
+
+**Limitations:** The first implementation preserves all notes in one contiguous 1–4 bar window, not arbitrary noncontiguous Note IDs. A chord inversion can be changed only when the new pitches meet any chosen hard plan. Same-seed reproducibility applies to the local deterministic provider, not remotely hosted model output.

@@ -62,3 +62,8 @@ src/
 - Initial three-track arrangement **must** retain `{tracks:[harmony,bass,accompaniment]}`.
 - A scoped edit **must** return exactly `{role,notes}` matching the requested existing target role; never implicitly accept or project three-track model outputs.
 - Apply only the selected role's hard music-plan checks, and rerun all preflight/MIDI validations before a dry-run; the source and protected tracks remain read-only. No model-owned IDs or ChangeSets.
+
+## Scoped pitch-only hard constraint
+- When `editConstraint:'pitch_only'` is selected, require nonempty <=32 unlocked original target notes fully within the window **before provider calls**.
+- Model output timing, durations, velocity and note count must match the exact multiset of original notes. Preserve original Note IDs and commit only `update_note` operations whose sole changed key is `pitch`, with no-op changes rejected.
+- Never repair a timing violation, relax harmony hard rules, or transform full regeneration into rhythm-locked mode implicitly. Explicit user opt-in only.

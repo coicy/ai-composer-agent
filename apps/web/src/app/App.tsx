@@ -52,6 +52,7 @@ export function App(){
  const [regionStartBar,setRegionStartBar]=useState(1);
  const [regionBars,setRegionBars]=useState(1);
  const [regionSeed,setRegionSeed]=useState(19501);
+ const [regionPitchOnly,setRegionPitchOnly]=useState(false);
  const [regionInstruction,setRegionInstruction]=useState('保留其他声部，给选定声部在指定小节写一个新的动机变化。');
  const [regionCandidate,setRegionCandidate]=useState<RegionRegenerationCandidate|null>(null);
  const [regionCandidates,setRegionCandidates]=useState<readonly RegionRegenerationCandidate[]>([]);
@@ -284,6 +285,7 @@ export function App(){
    project:snapshot,sourceTrackId:regionSourceId,targetTrackId:regionTargetId,targetRole:regionRole,
    startTick,endTick:startTick+regionBars*snapshot.ppq*4,
    instruction:regionInstruction,seed:regionSeed,
+   ...(regionPitchOnly?{editConstraint:'pitch_only' as const}:{}),
    ...(reuseApprovedPlan&&savedHarmonyPlan?{plan:savedHarmonyPlan.plan}:{})
   };
   try{
@@ -311,6 +313,7 @@ export function App(){
    kind:'scoped',sourceTrackId:pending.sourceTrackId,targetTrackIds:[pending.targetTrackId],
    startTick:pending.startTick,endTick:pending.endTick,seed:pending.seed,
    providerId:pending.providerId,instruction:regionInstruction,
+   ...(pending.editConstraint?{editConstraint:pending.editConstraint}:{}),
    ...(pending.plan?{planJson:JSON.stringify(pending.plan)}:{})
   };
   const applied=commitSession(session,{...pending.changes,generationRecord:record});
@@ -540,6 +543,9 @@ export function App(){
     onChange={e=>{setRegionBars(Number(e.target.value));invalidateRegion();}}/></label>
    <label>Seed <input type="number" aria-label="局部重编随机种子" min={0} max={4294967295} step={1} value={regionSeed}
     onChange={e=>{setRegionSeed(Number(e.target.value));invalidateRegion();}}/></label>
+   <label><input type="checkbox" aria-label="局部重编仅改音高" checked={regionPitchOnly}
+    onChange={e=>{setRegionPitchOnly(e.target.checked);invalidateRegion();}}/>
+    保留当前片段的所有节奏、时值、力度和音符 ID，仅重新生成音高</label>
    <textarea aria-label="局部重编指令" rows={2} maxLength={2000} value={regionInstruction}
     onChange={e=>{setRegionInstruction(e.target.value);invalidateRegion();}}/>
    {savedHarmonyPlan?<label><input type="checkbox" checked={reuseApprovedPlan} onChange={e=>{setReuseApprovedPlan(e.target.checked);invalidateRegion();}}/>继承已批准和声规划（{savedHarmonyPlan.recordId}）</label>:
@@ -563,8 +569,10 @@ export function App(){
     <p>切换候选可逐个试听；确认仅替换当前选定的候选与目标小节。</p>
    </section>}
    {regionCandidate&&<div className="scoped-review" role="region" aria-label="局部重编候选">
-    <strong>待确认：{regionCandidate.removedNotes.length} 个旧音符将替换为 {regionCandidate.notes.length} 个新音符，Seed {regionCandidate.seed}</strong>
-    <p>只修改 {project.tracks.find(t=>t.trackId===regionCandidate.targetTrackId)?.name??'目标轨道'} 的第 {Math.floor(regionCandidate.startTick/(project.ppq*4))+1} 小节起指定范围。钢琴卷帘中蓝色为新音符，红色为待删除音符。</p>
+    <strong>{regionCandidate.editConstraint==='pitch_only'
+     ?`待确认：仅更新 ${regionCandidate.changes.operations.length} 个音高，保留 ${regionCandidate.notes.length} 个音符的节奏、力度与 ID，Seed ${regionCandidate.seed}`
+     :`待确认：${regionCandidate.removedNotes.length} 个旧音符将替换为 ${regionCandidate.notes.length} 个新音符，Seed ${regionCandidate.seed}`}</strong>
+    <p>只修改 {project.tracks.find(t=>t.trackId===regionCandidate.targetTrackId)?.name??'目标轨道'} 的第 {Math.floor(regionCandidate.startTick/(project.ppq*4))+1} 小节起指定范围。钢琴卷帘中蓝色为候选音高，红色为{regionCandidate.editConstraint==='pitch_only'?'待更新音符（不会被删除）':'待删除音符'}。</p>
     {regionCandidate.changes.baseRevision!==project.revision&&<p className="error">候选已过期，请重新生成。</p>}
     <button disabled={regionCandidate.changes.baseRevision!==project.revision} onClick={()=>void auditionScopedRegion()}>试听局部重编候选</button>
     <button disabled={regionCandidate.changes.baseRevision!==project.revision} onClick={approveScopedRegion}>确认局部替换</button>

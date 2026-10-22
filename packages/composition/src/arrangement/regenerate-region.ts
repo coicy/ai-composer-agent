@@ -8,6 +8,7 @@ import type {ArrangementProvider,ArrangementRequest,ArrangementRole} from './arr
 export interface RegionRegenerationRequest extends ArrangementRequest {
  readonly targetTrackId:string;
  readonly targetRole:ArrangementRole;
+ readonly editConstraint?:'pitch_only';
 }
 export interface RegionRegenerationCandidate {
  readonly label:string;
@@ -16,6 +17,7 @@ export interface RegionRegenerationCandidate {
  readonly sourceTrackId:string;
  readonly targetTrackId:string;
  readonly targetRole:ArrangementRole;
+ readonly editConstraint?:'pitch_only';
  readonly seed?:number;
  readonly startTick:number;
  readonly endTick:number;
@@ -26,9 +28,10 @@ export interface RegionRegenerationCandidate {
 export async function proposeRegionRegeneration(
  provider:ArrangementProvider,request:RegionRegenerationRequest,signal?:AbortSignal
 ):Promise<RegionRegenerationCandidate>{
- const {project,sourceTrackId,targetTrackId,targetRole,startTick,endTick}=request;
+ const {project,sourceTrackId,targetTrackId,targetRole,startTick,endTick,editConstraint}=request;
  if(!validateProject(project))throw new Error('invalid_project');
  if(!ARRANGEMENT_ROLES.includes(targetRole))throw new Error('invalid_arrangement_role');
+ if(editConstraint!==undefined&&editConstraint!=='pitch_only')throw new Error('invalid_edit_constraint');
  if(sourceTrackId===targetTrackId)throw new Error('source_track_is_target');
  const target=project.tracks.find(t=>t.trackId===targetTrackId);
  if(!target)throw new Error('target_track_not_found');
@@ -41,20 +44,49 @@ export async function proposeRegionRegeneration(
   throw new Error('cross_boundary_note');
  // Perform the complete source, scope, plan and generated-MIDI checks before any edits.
  const generated=await proposeSingleRole(provider,request,signal);
- const notes=generated.notes;
- const oldIds=new Set(target.notes.map(n=>n.noteId));
- if(notes.some(n=>oldIds.has(n.noteId)))throw new Error('generated_note_id_collision');
- const operations:NoteOperation[]=[
-  ...overlap.map(n=>({type:'delete_note' as const,trackId:targetTrackId,noteId:n.noteId})),
-  ...notes.map(note=>({type:'add_note' as const,trackId:targetTrackId,note}))
- ];
+ let notes:readonly MidiNote[]=generated.notes;
+ let operations:NoteOperation[];
+ if(editConstraint==='pitch_only'){
+  if(!overlap.length)throw new Error('pitch_only_requires_notes');
+  if(overlap.length>32)throw new Error('pitch_only_region_too_dense');
+  const key=(note:MidiNote)=>`${note.startTick}:${note.durationTicks}:${note.velocity}`;
+  const byKey=(items:readonly MidiNote[])=>{
+   const map=new Map<string,MidiNote[]>();
+   for(const note of items){const k=key(note);const found=map.get(k)??[];found.push(note);map.set(k,found);}
+   return map;
+  };
+  const old=byKey(overlap),incoming=byKey(generated.notes);
+  if(old.size!==incoming.size||[...old].some(([k,v])=>incoming.get(k)?.length!==v.length))
+   throw new Error('pitch_only_rhythm_mismatch');
+  const replacement:MidiNote[]=[];
+  operations=[];
+  for(const [keyName,oldGroup] of old){
+   const newGroup=incoming.get(keyName)!;
+   oldGroup.sort((a,b)=>a.pitch-b.pitch||a.noteId.localeCompare(b.noteId));
+   newGroup.sort((a,b)=>a.pitch-b.pitch);
+   for(let i=0;i<oldGroup.length;i++){
+    const prior=oldGroup[i]!,next=newGroup[i]!;
+    replacement.push({...prior,pitch:next.pitch});
+    if(prior.pitch!==next.pitch)operations.push({type:'update_note',trackId:targetTrackId,noteId:prior.noteId,changes:{pitch:next.pitch}});
+   }
+  }
+  if(operations.length===0)throw new Error('no_pitch_changes');
+  notes=replacement;
+ }else{
+  const oldIds=new Set(target.notes.map(n=>n.noteId));
+  if(notes.some(n=>oldIds.has(n.noteId)))throw new Error('generated_note_id_collision');
+  operations=[
+   ...overlap.map(n=>({type:'delete_note' as const,trackId:targetTrackId,noteId:n.noteId})),
+   ...notes.map(note=>({type:'add_note' as const,trackId:targetTrackId,note}))
+  ];
+ }
  const changes:ChangeSet={baseRevision:project.revision,operations};
  const dryRun=applyChangeSet(project,changes);
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  return {
   label:`局部重编 · ${targetRole} · Seed ${request.seed??'未指定'}`,
   providerId:provider.id,plan:generated.plan,
-  sourceTrackId,targetTrackId,targetRole,seed:request.seed,
+  sourceTrackId,targetTrackId,targetRole,editConstraint,seed:request.seed,
   startTick,endTick,notes,removedNotes:overlap,changes
  };
 }
