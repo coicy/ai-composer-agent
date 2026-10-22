@@ -747,3 +747,41 @@ test('malicious AI feedback ordinal suggestions are rejected before any edit',as
  await expect(page.getByRole('region',{name:'反馈解释草案'})).toHaveCount(0);
  await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
 });
+
+test('seeded pitch-only region candidates display factual differences before approval',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.getByRole('checkbox',{name:'局部重编仅改音高'}).check();
+ await page.getByRole('button',{name:'按种子生成局部多方案'}).click();
+ const comparison=page.getByRole('region',{name:'局部重编方案比较'});
+ await expect(comparison.getByRole('button')).toHaveCount(3);
+ await expect(comparison.locator('.region-variant-metrics')).toHaveCount(3);
+ await expect(comparison).toContainText('改变音高');
+ await expect(comparison).toContainText('最大连续跳进');
+ const evidence=page.getByRole('region',{name:'局部候选客观差异'});
+ await expect(evidence).toContainText('原 ID 的音高改变');
+ await expect(evidence).toContainText('新增 / 删除');
+ await expect(evidence).toContainText('平均绝对音高变化');
+ await expect(evidence).toContainText('最大连续跳进（前 → 后）');
+ await expect(evidence).toContainText('不是音乐质量评分');
+ await comparison.getByRole('button').nth(1).click();
+ await expect(comparison.getByRole('button').nth(1)).toHaveAttribute('aria-pressed','true');
+ await expect(evidence).toBeVisible();
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+ await page.getByRole('button',{name:'取消局部候选'}).click();
+ await expect(evidence).toHaveCount(0);
+});
+test('full replacement comparison reports deleted and added notes without invented pitch matching',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.getByRole('button',{name:'按种子局部重编（离线）'}).click();
+ const evidence=page.getByRole('region',{name:'局部候选客观差异'});
+ await expect(evidence).toContainText('新增 / 删除');
+ await expect(evidence).toContainText('不可按原 ID 对比');
+ await expect(evidence).toContainText('不是音乐质量评分');
+ await expect(page.getByRole('button',{name:'确认局部替换'})).toBeEnabled();
+});
