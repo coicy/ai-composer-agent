@@ -1,0 +1,362 @@
+{
+  "schema": "ai-composer-reference-targets-v1",
+  "targets": [
+    {
+      "id": "meter_4_4",
+      "facet": "meter",
+      "value": "4/4",
+      "status": "covered",
+      "samples": 32,
+      "minimum_samples": 3,
+      "distinct_drummers": 7,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 3,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/blues/blues_01.mid",
+        "midi/blues/blues_02.mid",
+        "midi/classical_form/classical_form_01.mid"
+      ]
+    },
+    {
+      "id": "meter_3_4",
+      "facet": "meter",
+      "value": "3/4",
+      "status": "covered",
+      "samples": 3,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 1,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/baroque_counterpoint/baroque_counterpoint_02.mid",
+        "midi/romantic_piano/romantic_piano_01.mid",
+        "midi/romantic_piano/romantic_piano_02.mid"
+      ]
+    },
+    {
+      "id": "meter_6_8",
+      "facet": "meter",
+      "value": "6/8",
+      "status": "partial",
+      "samples": 3,
+      "minimum_samples": 3,
+      "distinct_drummers": 1,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 1,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/meter_6_8/meter_6_8_01.mid",
+        "midi/meter_6_8/meter_6_8_02.mid",
+        "midi/meter_6_8/meter_6_8_03.mid"
+      ]
+    },
+    {
+      "id": "meter_12_8",
+      "facet": "meter",
+      "value": "12/8",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    },
+    {
+      "id": "meter_5_4",
+      "facet": "meter",
+      "value": "5/4",
+      "status": "partial",
+      "samples": 1,
+      "minimum_samples": 2,
+      "distinct_drummers": 1,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 1,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/meter_5_4/meter_5_4_01.mid"
+      ]
+    },
+    {
+      "id": "meter_5_8",
+      "facet": "meter",
+      "value": "5/8",
+      "status": "partial",
+      "samples": 1,
+      "minimum_samples": 2,
+      "distinct_drummers": 1,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 1,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/meter_5_8/meter_5_8_01.mid"
+      ]
+    },
+    {
+      "id": "meter_7_8",
+      "facet": "meter",
+      "value": "7/8",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    },
+    {
+      "id": "source_disco",
+      "facet": "source_style",
+      "value": "dance/disco",
+      "status": "partial",
+      "samples": 1,
+      "minimum_samples": 2,
+      "distinct_drummers": 1,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 1,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/dance/dance_01.mid"
+      ]
+    },
+    {
+      "id": "source_breakbeat",
+      "facet": "source_style",
+      "value": "dance/breakbeat",
+      "status": "partial",
+      "samples": 1,
+      "minimum_samples": 2,
+      "distinct_drummers": 1,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 1,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/dance/dance_02.mid"
+      ]
+    },
+    {
+      "id": "source_blues_shuffle",
+      "facet": "source_style",
+      "value": "blues/shuffle",
+      "status": "partial",
+      "samples": 2,
+      "minimum_samples": 2,
+      "distinct_drummers": 1,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 1,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/blues/blues_01.mid",
+        "midi/blues/blues_02.mid"
+      ]
+    },
+    {
+      "id": "source_jazz_fusion",
+      "facet": "source_style",
+      "value": "jazz/fusion",
+      "status": "partial",
+      "samples": 1,
+      "minimum_samples": 2,
+      "distinct_drummers": 1,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 1,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/jazz/jazz_03.mid"
+      ]
+    },
+    {
+      "id": "source_brazilian_baiao",
+      "facet": "source_style",
+      "value": "latin/brazilian-baiao",
+      "status": "partial",
+      "samples": 1,
+      "minimum_samples": 2,
+      "distinct_drummers": 1,
+      "minimum_drummers": 2,
+      "distinct_source_collections": 1,
+      "minimum_sources": 0,
+      "file_examples": [
+        "midi/latin/latin_03.mid"
+      ]
+    },
+    {
+      "id": "game_battle",
+      "facet": "usage",
+      "value": "battle",
+      "status": "partial",
+      "samples": 2,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 1,
+      "minimum_sources": 2,
+      "file_examples": [
+        "midi/game_battle/game_battle_01.mid",
+        "midi/game_battle/game_battle_02.mid"
+      ]
+    },
+    {
+      "id": "game_town",
+      "facet": "usage",
+      "value": "town",
+      "status": "partial",
+      "samples": 2,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 1,
+      "minimum_sources": 2,
+      "file_examples": [
+        "midi/game_town/game_town_01.mid",
+        "midi/game_town/game_town_02.mid"
+      ]
+    },
+    {
+      "id": "game_dungeon",
+      "facet": "usage",
+      "value": "dungeon",
+      "status": "partial",
+      "samples": 2,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 1,
+      "minimum_sources": 2,
+      "file_examples": [
+        "midi/game_dungeon/game_dungeon_01.mid",
+        "midi/game_dungeon/game_dungeon_02.mid"
+      ]
+    },
+    {
+      "id": "game_narrative",
+      "facet": "usage",
+      "value": "narrative",
+      "status": "partial",
+      "samples": 2,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 1,
+      "minimum_sources": 2,
+      "file_examples": [
+        "midi/game_narrative/game_narrative_01.mid",
+        "midi/game_narrative/game_narrative_02.mid"
+      ]
+    },
+    {
+      "id": "mode_ionian",
+      "facet": "verified_mode",
+      "value": "ionian",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    },
+    {
+      "id": "mode_aeolian",
+      "facet": "verified_mode",
+      "value": "aeolian",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    },
+    {
+      "id": "mode_dorian",
+      "facet": "verified_mode",
+      "value": "dorian",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    },
+    {
+      "id": "mode_mixolydian",
+      "facet": "verified_mode",
+      "value": "mixolydian",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    },
+    {
+      "id": "mode_pentatonic",
+      "facet": "verified_mode",
+      "value": "pentatonic",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    },
+    {
+      "id": "groove_swing",
+      "facet": "verified_groove",
+      "value": "swing",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    },
+    {
+      "id": "groove_straight",
+      "facet": "verified_groove",
+      "value": "straight",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    },
+    {
+      "id": "groove_shuffle",
+      "facet": "verified_groove",
+      "value": "shuffle",
+      "status": "missing",
+      "samples": 0,
+      "minimum_samples": 2,
+      "distinct_drummers": 0,
+      "minimum_drummers": 0,
+      "distinct_source_collections": 0,
+      "minimum_sources": 0,
+      "file_examples": []
+    }
+  ],
+  "status_counts": {
+    "covered": 2,
+    "partial": 12,
+    "missing": 10
+  },
+  "warning": "Independent evidence goals, not genres; covered indicates only minimum evidence, NOT aesthetic representativity."
+}

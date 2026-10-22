@@ -1,0 +1,5971 @@
+{
+  "total_styles": 17,
+  "total_sampling_buckets": 20,
+  "total_files": 44,
+  "style_counts": {
+    "baroque_counterpoint": 2,
+    "blues": 2,
+    "classical_form": 2,
+    "dance": 2,
+    "funk": 3,
+    "game_battle": 2,
+    "game_dungeon": 2,
+    "game_narrative": 2,
+    "game_town": 2,
+    "hiphop": 3,
+    "jazz": 3,
+    "latin": 3,
+    "meter_5_4": 1,
+    "meter_5_8": 1,
+    "meter_6_8": 3,
+    "pop": 2,
+    "ragtime_piano": 2,
+    "rock": 3,
+    "romantic_piano": 2,
+    "soul": 2
+  },
+  "items": [
+    {
+      "style": "baroque_counterpoint",
+      "title": "Bach Invention No. 3 BWV 774",
+      "file": "midi/baroque_counterpoint/baroque_counterpoint_01.mid",
+      "source_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=70",
+      "license": "Public Domain",
+      "source_member": "https://www.mutopiaproject.org/ftp/BachJS/BWV774/bach-invention-03/bach-invention-03.mid",
+      "sha256": "602579a39b5b0e13ab4740dcff36342302553dcbd3619066e678f0074890c268",
+      "metadata": {
+        "attribution": "Bach Invention No. 3 BWV 774 · Mutopia Project volunteer edition",
+        "maintainer": "Allen Garvin",
+        "rights_verified_from_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=70"
+      },
+      "rights": {
+        "license_id": "Public Domain",
+        "license_url": null,
+        "license_evidence_url": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=70",
+        "credit": "Bach Invention No. 3 BWV 774; edition maintained by Allen Garvin (Mutopia Project)",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 495,
+        "track_count": 3,
+        "ppq": 384,
+        "pitch_range": [
+          38,
+          83
+        ],
+        "tempo_events": [
+          80.0
+        ],
+        "meter_events": [
+          "3/8"
+        ],
+        "channel_10_drums": false,
+        "program_change_count": 0,
+        "controller_numbers": [],
+        "velocity_mean": 127,
+        "velocity_sd": 0.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "score_derived_midi",
+          "source_style_label": null,
+          "source_index_group": "baroque_counterpoint",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "3/8"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            80.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 495,
+          "percussion_notes": 0,
+          "pitch_classes_c_to_b": [
+            1,
+            63,
+            87,
+            2,
+            79,
+            0,
+            73,
+            40,
+            14,
+            69,
+            7,
+            60
+          ],
+          "key_signature_events": [
+            "D"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 495,
+          "last_onset_beats": 87.5,
+          "quarter_note_phase_16_bins": [
+            147,
+            0,
+            0,
+            0,
+            100,
+            0,
+            1,
+            0,
+            143,
+            0,
+            0,
+            0,
+            104,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 0.0,
+          "velocity_variation_observed": false,
+          "controller_numbers": [],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            1,
+            2
+          ],
+          "drum_channel_10_observed": false,
+          "programs": [],
+          "distinct_note_tracks": 2
+        }
+      }
+    },
+    {
+      "style": "baroque_counterpoint",
+      "title": "Bach Invention No. 8 BWV 779",
+      "file": "midi/baroque_counterpoint/baroque_counterpoint_02.mid",
+      "source_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=61",
+      "license": "Public Domain",
+      "source_member": "https://www.mutopiaproject.org/ftp/BachJS/BWV779/bach-invention-08/bach-invention-08.mid",
+      "sha256": "07238719180171f76283756405ee43a0319226e869283bf29affb9e4c360e6f8",
+      "metadata": {
+        "attribution": "Bach Invention No. 8 BWV 779 · Mutopia Project volunteer edition",
+        "maintainer": "Allen Garvin",
+        "rights_verified_from_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=61"
+      },
+      "rights": {
+        "license_id": "Public Domain",
+        "license_url": null,
+        "license_evidence_url": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=61",
+        "credit": "Bach Invention No. 8 BWV 779; edition maintained by Allen Garvin (Mutopia Project)",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 598,
+        "track_count": 3,
+        "ppq": 384,
+        "pitch_range": [
+          36,
+          84
+        ],
+        "tempo_events": [
+          90.0
+        ],
+        "meter_events": [
+          "3/4"
+        ],
+        "channel_10_drums": false,
+        "program_change_count": 0,
+        "controller_numbers": [],
+        "velocity_mean": 127,
+        "velocity_sd": 0.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "score_derived_midi",
+          "source_style_label": null,
+          "source_index_group": "baroque_counterpoint",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "3/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            90.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 598,
+          "percussion_notes": 0,
+          "pitch_classes_c_to_b": [
+            92,
+            7,
+            82,
+            17,
+            56,
+            98,
+            3,
+            77,
+            0,
+            81,
+            68,
+            17
+          ],
+          "key_signature_events": [
+            "F"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 598,
+          "last_onset_beats": 99.0,
+          "quarter_note_phase_16_bins": [
+            193,
+            0,
+            0,
+            0,
+            100,
+            0,
+            0,
+            0,
+            192,
+            0,
+            0,
+            0,
+            113,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 0.0,
+          "velocity_variation_observed": false,
+          "controller_numbers": [],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            1,
+            2
+          ],
+          "drum_channel_10_observed": false,
+          "programs": [],
+          "distinct_note_tracks": 2
+        }
+      }
+    },
+    {
+      "style": "blues",
+      "title": "GMD blues/shuffle drummer4",
+      "file": "midi/blues/blues_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer4/session1/8_blues-shuffle_112_beat_4-4.mid",
+      "sha256": "06e27dd6014956cb161013fa64830f9fbb3b918088e35ae8a84591e6ba54b8d5",
+      "metadata": {
+        "style": "blues/shuffle",
+        "bpm": "112",
+        "time_signature": "4-4",
+        "duration": "8.621647",
+        "drummer": "drummer4",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer4",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 98,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          55
+        ],
+        "tempo_events": [
+          112.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 81,
+        "velocity_sd": 40.1
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "blues/shuffle",
+          "source_index_group": "blues",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            112.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 98,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 98,
+          "last_onset_beats": 15.91,
+          "quarter_note_phase_16_bins": [
+            18,
+            1,
+            1,
+            0,
+            8,
+            7,
+            3,
+            1,
+            1,
+            14,
+            15,
+            4,
+            0,
+            1,
+            8,
+            16
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 40.07,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "blues",
+      "title": "GMD blues/shuffle drummer4",
+      "file": "midi/blues/blues_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer4/session1/6_blues-shuffle_134_beat_4-4.mid",
+      "sha256": "96368cdf7f528a62822c1860267781711ee86d713f5b2a5a0d6512a184c0f280",
+      "metadata": {
+        "style": "blues/shuffle",
+        "bpm": "134",
+        "time_signature": "4-4",
+        "duration": "7.112870",
+        "drummer": "drummer4",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer4",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 84,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          58
+        ],
+        "tempo_events": [
+          134.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 73.4,
+        "velocity_sd": 39.6
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "blues/shuffle",
+          "source_index_group": "blues",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            134.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 84,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 84,
+          "last_onset_beats": 15.87,
+          "quarter_note_phase_16_bins": [
+            23,
+            9,
+            1,
+            0,
+            0,
+            3,
+            5,
+            1,
+            0,
+            2,
+            17,
+            11,
+            3,
+            1,
+            4,
+            4
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 39.56,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "classical_form",
+      "title": "Mozart Sonata K309 I",
+      "file": "midi/classical_form/classical_form_01.mid",
+      "source_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1379",
+      "license": "Public Domain",
+      "source_member": "https://www.mutopiaproject.org/ftp/MozartWA/KV309/KV309_1/KV309_1.mid",
+      "sha256": "52ef514bf46fd437319327ac8abe7ea56001a3e7e411a592cfd412ea6950f33c",
+      "metadata": {
+        "attribution": "Mozart Sonata K309 I · Mutopia Project volunteer edition",
+        "maintainer": "Stelios Samelis",
+        "rights_verified_from_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1379"
+      },
+      "rights": {
+        "license_id": "Public Domain",
+        "license_url": null,
+        "license_evidence_url": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1379",
+        "credit": "Mozart Sonata K309 I; edition maintained by Stelios Samelis (Mutopia Project)",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 2378,
+        "track_count": 3,
+        "ppq": 384,
+        "pitch_range": [
+          31,
+          89
+        ],
+        "tempo_events": [
+          146.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": false,
+        "program_change_count": 0,
+        "controller_numbers": [
+          7
+        ],
+        "velocity_mean": 127,
+        "velocity_sd": 0.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "score_derived_midi",
+          "source_style_label": null,
+          "source_index_group": "classical_form",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            146.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 2378,
+          "percussion_notes": 0,
+          "pitch_classes_c_to_b": [
+            399,
+            45,
+            376,
+            34,
+            273,
+            164,
+            124,
+            395,
+            43,
+            245,
+            39,
+            241
+          ],
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 2378,
+          "last_onset_beats": 621.38,
+          "quarter_note_phase_16_bins": [
+            577,
+            0,
+            95,
+            0,
+            403,
+            0,
+            102,
+            1,
+            523,
+            0,
+            91,
+            4,
+            521,
+            0,
+            61,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 0.0,
+          "velocity_variation_observed": false,
+          "controller_numbers": [
+            7
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            1,
+            2
+          ],
+          "drum_channel_10_observed": false,
+          "programs": [],
+          "distinct_note_tracks": 2
+        }
+      }
+    },
+    {
+      "style": "classical_form",
+      "title": "Beethoven Fuer Elise",
+      "file": "midi/classical_form/classical_form_02.mid",
+      "source_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=931",
+      "license": "Public Domain",
+      "source_member": "https://www.mutopiaproject.org/ftp/BeethovenLv/WoO59/fur_Elise_WoO59/fur_Elise_WoO59.mid",
+      "sha256": "1c12c21c7bbf4cf163896732672648a69d497636059837abd153c71abe50215a",
+      "metadata": {
+        "attribution": "Beethoven Fuer Elise · Mutopia Project volunteer edition",
+        "maintainer": "Stelios Samelis",
+        "rights_verified_from_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=931"
+      },
+      "rights": {
+        "license_id": "Public Domain",
+        "license_url": null,
+        "license_evidence_url": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=931",
+        "credit": "Beethoven Fuer Elise; edition maintained by Stelios Samelis (Mutopia Project)",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 905,
+        "track_count": 3,
+        "ppq": 384,
+        "pitch_range": [
+          33,
+          100
+        ],
+        "tempo_events": [
+          72.0
+        ],
+        "meter_events": [
+          "3/8"
+        ],
+        "channel_10_drums": false,
+        "program_change_count": 0,
+        "controller_numbers": [
+          7
+        ],
+        "velocity_mean": 62,
+        "velocity_sd": 0.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "score_derived_midi",
+          "source_style_label": null,
+          "source_index_group": "classical_form",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "3/8"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            72.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 905,
+          "percussion_notes": 0,
+          "pitch_classes_c_to_b": [
+            105,
+            5,
+            68,
+            52,
+            227,
+            48,
+            3,
+            56,
+            28,
+            208,
+            34,
+            71
+          ],
+          "key_signature_events": [
+            "Am"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 905,
+          "last_onset_beats": 156.0,
+          "quarter_note_phase_16_bins": [
+            256,
+            0,
+            7,
+            8,
+            163,
+            8,
+            9,
+            0,
+            252,
+            0,
+            9,
+            7,
+            167,
+            7,
+            11,
+            1
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 0.0,
+          "velocity_variation_observed": false,
+          "controller_numbers": [
+            7
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1
+          ],
+          "drum_channel_10_observed": false,
+          "programs": [],
+          "distinct_note_tracks": 2
+        }
+      }
+    },
+    {
+      "style": "dance",
+      "title": "GMD dance/disco drummer1",
+      "file": "midi/dance/dance_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer1/session3/7_dance-disco_120_beat_4-4.mid",
+      "sha256": "ca1b4e4b46efbd7b819c6a8792b71f84c5a9d8f455d8de1f5ba74c34019ebdce",
+      "metadata": {
+        "style": "dance/disco",
+        "bpm": "120",
+        "time_signature": "4-4",
+        "duration": "58.050000",
+        "drummer": "drummer1",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer1",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 644,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          48
+        ],
+        "tempo_events": [
+          120.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 67.9,
+        "velocity_sd": 40.3
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "dance/disco",
+          "source_index_group": "dance",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            120.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 644,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 644,
+          "last_onset_beats": 115.9,
+          "quarter_note_phase_16_bins": [
+            110,
+            0,
+            10,
+            45,
+            48,
+            5,
+            10,
+            79,
+            30,
+            0,
+            6,
+            38,
+            64,
+            25,
+            56,
+            118
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 40.35,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "dance",
+      "title": "GMD dance/breakbeat drummer1",
+      "file": "midi/dance/dance_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer1/session1/81_dance-breakbeat_170_beat_4-4.mid",
+      "sha256": "ddb6a19f200804b09f5485dbe820841cd6c175905c474c049221d051cec1b653",
+      "metadata": {
+        "style": "dance/breakbeat",
+        "bpm": "170",
+        "time_signature": "4-4",
+        "duration": "56.392619",
+        "drummer": "drummer1",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer1",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 637,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          58
+        ],
+        "tempo_events": [
+          170.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 2,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 52.6,
+        "velocity_sd": 20.6
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "dance/breakbeat",
+          "source_index_group": "dance",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            170.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 637,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 637,
+          "last_onset_beats": 159.49,
+          "quarter_note_phase_16_bins": [
+            98,
+            28,
+            13,
+            33,
+            43,
+            11,
+            19,
+            72,
+            85,
+            20,
+            12,
+            27,
+            39,
+            19,
+            18,
+            100
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 20.57,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "funk",
+      "title": "GMD funk drummer7",
+      "file": "midi/funk/funk_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer7/session3/48_funk_112_beat_4-4.mid",
+      "sha256": "a7fc5ee5253df04047ec0e75afdc2686c1404c75bde2dfecca8919929a06a659",
+      "metadata": {
+        "style": "funk",
+        "bpm": "112",
+        "time_signature": "4-4",
+        "duration": "12.674100",
+        "drummer": "drummer7",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer7",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 92,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          46
+        ],
+        "tempo_events": [
+          112.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 59.6,
+        "velocity_sd": 34.2
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "funk",
+          "source_index_group": "funk",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            112.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 92,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 92,
+          "last_onset_beats": 23.47,
+          "quarter_note_phase_16_bins": [
+            30,
+            0,
+            0,
+            3,
+            6,
+            0,
+            0,
+            11,
+            21,
+            0,
+            1,
+            2,
+            6,
+            4,
+            1,
+            7
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 34.15,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "funk",
+      "title": "GMD funk/groove2 drummer1",
+      "file": "midi/funk/funk_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer1/eval_session/2_funk-groove2_105_beat_4-4.mid",
+      "sha256": "05bd92056f42f61de95702b55433dc083cd0064148ad6d478880470548bfced1",
+      "metadata": {
+        "style": "funk/groove2",
+        "bpm": "105",
+        "time_signature": "4-4",
+        "duration": "36.351218",
+        "drummer": "drummer1",
+        "beat_type": "beat",
+        "split": "test",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer1",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 324,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          52
+        ],
+        "tempo_events": [
+          105.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 66.2,
+        "velocity_sd": 30.4
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "funk/groove2",
+          "source_index_group": "funk",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            105.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 324,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 324,
+          "last_onset_beats": 63.44,
+          "quarter_note_phase_16_bins": [
+            80,
+            10,
+            5,
+            2,
+            18,
+            16,
+            2,
+            30,
+            49,
+            4,
+            0,
+            3,
+            31,
+            21,
+            15,
+            38
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 30.36,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "funk",
+      "title": "GMD funk/groove2 drummer8",
+      "file": "midi/funk/funk_03.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer8/eval_session/2_funk-groove2_105_beat_4-4.mid",
+      "sha256": "bdebf662f759b9027d572a9b91d7639e9dac943f570954f5b0adc30fd0404005",
+      "metadata": {
+        "style": "funk/groove2",
+        "bpm": "105",
+        "time_signature": "4-4",
+        "duration": "36.386932",
+        "drummer": "drummer8",
+        "beat_type": "beat",
+        "split": "test",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer8",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 254,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          49
+        ],
+        "tempo_events": [
+          105.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 66.5,
+        "velocity_sd": 30.8
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "funk/groove2",
+          "source_index_group": "funk",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            105.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 254,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 254,
+          "last_onset_beats": 63.5,
+          "quarter_note_phase_16_bins": [
+            105,
+            20,
+            0,
+            0,
+            2,
+            13,
+            1,
+            1,
+            65,
+            15,
+            0,
+            0,
+            0,
+            26,
+            6,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 30.83,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "game_battle",
+      "title": "rpgchip13_battle_1",
+      "file": "midi/game_battle/game_battle_01.mid",
+      "source_page": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+      "license": "CC0-1.0",
+      "source_member": "rpgchip13_battle_1.mid",
+      "sha256": "98b1869a3e6ac947239ef718f5fae212c001b4832c9bf7f44bc41e01715a7767",
+      "metadata": {
+        "attribution": "Aureolus_Omicron (CC0)"
+      },
+      "rights": {
+        "license_id": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "license_evidence_url": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+        "credit": "Aureolus_Omicron",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 2017,
+        "track_count": 6,
+        "ppq": 480,
+        "pitch_range": [
+          26,
+          86
+        ],
+        "tempo_events": [
+          112.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 6,
+        "controller_numbers": [
+          7,
+          10,
+          91,
+          93,
+          121
+        ],
+        "velocity_mean": 81.1,
+        "velocity_sd": 9.2
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "game_composition_midi",
+          "source_style_label": null,
+          "source_index_group": "game_battle",
+          "game_usage": "battle",
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            112.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 1117,
+          "percussion_notes": 900,
+          "pitch_classes_c_to_b": [
+            120,
+            0,
+            208,
+            60,
+            11,
+            124,
+            55,
+            285,
+            49,
+            97,
+            108,
+            0
+          ],
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 2017,
+          "last_onset_beats": 255.0,
+          "quarter_note_phase_16_bins": [
+            1137,
+            0,
+            0,
+            0,
+            131,
+            0,
+            0,
+            0,
+            618,
+            0,
+            0,
+            0,
+            131,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 9.15,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            7,
+            10,
+            91,
+            93,
+            121
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              0,
+              38
+            ],
+            [
+              1,
+              50
+            ],
+            [
+              2,
+              50
+            ],
+            [
+              3,
+              50
+            ],
+            [
+              4,
+              80
+            ],
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 6
+        }
+      }
+    },
+    {
+      "style": "game_battle",
+      "title": "rpgchip14_battle_2",
+      "file": "midi/game_battle/game_battle_02.mid",
+      "source_page": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+      "license": "CC0-1.0",
+      "source_member": "rpgchip14_battle_2.mid",
+      "sha256": "dcd1a9fcedbf028143cdcc19e0ddd5cc91fe44e7688d54f18d5a1931227b4c09",
+      "metadata": {
+        "attribution": "Aureolus_Omicron (CC0)"
+      },
+      "rights": {
+        "license_id": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "license_evidence_url": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+        "credit": "Aureolus_Omicron",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 1993,
+        "track_count": 6,
+        "ppq": 480,
+        "pitch_range": [
+          32,
+          84
+        ],
+        "tempo_events": [
+          144.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 6,
+        "controller_numbers": [
+          7,
+          10,
+          91,
+          93,
+          121
+        ],
+        "velocity_mean": 80,
+        "velocity_sd": 0.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "game_composition_midi",
+          "source_style_label": null,
+          "source_index_group": "game_battle",
+          "game_usage": "battle",
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            144.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 1096,
+          "percussion_notes": 897,
+          "pitch_classes_c_to_b": [
+            105,
+            25,
+            94,
+            187,
+            103,
+            52,
+            25,
+            52,
+            103,
+            73,
+            221,
+            56
+          ],
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 1993,
+          "last_onset_beats": 255.75,
+          "quarter_note_phase_16_bins": [
+            1133,
+            0,
+            0,
+            1,
+            18,
+            17,
+            1,
+            0,
+            779,
+            0,
+            1,
+            17,
+            25,
+            1,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 0.0,
+          "velocity_variation_observed": false,
+          "controller_numbers": [
+            7,
+            10,
+            91,
+            93,
+            121
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              0,
+              38
+            ],
+            [
+              1,
+              38
+            ],
+            [
+              2,
+              62
+            ],
+            [
+              3,
+              80
+            ],
+            [
+              4,
+              81
+            ],
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 6
+        }
+      }
+    },
+    {
+      "style": "game_dungeon",
+      "title": "rpgchip06_dungeon",
+      "file": "midi/game_dungeon/game_dungeon_01.mid",
+      "source_page": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+      "license": "CC0-1.0",
+      "source_member": "rpgchip06_dungeon.mid",
+      "sha256": "4086634603d782b6fc5949a1bdc7e3106d14c76c9bfcb4fb398fe157bc866e06",
+      "metadata": {
+        "attribution": "Aureolus_Omicron (CC0)"
+      },
+      "rights": {
+        "license_id": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "license_evidence_url": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+        "credit": "Aureolus_Omicron",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 450,
+        "track_count": 6,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          84
+        ],
+        "tempo_events": [
+          108.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 6,
+        "controller_numbers": [
+          7,
+          10,
+          91,
+          93,
+          121
+        ],
+        "velocity_mean": 89.4,
+        "velocity_sd": 7.9
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "game_composition_midi",
+          "source_style_label": null,
+          "source_index_group": "game_dungeon",
+          "game_usage": "dungeon",
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            108.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 358,
+          "percussion_notes": 92,
+          "pitch_classes_c_to_b": [
+            44,
+            12,
+            25,
+            21,
+            68,
+            10,
+            30,
+            28,
+            8,
+            43,
+            6,
+            63
+          ],
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 450,
+          "last_onset_beats": 127.5,
+          "quarter_note_phase_16_bins": [
+            311,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            139,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 7.88,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            7,
+            10,
+            91,
+            93,
+            121
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              0,
+              80
+            ],
+            [
+              1,
+              81
+            ],
+            [
+              2,
+              50
+            ],
+            [
+              3,
+              50
+            ],
+            [
+              4,
+              50
+            ],
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 6
+        }
+      }
+    },
+    {
+      "style": "game_dungeon",
+      "title": "rpgchip07_the_shrine_of_mysteries",
+      "file": "midi/game_dungeon/game_dungeon_02.mid",
+      "source_page": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+      "license": "CC0-1.0",
+      "source_member": "rpgchip07_the_shrine_of_mysteries.mid",
+      "sha256": "f2fa9dbfae275afd5ed67522379bdb0e28b38df18a5d073ce178477184ca0cdf",
+      "metadata": {
+        "attribution": "Aureolus_Omicron (CC0)"
+      },
+      "rights": {
+        "license_id": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "license_evidence_url": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+        "credit": "Aureolus_Omicron",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 711,
+        "track_count": 6,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          91
+        ],
+        "tempo_events": [
+          90.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 6,
+        "controller_numbers": [
+          7,
+          10,
+          91,
+          93,
+          121
+        ],
+        "velocity_mean": 91.5,
+        "velocity_sd": 7.2
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "game_composition_midi",
+          "source_style_label": null,
+          "source_index_group": "game_dungeon",
+          "game_usage": "dungeon",
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            90.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 640,
+          "percussion_notes": 71,
+          "pitch_classes_c_to_b": [
+            80,
+            40,
+            0,
+            80,
+            36,
+            80,
+            80,
+            40,
+            0,
+            40,
+            120,
+            44
+          ],
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 711,
+          "last_onset_beats": 127.75,
+          "quarter_note_phase_16_bins": [
+            323,
+            0,
+            0,
+            0,
+            128,
+            0,
+            0,
+            0,
+            132,
+            0,
+            0,
+            0,
+            128,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 7.18,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            7,
+            10,
+            91,
+            93,
+            121
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              0,
+              80
+            ],
+            [
+              1,
+              50
+            ],
+            [
+              2,
+              50
+            ],
+            [
+              3,
+              50
+            ],
+            [
+              4,
+              50
+            ],
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 6
+        }
+      }
+    },
+    {
+      "style": "game_narrative",
+      "title": "rpgchip02_bittersweet_story",
+      "file": "midi/game_narrative/game_narrative_01.mid",
+      "source_page": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+      "license": "CC0-1.0",
+      "source_member": "rpgchip02_bittersweet_story.mid",
+      "sha256": "db6900d09a07c197f3be780f05d5e35688fb6e1afbf2f2a23de8e7378e10087a",
+      "metadata": {
+        "attribution": "Aureolus_Omicron (CC0)"
+      },
+      "rights": {
+        "license_id": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "license_evidence_url": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+        "credit": "Aureolus_Omicron",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 719,
+        "track_count": 6,
+        "ppq": 480,
+        "pitch_range": [
+          45,
+          86
+        ],
+        "tempo_events": [
+          72.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 6,
+        "controller_numbers": [
+          7,
+          10,
+          91,
+          93,
+          121
+        ],
+        "velocity_mean": 80.3,
+        "velocity_sd": 8.6
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "game_composition_midi",
+          "source_style_label": null,
+          "source_index_group": "game_narrative",
+          "game_usage": "narrative",
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            72.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 591,
+          "percussion_notes": 128,
+          "pitch_classes_c_to_b": [
+            35,
+            39,
+            84,
+            22,
+            47,
+            66,
+            35,
+            95,
+            8,
+            92,
+            41,
+            27
+          ],
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 719,
+          "last_onset_beats": 127.67,
+          "quarter_note_phase_16_bins": [
+            425,
+            0,
+            0,
+            0,
+            1,
+            128,
+            0,
+            0,
+            26,
+            0,
+            0,
+            128,
+            11,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 8.58,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            7,
+            10,
+            91,
+            93,
+            121
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              0,
+              80
+            ],
+            [
+              1,
+              80
+            ],
+            [
+              2,
+              62
+            ],
+            [
+              3,
+              62
+            ],
+            [
+              4,
+              62
+            ],
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 6
+        }
+      }
+    },
+    {
+      "style": "game_narrative",
+      "title": "rpgchip09_rainy_streets",
+      "file": "midi/game_narrative/game_narrative_02.mid",
+      "source_page": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+      "license": "CC0-1.0",
+      "source_member": "rpgchip09_rainy_streets.mid",
+      "sha256": "0f26c281b32749648dc7574f41174588af975e189ce4660defe17a3be94ce2cb",
+      "metadata": {
+        "attribution": "Aureolus_Omicron (CC0)"
+      },
+      "rights": {
+        "license_id": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "license_evidence_url": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+        "credit": "Aureolus_Omicron",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 685,
+        "track_count": 6,
+        "ppq": 480,
+        "pitch_range": [
+          28,
+          81
+        ],
+        "tempo_events": [
+          80.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 6,
+        "controller_numbers": [
+          7,
+          10,
+          91,
+          93,
+          121
+        ],
+        "velocity_mean": 86.0,
+        "velocity_sd": 7.7
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "game_composition_midi",
+          "source_style_label": null,
+          "source_index_group": "game_narrative",
+          "game_usage": "narrative",
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            80.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 354,
+          "percussion_notes": 331,
+          "pitch_classes_c_to_b": [
+            2,
+            42,
+            49,
+            0,
+            28,
+            14,
+            67,
+            42,
+            8,
+            35,
+            14,
+            53
+          ],
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 685,
+          "last_onset_beats": 127.75,
+          "quarter_note_phase_16_bins": [
+            406,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            278,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 7.74,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            7,
+            10,
+            91,
+            93,
+            121
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              0,
+              38
+            ],
+            [
+              1,
+              62
+            ],
+            [
+              2,
+              62
+            ],
+            [
+              3,
+              50
+            ],
+            [
+              4,
+              50
+            ],
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 6
+        }
+      }
+    },
+    {
+      "style": "game_town",
+      "title": "rpgchip03_town",
+      "file": "midi/game_town/game_town_01.mid",
+      "source_page": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+      "license": "CC0-1.0",
+      "source_member": "rpgchip03_town.mid",
+      "sha256": "b9a7843ad0bec341bb6f67d6dfe7059a5da5e90e86739588ed139749a09e9cbe",
+      "metadata": {
+        "attribution": "Aureolus_Omicron (CC0)"
+      },
+      "rights": {
+        "license_id": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "license_evidence_url": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+        "credit": "Aureolus_Omicron",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 649,
+        "track_count": 6,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          87
+        ],
+        "tempo_events": [
+          108.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 6,
+        "controller_numbers": [
+          7,
+          10,
+          91,
+          93,
+          121
+        ],
+        "velocity_mean": 86.8,
+        "velocity_sd": 7.9
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "game_composition_midi",
+          "source_style_label": null,
+          "source_index_group": "game_town",
+          "game_usage": "town",
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            108.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 421,
+          "percussion_notes": 228,
+          "pitch_classes_c_to_b": [
+            0,
+            46,
+            31,
+            12,
+            63,
+            0,
+            60,
+            23,
+            35,
+            66,
+            13,
+            72
+          ],
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 649,
+          "last_onset_beats": 191.0,
+          "quarter_note_phase_16_bins": [
+            619,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 7.91,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            7,
+            10,
+            91,
+            93,
+            121
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              0,
+              80
+            ],
+            [
+              1,
+              80
+            ],
+            [
+              2,
+              62
+            ],
+            [
+              3,
+              62
+            ],
+            [
+              4,
+              62
+            ],
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 6
+        }
+      }
+    },
+    {
+      "style": "game_town",
+      "title": "rpgchip04_in_the_royal_court",
+      "file": "midi/game_town/game_town_02.mid",
+      "source_page": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+      "license": "CC0-1.0",
+      "source_member": "rpgchip04_in_the_royal_court.mid",
+      "sha256": "ac91f4f49ea5eab6f73ca7f8fba1851746e62b17bc6220ee556739e73c637763",
+      "metadata": {
+        "attribution": "Aureolus_Omicron (CC0)"
+      },
+      "rights": {
+        "license_id": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "license_evidence_url": "https://opengameart.org/content/15-melodic-rpg-chiptunes",
+        "credit": "Aureolus_Omicron",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 1162,
+        "track_count": 6,
+        "ppq": 480,
+        "pitch_range": [
+          26,
+          84
+        ],
+        "tempo_events": [
+          80.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 6,
+        "controller_numbers": [
+          7,
+          10,
+          91,
+          93,
+          121
+        ],
+        "velocity_mean": 82.9,
+        "velocity_sd": 6.2
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "game_composition_midi",
+          "source_style_label": null,
+          "source_index_group": "game_town",
+          "game_usage": "town",
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            80.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 1006,
+          "percussion_notes": 156,
+          "pitch_classes_c_to_b": [
+            84,
+            0,
+            154,
+            0,
+            194,
+            0,
+            190,
+            184,
+            0,
+            110,
+            0,
+            90
+          ],
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 1162,
+          "last_onset_beats": 159.75,
+          "quarter_note_phase_16_bins": [
+            721,
+            0,
+            0,
+            0,
+            102,
+            0,
+            0,
+            0,
+            189,
+            0,
+            0,
+            0,
+            150,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 6.18,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            7,
+            10,
+            91,
+            93,
+            121
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              0,
+              38
+            ],
+            [
+              1,
+              50
+            ],
+            [
+              2,
+              50
+            ],
+            [
+              3,
+              80
+            ],
+            [
+              4,
+              81
+            ],
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 6
+        }
+      }
+    },
+    {
+      "style": "hiphop",
+      "title": "GMD hiphop drummer3",
+      "file": "midi/hiphop/hiphop_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer3/session2/31_hiphop_92_beat_4-4.mid",
+      "sha256": "55ef2daf2ef9a5e886b63e7fecc5de5c7a78422c2e37f1a3c994e189b624321e",
+      "metadata": {
+        "style": "hiphop",
+        "bpm": "92",
+        "time_signature": "4-4",
+        "duration": "12.975545",
+        "drummer": "drummer3",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer3",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 83,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          55
+        ],
+        "tempo_events": [
+          92.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 81.3,
+        "velocity_sd": 41.5
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "hiphop",
+          "source_index_group": "hiphop",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            92.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 83,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 83,
+          "last_onset_beats": 19.74,
+          "quarter_note_phase_16_bins": [
+            22,
+            4,
+            0,
+            2,
+            10,
+            2,
+            0,
+            2,
+            23,
+            0,
+            0,
+            0,
+            11,
+            2,
+            0,
+            5
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 41.5,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "hiphop",
+      "title": "GMD hiphop drummer7",
+      "file": "midi/hiphop/hiphop_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer7/session1/40_hiphop_100_beat_4-4.mid",
+      "sha256": "3dccd455f0142b959f43510902040ff23b0a205fc3e8486e01d963122bb26398",
+      "metadata": {
+        "style": "hiphop",
+        "bpm": "100",
+        "time_signature": "4-4",
+        "duration": "16.915000",
+        "drummer": "drummer7",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer7",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 111,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          52
+        ],
+        "tempo_events": [
+          100.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 56.2,
+        "velocity_sd": 36.8
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "hiphop",
+          "source_index_group": "hiphop",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            100.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 111,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 111,
+          "last_onset_beats": 27.48,
+          "quarter_note_phase_16_bins": [
+            13,
+            4,
+            4,
+            4,
+            14,
+            6,
+            6,
+            5,
+            16,
+            1,
+            4,
+            4,
+            17,
+            2,
+            3,
+            8
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 36.81,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "hiphop",
+      "title": "GMD hiphop drummer8",
+      "file": "midi/hiphop/hiphop_03.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer8/session1/3_hiphop_90_beat_4-4.mid",
+      "sha256": "22c09f6b088103dc0d08f28e692ac4d6265d255ae2cb8ee38db5bfa64250a9e9",
+      "metadata": {
+        "style": "hiphop",
+        "bpm": "90",
+        "time_signature": "4-4",
+        "duration": "39.356964",
+        "drummer": "drummer8",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer8",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 374,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          44
+        ],
+        "tempo_events": [
+          90.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 69.3,
+        "velocity_sd": 31.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "hiphop",
+          "source_index_group": "hiphop",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            90.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 374,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 374,
+          "last_onset_beats": 58.88,
+          "quarter_note_phase_16_bins": [
+            82,
+            4,
+            0,
+            33,
+            39,
+            0,
+            0,
+            35,
+            91,
+            1,
+            0,
+            0,
+            15,
+            1,
+            3,
+            70
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 30.99,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "jazz",
+      "title": "GMD jazz drummer3",
+      "file": "midi/jazz/jazz_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer3/session1/32_jazz_120_beat_4-4.mid",
+      "sha256": "a4119a4e5eda0af1768da2e297d298e415426842664297c11aad4c3ad6761401",
+      "metadata": {
+        "style": "jazz",
+        "bpm": "120",
+        "time_signature": "4-4",
+        "duration": "9.984375",
+        "drummer": "drummer3",
+        "beat_type": "beat",
+        "split": "test",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer3",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 62,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          55
+        ],
+        "tempo_events": [
+          120.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 80.0,
+        "velocity_sd": 26.4
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "jazz",
+          "source_index_group": "jazz",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            120.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 62,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 62,
+          "last_onset_beats": 16.05,
+          "quarter_note_phase_16_bins": [
+            11,
+            3,
+            3,
+            0,
+            9,
+            3,
+            3,
+            1,
+            10,
+            2,
+            2,
+            1,
+            9,
+            4,
+            1,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 26.44,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "jazz",
+      "title": "GMD jazz drummer1",
+      "file": "midi/jazz/jazz_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer1/session1/75_jazz_125_beat_4-4.mid",
+      "sha256": "c83e10e8905acf5e59ef758b9e4e026ee7f5f048c6b68e19b73723e009f2f933",
+      "metadata": {
+        "style": "jazz",
+        "bpm": "125",
+        "time_signature": "4-4",
+        "duration": "61.404000",
+        "drummer": "drummer1",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer1",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 486,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          26,
+          59
+        ],
+        "tempo_events": [
+          125.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 2,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 64.2,
+        "velocity_sd": 28.6
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "jazz",
+          "source_index_group": "jazz",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            125.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 486,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 486,
+          "last_onset_beats": 127.72,
+          "quarter_note_phase_16_bins": [
+            48,
+            11,
+            18,
+            27,
+            33,
+            20,
+            21,
+            28,
+            17,
+            30,
+            39,
+            45,
+            17,
+            12,
+            37,
+            83
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 28.58,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "jazz",
+      "title": "GMD jazz/fusion drummer7",
+      "file": "midi/jazz/jazz_03.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer7/session2/114_jazz-fusion_96_beat_4-4.mid",
+      "sha256": "abeb1fc40bf87de751841d6d93d0ffedb118f13506e16415e6a929a2666aeb10",
+      "metadata": {
+        "style": "jazz/fusion",
+        "bpm": "96",
+        "time_signature": "4-4",
+        "duration": "19.996094",
+        "drummer": "drummer7",
+        "beat_type": "beat",
+        "split": "test",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer7",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 127,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          59
+        ],
+        "tempo_events": [
+          96.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 67.9,
+        "velocity_sd": 34.6
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "jazz/fusion",
+          "source_index_group": "jazz",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            96.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 127,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 127,
+          "last_onset_beats": 30.9,
+          "quarter_note_phase_16_bins": [
+            10,
+            1,
+            4,
+            15,
+            8,
+            2,
+            4,
+            18,
+            9,
+            0,
+            3,
+            18,
+            12,
+            1,
+            4,
+            18
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 34.59,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "latin",
+      "title": "GMD latin/brazilian-ijexa drummer5",
+      "file": "midi/latin/latin_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer5/session2/20_latin-brazilian-ijexa_108_beat_4-4.mid",
+      "sha256": "fa21392a2756e26b86cc416d80ab4484358fd637eb9b622e1d7f036607b86408",
+      "metadata": {
+        "style": "latin/brazilian-ijexa",
+        "bpm": "108",
+        "time_signature": "4-4",
+        "duration": "31.101877",
+        "drummer": "drummer5",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer5",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 353,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          44
+        ],
+        "tempo_events": [
+          108.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 47.9,
+        "velocity_sd": 29.1
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "latin/brazilian-ijexa",
+          "source_index_group": "latin",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            108.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 353,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 353,
+          "last_onset_beats": 52.03,
+          "quarter_note_phase_16_bins": [
+            78,
+            19,
+            5,
+            23,
+            45,
+            17,
+            9,
+            29,
+            48,
+            9,
+            10,
+            9,
+            25,
+            3,
+            4,
+            20
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 29.09,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "latin",
+      "title": "GMD latin/brazilian drummer4",
+      "file": "midi/latin/latin_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer4/session1/4_latin-brazilian_92_beat_4-4.mid",
+      "sha256": "0f5aa65ef1f7c82ef25108795dc810b69acf6028823cd526dece049221e3a68e",
+      "metadata": {
+        "style": "latin/brazilian",
+        "bpm": "92",
+        "time_signature": "4-4",
+        "duration": "23.461960",
+        "drummer": "drummer4",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer4",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 215,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          58
+        ],
+        "tempo_events": [
+          92.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 90.2,
+        "velocity_sd": 36.2
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "latin/brazilian",
+          "source_index_group": "latin",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            92.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 215,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 215,
+          "last_onset_beats": 35.7,
+          "quarter_note_phase_16_bins": [
+            27,
+            6,
+            2,
+            13,
+            8,
+            7,
+            13,
+            29,
+            14,
+            2,
+            9,
+            22,
+            10,
+            1,
+            13,
+            39
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 36.24,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "latin",
+      "title": "GMD latin/brazilian-baiao drummer1",
+      "file": "midi/latin/latin_03.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer1/session1/145_latin-brazilian-baiao_95_beat_4-4.mid",
+      "sha256": "9a454bb0a930b7b767d9a29a23a6926208792ae3b79e97374f95ec96f79ce13d",
+      "metadata": {
+        "style": "latin/brazilian-baiao",
+        "bpm": "95",
+        "time_signature": "4-4",
+        "duration": "30.060481",
+        "drummer": "drummer1",
+        "beat_type": "beat",
+        "split": "validation",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer1",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 247,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          48
+        ],
+        "tempo_events": [
+          95.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 2,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 55.9,
+        "velocity_sd": 25.4
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "latin/brazilian-baiao",
+          "source_index_group": "latin",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            95.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 247,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 247,
+          "last_onset_beats": 47.44,
+          "quarter_note_phase_16_bins": [
+            58,
+            3,
+            0,
+            16,
+            33,
+            0,
+            2,
+            29,
+            44,
+            2,
+            1,
+            5,
+            25,
+            1,
+            2,
+            26
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 25.44,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [
+            [
+              9,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "meter_5_4",
+      "title": "GMD 5-4 · rock/prog · drummer1",
+      "file": "midi/meter_5_4/meter_5_4_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer1/session2/111_rock-prog_110_beat_5-4.mid",
+      "sha256": "e66420728e5a1efd5fafd3b54050acfaa465464ddfffa373e800dce2d9171eee",
+      "metadata": {
+        "style": "rock/prog",
+        "bpm": "110",
+        "time_signature": "5-4",
+        "duration": "141.758073",
+        "drummer": "drummer1",
+        "beat_type": "beat",
+        "split": "train",
+        "sample_role": "meter_coverage_probe",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer1",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 1450,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          58
+        ],
+        "tempo_events": [
+          110.0
+        ],
+        "meter_events": [
+          "5/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 53.6,
+        "velocity_sd": 30.5
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "rock/prog",
+          "source_index_group": "meter_5_4",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "5/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            110.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 1450,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 1450,
+          "last_onset_beats": 259.7,
+          "quarter_note_phase_16_bins": [
+            87,
+            19,
+            48,
+            177,
+            69,
+            26,
+            70,
+            165,
+            79,
+            14,
+            76,
+            182,
+            90,
+            26,
+            88,
+            234
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 30.49,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "meter_5_8",
+      "title": "GMD 5-8 · latin/venezuelan-merengue · drummer5",
+      "file": "midi/meter_5_8/meter_5_8_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer5/session1/8_latin-venezuelan-merengue_162_beat_5-8.mid",
+      "sha256": "c77e5d03adc1daad2f1e88670262fe4704b7c3cc98cc527934640560f3acecd9",
+      "metadata": {
+        "style": "latin/venezuelan-merengue",
+        "bpm": "162",
+        "time_signature": "5-8",
+        "duration": "166.912642",
+        "drummer": "drummer5",
+        "beat_type": "beat",
+        "split": "train",
+        "sample_role": "meter_coverage_probe",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer5",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 1641,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          44
+        ],
+        "tempo_events": [
+          162.0
+        ],
+        "meter_events": [
+          "5/8"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 42.3,
+        "velocity_sd": 14.4
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "latin/venezuelan-merengue",
+          "source_index_group": "meter_5_8",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "5/8"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            162.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 1641,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 1641,
+          "last_onset_beats": 449.96,
+          "quarter_note_phase_16_bins": [
+            206,
+            26,
+            7,
+            6,
+            7,
+            8,
+            130,
+            390,
+            210,
+            48,
+            43,
+            40,
+            13,
+            11,
+            110,
+            386
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 14.41,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "meter_6_8",
+      "title": "GMD 6-8 · rock · drummer6",
+      "file": "midi/meter_6_8/meter_6_8_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer6/session1/3_rock_80_beat_6-8.mid",
+      "sha256": "934b5efb826fe6673cac11be75275af47a753c1b3982b39fd25750a6caa9f119",
+      "metadata": {
+        "style": "rock",
+        "bpm": "80",
+        "time_signature": "6-8",
+        "duration": "20.214063",
+        "drummer": "drummer6",
+        "beat_type": "beat",
+        "split": "train",
+        "sample_role": "meter_coverage_probe",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer6",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 147,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          53
+        ],
+        "tempo_events": [
+          80.0
+        ],
+        "meter_events": [
+          "6/8"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 74.2,
+        "velocity_sd": 24.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "rock",
+          "source_index_group": "meter_6_8",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "6/8"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            80.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 147,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 147,
+          "last_onset_beats": 26.82,
+          "quarter_note_phase_16_bins": [
+            33,
+            9,
+            1,
+            0,
+            1,
+            19,
+            7,
+            5,
+            33,
+            7,
+            1,
+            1,
+            1,
+            20,
+            7,
+            2
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 24.02,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "meter_6_8",
+      "title": "GMD 6-8 · rock · drummer6",
+      "file": "midi/meter_6_8/meter_6_8_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer6/session1/1_rock_70_beat_6-8.mid",
+      "sha256": "365c10899943b9caceb08a4033ff335de7659a0dde56343263e3f33be5e0f0d6",
+      "metadata": {
+        "style": "rock",
+        "bpm": "70",
+        "time_signature": "6-8",
+        "duration": "35.717863",
+        "drummer": "drummer6",
+        "beat_type": "beat",
+        "split": "train",
+        "sample_role": "meter_coverage_probe",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer6",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 243,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          55
+        ],
+        "tempo_events": [
+          70.0
+        ],
+        "meter_events": [
+          "6/8"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 80.8,
+        "velocity_sd": 30.8
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "rock",
+          "source_index_group": "meter_6_8",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "6/8"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            70.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 243,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 243,
+          "last_onset_beats": 41.55,
+          "quarter_note_phase_16_bins": [
+            61,
+            11,
+            2,
+            4,
+            6,
+            30,
+            6,
+            5,
+            48,
+            10,
+            5,
+            5,
+            4,
+            31,
+            7,
+            8
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 30.79,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "meter_6_8",
+      "title": "GMD 6-8 · rock · drummer6",
+      "file": "midi/meter_6_8/meter_6_8_03.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer6/session1/4_rock_80_beat_6-8.mid",
+      "sha256": "8f3427ea3e79a47e27061f7577e07107d790dd58740c8b5f3f6301e32a90d44c",
+      "metadata": {
+        "style": "rock",
+        "bpm": "80",
+        "time_signature": "6-8",
+        "duration": "52.329688",
+        "drummer": "drummer6",
+        "beat_type": "beat",
+        "split": "validation",
+        "sample_role": "meter_coverage_probe",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer6",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 346,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          55
+        ],
+        "tempo_events": [
+          80.0
+        ],
+        "meter_events": [
+          "6/8"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 65.3,
+        "velocity_sd": 23.9
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "rock",
+          "source_index_group": "meter_6_8",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "6/8"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            80.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 346,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 346,
+          "last_onset_beats": 69.01,
+          "quarter_note_phase_16_bins": [
+            79,
+            12,
+            1,
+            2,
+            8,
+            42,
+            9,
+            17,
+            84,
+            10,
+            0,
+            2,
+            8,
+            39,
+            12,
+            21
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 23.86,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "pop",
+      "title": "GMD pop drummer7",
+      "file": "midi/pop/pop_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer7/session2/105_pop_132_beat_4-4.mid",
+      "sha256": "679d7f3013b30860e8278d6ea9571200e6a3e56f22f76e2552ad9ba3c7f559ce",
+      "metadata": {
+        "style": "pop",
+        "bpm": "132",
+        "time_signature": "4-4",
+        "duration": "18.890133",
+        "drummer": "drummer7",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer7",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 141,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          46
+        ],
+        "tempo_events": [
+          132.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 69.2,
+        "velocity_sd": 43.4
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "pop",
+          "source_index_group": "pop",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            132.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 141,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 141,
+          "last_onset_beats": 41.34,
+          "quarter_note_phase_16_bins": [
+            29,
+            1,
+            0,
+            0,
+            3,
+            4,
+            6,
+            39,
+            12,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            45
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 43.41,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "pop",
+      "title": "GMD pop/groove7 drummer8",
+      "file": "midi/pop/pop_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer8/eval_session/7_pop-groove7_138_beat_4-4.mid",
+      "sha256": "e374db71ee5861723e8e017311a8924f8d58e1612dd922198179320ef8e737db",
+      "metadata": {
+        "style": "pop/groove7",
+        "bpm": "138",
+        "time_signature": "4-4",
+        "duration": "27.701112",
+        "drummer": "drummer8",
+        "beat_type": "beat",
+        "split": "test",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer8",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 197,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          42
+        ],
+        "tempo_events": [
+          138.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 98.0,
+        "velocity_sd": 28.5
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "pop/groove7",
+          "source_index_group": "pop",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            138.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 197,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 197,
+          "last_onset_beats": 63.48,
+          "quarter_note_phase_16_bins": [
+            52,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            46,
+            21,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            75
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 28.45,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "ragtime_piano",
+      "title": "Joplin Maple Leaf Rag",
+      "file": "midi/ragtime_piano/ragtime_piano_01.mid",
+      "source_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=23",
+      "license": "Public Domain",
+      "source_member": "https://www.mutopiaproject.org/ftp/JoplinS/maple/maple.mid",
+      "sha256": "3dd712a85fabd267f5a2cee5cb23af4683408c2f29b8814721844498f1ee4f66",
+      "metadata": {
+        "attribution": "Joplin Maple Leaf Rag · Mutopia Project volunteer edition",
+        "maintainer": "Chris Sawer",
+        "rights_verified_from_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=23"
+      },
+      "rights": {
+        "license_id": "Public Domain",
+        "license_url": null,
+        "license_evidence_url": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=23",
+        "credit": "Joplin Maple Leaf Rag; edition maintained by Chris Sawer (Mutopia Project)",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 2566,
+        "track_count": 3,
+        "ppq": 384,
+        "pitch_range": [
+          32,
+          92
+        ],
+        "tempo_events": [
+          120.0
+        ],
+        "meter_events": [
+          "2/4"
+        ],
+        "channel_10_drums": false,
+        "program_change_count": 0,
+        "controller_numbers": [],
+        "velocity_mean": 90,
+        "velocity_sd": 0.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "score_derived_midi",
+          "source_style_label": null,
+          "source_index_group": "ragtime_piano",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "2/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            120.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 2566,
+          "percussion_notes": 0,
+          "pitch_classes_c_to_b": [
+            308,
+            188,
+            78,
+            516,
+            66,
+            270,
+            54,
+            123,
+            593,
+            46,
+            252,
+            72
+          ],
+          "key_signature_events": [
+            "Ab",
+            "Db"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 2566,
+          "last_onset_beats": 287.5,
+          "quarter_note_phase_16_bins": [
+            1020,
+            0,
+            0,
+            0,
+            342,
+            0,
+            0,
+            0,
+            923,
+            0,
+            0,
+            0,
+            281,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 0.0,
+          "velocity_variation_observed": false,
+          "controller_numbers": [],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1
+          ],
+          "drum_channel_10_observed": false,
+          "programs": [],
+          "distinct_note_tracks": 2
+        }
+      }
+    },
+    {
+      "style": "ragtime_piano",
+      "title": "Joplin Pineapple Rag",
+      "file": "midi/ragtime_piano/ragtime_piano_02.mid",
+      "source_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1899",
+      "license": "Public Domain",
+      "source_member": "https://www.mutopiaproject.org/ftp/JoplinS/PineappleRag/PineappleRag.mid",
+      "sha256": "a8ff24b340900baaa53e43ad575bc1857721706f0bd420425446f8b14e252420",
+      "metadata": {
+        "attribution": "Joplin Pineapple Rag · Mutopia Project volunteer edition",
+        "maintainer": "Coyau",
+        "rights_verified_from_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1899"
+      },
+      "rights": {
+        "license_id": "Public Domain",
+        "license_url": null,
+        "license_evidence_url": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1899",
+        "credit": "Joplin Pineapple Rag; edition maintained by Coyau (Mutopia Project)",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 2483,
+        "track_count": 3,
+        "ppq": 384,
+        "pitch_range": [
+          34,
+          89
+        ],
+        "tempo_events": [
+          100.0
+        ],
+        "meter_events": [
+          "2/4"
+        ],
+        "channel_10_drums": false,
+        "program_change_count": 4,
+        "controller_numbers": [
+          7
+        ],
+        "velocity_mean": 88.0,
+        "velocity_sd": 7.8
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "score_derived_midi",
+          "source_style_label": null,
+          "source_index_group": "ragtime_piano",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "2/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            100.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 2483,
+          "percussion_notes": 0,
+          "pitch_classes_c_to_b": [
+            172,
+            38,
+            292,
+            382,
+            27,
+            406,
+            121,
+            271,
+            75,
+            122,
+            529,
+            48
+          ],
+          "key_signature_events": [
+            "Bb",
+            "Eb"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 2483,
+          "last_onset_beats": 295.0,
+          "quarter_note_phase_16_bins": [
+            890,
+            0,
+            0,
+            0,
+            363,
+            0,
+            0,
+            0,
+            889,
+            0,
+            0,
+            0,
+            341,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 7.8,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            7
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1
+          ],
+          "drum_channel_10_observed": false,
+          "programs": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 2
+        }
+      }
+    },
+    {
+      "style": "rock",
+      "title": "GMD rock drummer3",
+      "file": "midi/rock/rock_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer3/session2/42_rock_110_beat_4-4.mid",
+      "sha256": "c0b1a7b149c075828e34ed2d73ad8108ddee9507af4dcac9b8f54ecbf79f4818",
+      "metadata": {
+        "style": "rock",
+        "bpm": "110",
+        "time_signature": "4-4",
+        "duration": "19.573880",
+        "drummer": "drummer3",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer3",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 94,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          55
+        ],
+        "tempo_events": [
+          110.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 84.1,
+        "velocity_sd": 41.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "rock",
+          "source_index_group": "rock",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            110.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 94,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 94,
+          "last_onset_beats": 35.55,
+          "quarter_note_phase_16_bins": [
+            21,
+            1,
+            0,
+            1,
+            4,
+            10,
+            6,
+            0,
+            1,
+            6,
+            15,
+            10,
+            1,
+            0,
+            1,
+            17
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 40.97,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "rock",
+      "title": "GMD rock drummer7",
+      "file": "midi/rock/rock_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer7/session2/24_rock_118_beat_4-4.mid",
+      "sha256": "c5c15217e4ac848db5435f34e49d08353244838515db32efbb17d06891c2497c",
+      "metadata": {
+        "style": "rock",
+        "bpm": "118",
+        "time_signature": "4-4",
+        "duration": "16.850650",
+        "drummer": "drummer7",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer7",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 185,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          57
+        ],
+        "tempo_events": [
+          118.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 79.4,
+        "velocity_sd": 34.3
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "rock",
+          "source_index_group": "rock",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            118.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 185,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 185,
+          "last_onset_beats": 32.94,
+          "quarter_note_phase_16_bins": [
+            18,
+            1,
+            1,
+            4,
+            1,
+            2,
+            13,
+            42,
+            11,
+            1,
+            5,
+            2,
+            6,
+            1,
+            19,
+            58
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 34.32,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "rock",
+      "title": "GMD rock drummer9",
+      "file": "midi/rock/rock_03.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer9/session1/15_rock_120_beat_4-4.mid",
+      "sha256": "591fed9b1a58d051d03877a91b3da196416370b79e8aedc4640f75ba04e5490e",
+      "metadata": {
+        "style": "rock",
+        "bpm": "120",
+        "time_signature": "4-4",
+        "duration": "11.839583",
+        "drummer": "drummer9",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer9",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 109,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          26,
+          55
+        ],
+        "tempo_events": [
+          120.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 55.7,
+        "velocity_sd": 36.5
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "rock",
+          "source_index_group": "rock",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            120.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 109,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 109,
+          "last_onset_beats": 23.48,
+          "quarter_note_phase_16_bins": [
+            23,
+            3,
+            1,
+            1,
+            8,
+            2,
+            2,
+            12,
+            19,
+            2,
+            0,
+            8,
+            3,
+            6,
+            1,
+            18
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 36.46,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "romantic_piano",
+      "title": "Chopin Minute Waltz",
+      "file": "midi/romantic_piano/romantic_piano_01.mid",
+      "source_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=483",
+      "license": "Public Domain",
+      "source_member": "https://www.mutopiaproject.org/ftp/ChopinFF/O64/chopin_valse_op64_no1/chopin_valse_op64_no1.mid",
+      "sha256": "62333ad9f9b22603d009734ab500330a12ac09aeca13d185ac0ba64a7fb9d206",
+      "metadata": {
+        "attribution": "Chopin Minute Waltz · Mutopia Project volunteer edition",
+        "maintainer": "Magnus Lewis-Smith",
+        "rights_verified_from_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=483"
+      },
+      "rights": {
+        "license_id": "Public Domain",
+        "license_url": null,
+        "license_evidence_url": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=483",
+        "credit": "Chopin Minute Waltz; edition maintained by Magnus Lewis-Smith (Mutopia Project)",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 1370,
+        "track_count": 3,
+        "ppq": 384,
+        "pitch_range": [
+          36,
+          101
+        ],
+        "tempo_events": [
+          280.0
+        ],
+        "meter_events": [
+          "3/4"
+        ],
+        "channel_10_drums": false,
+        "program_change_count": 4,
+        "controller_numbers": [
+          64
+        ],
+        "velocity_mean": 90,
+        "velocity_sd": 0.0
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "score_derived_midi",
+          "source_style_label": null,
+          "source_index_group": "romantic_piano",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "3/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            280.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 1370,
+          "percussion_notes": 0,
+          "pitch_classes_c_to_b": [
+            152,
+            153,
+            11,
+            107,
+            23,
+            229,
+            152,
+            55,
+            344,
+            14,
+            126,
+            4
+          ],
+          "key_signature_events": [
+            "Db"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 1370,
+          "last_onset_beats": 418.0,
+          "quarter_note_phase_16_bins": [
+            1041,
+            0,
+            3,
+            0,
+            4,
+            16,
+            3,
+            0,
+            267,
+            0,
+            3,
+            16,
+            4,
+            0,
+            13,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 0.0,
+          "velocity_variation_observed": false,
+          "controller_numbers": [
+            64
+          ],
+          "pedal_64_observed": true
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1
+          ],
+          "drum_channel_10_observed": false,
+          "programs": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ],
+          "distinct_note_tracks": 2
+        }
+      }
+    },
+    {
+      "style": "romantic_piano",
+      "title": "Chopin Waltz B minor Op69 No2",
+      "file": "midi/romantic_piano/romantic_piano_02.mid",
+      "source_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=511",
+      "license": "Public Domain",
+      "source_member": "https://www.mutopiaproject.org/ftp/ChopinFF/O69/w10-h-moll-cfi/w10-h-moll-cfi.mid",
+      "sha256": "a7a0e2aca89fc9d530fe50e9538948621b8a6e1883c705353e15928d411f1ae2",
+      "metadata": {
+        "attribution": "Chopin Waltz B minor Op69 No2 · Mutopia Project volunteer edition",
+        "maintainer": "Roland Goretzki",
+        "rights_verified_from_page": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=511"
+      },
+      "rights": {
+        "license_id": "Public Domain",
+        "license_url": null,
+        "license_evidence_url": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=511",
+        "credit": "Chopin Waltz B minor Op69 No2; edition maintained by Roland Goretzki (Mutopia Project)",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 1603,
+        "track_count": 3,
+        "ppq": 384,
+        "pitch_range": [
+          35,
+          90
+        ],
+        "tempo_events": [
+          152.0
+        ],
+        "meter_events": [
+          "3/4"
+        ],
+        "channel_10_drums": false,
+        "program_change_count": 0,
+        "controller_numbers": [
+          7,
+          64
+        ],
+        "velocity_mean": 82.4,
+        "velocity_sd": 21.6
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "score_derived_midi",
+          "source_style_label": null,
+          "source_index_group": "romantic_piano",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "3/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            152.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "observable",
+          "pitched_notes": 1603,
+          "percussion_notes": 0,
+          "pitch_classes_c_to_b": [
+            4,
+            203,
+            202,
+            53,
+            202,
+            19,
+            346,
+            101,
+            30,
+            63,
+            95,
+            285
+          ],
+          "key_signature_events": [
+            "B",
+            "Bm"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 1603,
+          "last_onset_beats": 434.0,
+          "quarter_note_phase_16_bins": [
+            1337,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            246,
+            0,
+            0,
+            0,
+            20,
+            0,
+            0,
+            0
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": false
+        },
+        "performance": {
+          "velocity_standard_deviation": 21.63,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            7,
+            64
+          ],
+          "pedal_64_observed": true
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [
+            0,
+            1
+          ],
+          "drum_channel_10_observed": false,
+          "programs": [],
+          "distinct_note_tracks": 2
+        }
+      }
+    },
+    {
+      "style": "soul",
+      "title": "GMD soul drummer7",
+      "file": "midi/soul/soul_01.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer7/session3/159_soul_98_beat_4-4.mid",
+      "sha256": "5d1f285829ec4fe9da54875d1f088497255ca6eb07076b925a35b69a153fe839",
+      "metadata": {
+        "style": "soul",
+        "bpm": "98",
+        "time_signature": "4-4",
+        "duration": "29.353321",
+        "drummer": "drummer7",
+        "beat_type": "beat",
+        "split": "train",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer7",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 209,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          22,
+          59
+        ],
+        "tempo_events": [
+          98.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 64.0,
+        "velocity_sd": 38.5
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "soul",
+          "source_index_group": "soul",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            98.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 209,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 209,
+          "last_onset_beats": 47.8,
+          "quarter_note_phase_16_bins": [
+            36,
+            5,
+            1,
+            2,
+            13,
+            9,
+            6,
+            33,
+            19,
+            0,
+            0,
+            2,
+            17,
+            9,
+            12,
+            45
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 38.49,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    },
+    {
+      "style": "soul",
+      "title": "GMD soul/groove10 drummer8",
+      "file": "midi/soul/soul_02.mid",
+      "source_page": "https://magenta.withgoogle.com/datasets/groove",
+      "license": "CC BY 4.0",
+      "source_member": "groove/drummer8/eval_session/10_soul-groove10_102_beat_4-4.mid",
+      "sha256": "703e028340709e9ac50fdeee16b7cf360bdc6ec1530d4fec3a5bb48c16aa780e",
+      "metadata": {
+        "style": "soul/groove10",
+        "bpm": "102",
+        "time_signature": "4-4",
+        "duration": "37.465668",
+        "drummer": "drummer8",
+        "beat_type": "beat",
+        "split": "test",
+        "attribution": "Google LLC; Groove MIDI Dataset; Gillick et al. 2019"
+      },
+      "rights": {
+        "license_id": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence_url": "https://magenta.withgoogle.com/datasets/groove",
+        "credit": "Google LLC (Groove MIDI Dataset); drummer8",
+        "original_bytes_unchanged": true
+      },
+      "analysis": {
+        "note_count": 275,
+        "track_count": 1,
+        "ppq": 480,
+        "pitch_range": [
+          36,
+          42
+        ],
+        "tempo_events": [
+          102.0
+        ],
+        "meter_events": [
+          "4/4"
+        ],
+        "channel_10_drums": true,
+        "program_change_count": 0,
+        "controller_numbers": [
+          4
+        ],
+        "velocity_mean": 83.4,
+        "velocity_sd": 40.7
+      },
+      "facets": {
+        "labels": {
+          "source_collection": "human_drum_performance",
+          "source_style_label": "soul/groove10",
+          "source_index_group": "soul",
+          "game_usage": null,
+          "verified_genre": null,
+          "verified_mode": null,
+          "verified_groove": null,
+          "verified_form": null
+        },
+        "meter": {
+          "values": [
+            "4/4"
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "tempo": {
+          "bpm_values": [
+            102.0
+          ],
+          "source": "midi_event",
+          "changes": false
+        },
+        "pitch_language": {
+          "status": "not_applicable_percussion_only",
+          "pitched_notes": 0,
+          "percussion_notes": 275,
+          "pitch_classes_c_to_b": null,
+          "key_signature_events": [
+            "C"
+          ],
+          "verified_tonic": null,
+          "verified_mode": null
+        },
+        "rhythm": {
+          "note_onset_count": 275,
+          "last_onset_beats": 63.52,
+          "quarter_note_phase_16_bins": [
+            89,
+            27,
+            1,
+            0,
+            3,
+            29,
+            8,
+            15,
+            70,
+            15,
+            0,
+            1,
+            1,
+            5,
+            7,
+            4
+          ],
+          "swing_classification": null,
+          "microtiming_style": null,
+          "performance_source": true
+        },
+        "performance": {
+          "velocity_standard_deviation": 40.67,
+          "velocity_variation_observed": true,
+          "controller_numbers": [
+            4
+          ],
+          "pedal_64_observed": false
+        },
+        "instrumentation": {
+          "pitched_midi_channels": [],
+          "drum_channel_10_observed": true,
+          "programs": [],
+          "distinct_note_tracks": 1
+        }
+      }
+    }
+  ],
+  "licensing": "GMD CC BY 4.0 requires attribution; RPG CC0; selected Mutopia editions are individually labeled Public Domain.",
+  "limitations": "GMD is drum-only, not harmony. Mutopia is score-rendered and not a human groove reference. ai-composer-agent MIDI import currently loses tempo/meter/program/CC/channel fidelity.",
+  "selection": "GMD beat-type performances; typical BPM, duration, mostly 4/4, differing drummers when available; game tracks selected by named context; Mutopia by canonical style and public-domain notation.",
+  "facets_schema": "ai-composer-reference-facets-v1",
+  "sampling_disclaimer": "meter_* buckets are facet probes, NOT musical style classes; 1-item probes are insufficient to represent a style.",
+  "coverage_file": "coverage.json",
+  "targets_file": "targets.json"
+}

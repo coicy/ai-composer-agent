@@ -1,0 +1,147 @@
+{
+  "schema": "ai-composer-reference-coverage-v1",
+  "total_midi": 44,
+  "original_index_groups": {
+    "baroque_counterpoint": 2,
+    "blues": 2,
+    "classical_form": 2,
+    "dance": 2,
+    "funk": 3,
+    "game_battle": 2,
+    "game_dungeon": 2,
+    "game_narrative": 2,
+    "game_town": 2,
+    "hiphop": 3,
+    "jazz": 3,
+    "latin": 3,
+    "pop": 2,
+    "ragtime_piano": 2,
+    "rock": 3,
+    "romantic_piano": 2,
+    "soul": 2
+  },
+  "meter_probe_buckets": {
+    "meter_5_4": 1,
+    "meter_5_8": 1,
+    "meter_6_8": 3
+  },
+  "sampling_bucket_counts": {
+    "baroque_counterpoint": 2,
+    "blues": 2,
+    "classical_form": 2,
+    "dance": 2,
+    "funk": 3,
+    "game_battle": 2,
+    "game_dungeon": 2,
+    "game_narrative": 2,
+    "game_town": 2,
+    "hiphop": 3,
+    "jazz": 3,
+    "latin": 3,
+    "meter_5_4": 1,
+    "meter_5_8": 1,
+    "meter_6_8": 3,
+    "pop": 2,
+    "ragtime_piano": 2,
+    "rock": 3,
+    "romantic_piano": 2,
+    "soul": 2
+  },
+  "evidence_source_counts": {
+    "game_composition_midi": 8,
+    "human_drum_performance": 28,
+    "score_derived_midi": 8
+  },
+  "source_style_labels": {
+    "blues/shuffle": 2,
+    "dance/breakbeat": 1,
+    "dance/disco": 1,
+    "funk": 1,
+    "funk/groove2": 2,
+    "hiphop": 3,
+    "jazz": 2,
+    "jazz/fusion": 1,
+    "latin/brazilian": 1,
+    "latin/brazilian-baiao": 1,
+    "latin/brazilian-ijexa": 1,
+    "latin/venezuelan-merengue": 1,
+    "pop": 1,
+    "pop/groove7": 1,
+    "rock": 6,
+    "rock/prog": 1,
+    "soul": 1,
+    "soul/groove10": 1
+  },
+  "known_distinct_drummers_by_bucket": {
+    "blues": 1,
+    "dance": 1,
+    "funk": 3,
+    "hiphop": 3,
+    "jazz": 3,
+    "latin": 3,
+    "meter_5_4": 1,
+    "meter_5_8": 1,
+    "meter_6_8": 1,
+    "pop": 2,
+    "rock": 3,
+    "soul": 2
+  },
+  "game_usage": {
+    "battle": 2,
+    "dungeon": 2,
+    "narrative": 2,
+    "town": 2
+  },
+  "observed_meters": {
+    "2/4": 2,
+    "3/4": 3,
+    "3/8": 2,
+    "4/4": 32,
+    "5/4": 1,
+    "5/8": 1,
+    "6/8": 3
+  },
+  "priority_meters": {
+    "2/4": 2,
+    "3/4": 3,
+    "4/4": 32,
+    "6/8": 3,
+    "9/8": 0,
+    "12/8": 0,
+    "5/4": 1,
+    "5/8": 1,
+    "7/8": 0,
+    "7/4": 0
+  },
+  "capabilities": {
+    "pitched_material": 16,
+    "drum_only": 28,
+    "meter_unknown": 0,
+    "human_performance_drums": 28,
+    "velocity_variation_observed": 37,
+    "expert_verified_mode": 0,
+    "expert_verified_groove": 0,
+    "expert_verified_form": 0
+  },
+  "coverage_warnings": [
+    "Original index groups are not mutually exclusive musical genres.",
+    "Drum-only MIDI files must not count toward pitch/mode/harmony coverage.",
+    "Key signatures and pitch-class histograms are not verified key or mode labels.",
+    "Sixteenth-phase timing histograms are not swing or human-feel certifications.",
+    "Game usage labels are not genre labels.",
+    "MIDI instrument programs do not fully capture synthesized audio timbre."
+  ],
+  "missing_priority_meters": [
+    "9/8",
+    "12/8",
+    "7/8",
+    "7/4"
+  ],
+  "sampling_warnings": [
+    "blues: 2 clips from 1 documented drummer(s); recordings are not independent performers.",
+    "dance: 2 clips from 1 documented drummer(s); recordings are not independent performers.",
+    "meter_6_8: 3 clips from 1 documented drummer(s); recordings are not independent performers.",
+    "meter_5_4: only 1 source clip(s); useful as a meter probe but insufficient for style representativity.",
+    "meter_5_8: only 1 source clip(s); useful as a meter probe but insufficient for style representativity."
+  ]
+}
