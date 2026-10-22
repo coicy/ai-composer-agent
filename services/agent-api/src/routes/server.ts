@@ -2,9 +2,11 @@ import {createServer,type IncomingMessage,type ServerResponse} from 'node:http';
 import {validateProject} from '@ai-composer/music-core';
 import {proposeWithProvider,proposeArrangement,proposeRegionRegeneration,ARRANGEMENT_ROLES} from '@ai-composer/composition';
 import type {CompositionRequest,ArrangementRequest} from '@ai-composer/composition';
-import {validateHarmonyPlan} from '@ai-composer/composition';
+import {validateHarmonyPlan,validateFeedbackInput,validateFeedbackInterpretation} from '@ai-composer/composition';
 import {createOpenAIProvider} from '../providers/openai.js';
 import {createOpenAIArranger} from '../providers/openai-arranger.js';
+import {createOpenAIFeedbackInterpreter} from '../providers/openai-feedback.js';
+import type {FeedbackProvider} from '../providers/openai-feedback.js';
 const MAX_BODY=128*1024;
 function reply(res:ServerResponse,status:number,data:unknown){
  res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'});
@@ -62,7 +64,8 @@ function parseArrangementRequest(value:unknown):ArrangementRequest{
 }
 type ProviderFactory=typeof createOpenAIProvider;
 type ArrangerFactory=typeof createOpenAIArranger;
-export interface ServerOptions {apiKey?:string;model?:string;allowedOrigin?:string;providerFactory?:ProviderFactory;arrangerFactory?:ArrangerFactory}
+type FeedbackFactory=(options:Parameters<typeof createOpenAIFeedbackInterpreter>[0])=>FeedbackProvider;
+export interface ServerOptions {apiKey?:string;model?:string;allowedOrigin?:string;providerFactory?:ProviderFactory;arrangerFactory?:ArrangerFactory;feedbackFactory?:FeedbackFactory}
 export function createAgentServer(options:ServerOptions={}){
  const allowedOrigin=options.allowedOrigin??'http://localhost:5173';
  const rates=new Map<string,{window:number,count:number}>();
@@ -70,7 +73,7 @@ export function createAgentServer(options:ServerOptions={}){
   const origin=req.headers.origin;
   if(origin&&origin!==allowedOrigin&&origin!=='http://127.0.0.1:5173'){reply(res,403,{error:'forbidden_origin'});return;}
   if(req.method==='GET'&&req.url==='/health'){reply(res,200,{ok:true,modelConfigured:!!options.apiKey});return;}
-  if(req.method!=='POST'||(req.url!=='/api/compose'&&req.url!=='/api/arrange')){reply(res,404,{error:'not_found'});return;}
+  if(req.method!=='POST'||(req.url!=='/api/compose'&&req.url!=='/api/arrange'&&req.url!=='/api/feedback')){reply(res,404,{error:'not_found'});return;}
   if(!options.apiKey){reply(res,503,{error:'api_key_not_configured'});return;}
   const address=req.socket.remoteAddress??'local',now=Date.now(),prior=rates.get(address);
   const entry=(!prior||now-prior.window>60000)?{window:now,count:0}:prior;
@@ -80,7 +83,17 @@ export function createAgentServer(options:ServerOptions={}){
   res.on('close',()=>{if(!res.writableEnded)controller.abort();});
   try{
    const body=await readBody(req);
-   if(req.url==='/api/arrange'){
+   if(req.url==='/api/feedback'){
+    if(!body||typeof body!=='object'||Array.isArray(body))throw new Error('invalid_request');
+    const params=body as Record<string,unknown>;
+    if(Object.keys(params).some(k=>k!=='feedback'&&k!=='noteCount'))throw new Error('invalid_request');
+    const input=validateFeedbackInput(params.feedback,params.noteCount);
+    const provider=(options.feedbackFactory??createOpenAIFeedbackInterpreter)(
+     {apiKey:options.apiKey,model:options.model??'gpt-4.1-mini'});
+    const proposed=await provider.interpret(input.feedback,input.noteCount,controller.signal);
+    const interpretation=validateFeedbackInterpretation(proposed,input.noteCount);
+    reply(res,200,interpretation);
+   }else if(req.url==='/api/arrange'){
     const request=parseArrangementRequest(body);
     const provider=(options.arrangerFactory??createOpenAIArranger)({apiKey:options.apiKey,model:options.model??'gpt-4.1-mini'});
     if(request.editing){
@@ -104,7 +117,7 @@ export function createAgentServer(options:ServerOptions={}){
   }catch(e){
    if(res.destroyed)return;
    const reason=e instanceof Error?e.message:'internal_error';
-   const clientError=['invalid_request','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','pitch_only_requires_notes','pitch_only_region_too_dense','invalid_protected_prefix','invalid_leap_constraint','feedback_requires_pitch_only','rhythm_constraint_violated','no_pitch_changes','invalid_arrangement_scope','invalid_arrangement_seed','invalid_arrangement_role','invalid_arrangement_editing','source_track_is_target','target_track_not_found','source_track_not_found','empty_source_range','source_range_too_dense','invalid_harmony_plan','invalid_plan_key','invalid_plan_progression','invalid_plan_register','invalid_plan_enforcement','invalid_plan_timeline','invalid_plan_passing_tones','plan_requires_whole_bars'].includes(reason) || /^plan_(scale|chords|registers|inversions)_violation:(harmony|bass|accompaniment)$/.test(reason);
+   const clientError=['invalid_request','invalid_feedback_text','invalid_feedback_note_count','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','pitch_only_requires_notes','pitch_only_region_too_dense','invalid_protected_prefix','invalid_leap_constraint','feedback_requires_pitch_only','rhythm_constraint_violated','no_pitch_changes','invalid_arrangement_scope','invalid_arrangement_seed','invalid_arrangement_role','invalid_arrangement_editing','source_track_is_target','target_track_not_found','source_track_not_found','empty_source_range','source_range_too_dense','invalid_harmony_plan','invalid_plan_key','invalid_plan_progression','invalid_plan_register','invalid_plan_enforcement','invalid_plan_timeline','invalid_plan_passing_tones','plan_requires_whole_bars'].includes(reason) || /^plan_(scale|chords|registers|inversions)_violation:(harmony|bass|accompaniment)$/.test(reason);
    reply(res,clientError?422:502,{error:clientError?reason:'generation_failed'});
   }
  });
