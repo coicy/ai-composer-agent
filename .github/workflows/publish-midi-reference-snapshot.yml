@@ -54,7 +54,7 @@ jobs:
             exit 1
           }
           git add references/
-          git diff --cached --check
+          git -c core.whitespace=-blank-at-eof diff --cached --check
           if git diff --cached --quiet; then
             echo 'No changes to persistent MIDI reference assets.'
             exit 0
