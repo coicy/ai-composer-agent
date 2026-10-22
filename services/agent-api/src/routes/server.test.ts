@@ -260,7 +260,7 @@ describe('agent API',()=>{
   const url=await launch({apiKey:'fake',feedbackFactory});
   const send=async(value:unknown)=>fetch(url+'/api/feedback',{method:'POST',
    headers:{'content-type':'application/json'},body:JSON.stringify(value)});
-  const ok=await send({feedback:'保留第一个音，不超过五个半音',noteCount:3});
+  const ok=await send({feedback:'保留第一个音，跳进不超过五个半音',noteCount:3});
   expect(ok.status).toBe(200);
   expect(await ok.json()).toEqual({pitchOnly:true,protectedPrefixCount:1,maxLeapSemitones:5,
    explanation:'保留首音，控制跳进',unresolved:[]});
@@ -271,6 +271,20 @@ describe('agent API',()=>{
   const count=await send({feedback:'保留首音',noteCount:33});
   expect(count.status).toBe(422);
   expect((await count.json()).error).toBe('invalid_feedback_note_count');
+ });
+ it('does not grant invented hard edit constraints to subjective AI feedback',async()=>{
+  const feedbackFactory=()=>({id:'untrusted',async interpret(){
+   return {pitchOnly:true,protectedPrefixCount:2,protectedNoteOrdinals:[3],
+    maxLeapSemitones:5,explanation:'pretend hard rule',unresolved:[]};
+  }});
+  const url=await launch({apiKey:'fake',feedbackFactory});
+  const response=await fetch(url+'/api/feedback',{method:'POST',headers:{'content-type':'application/json'},
+   body:JSON.stringify({feedback:'让这段音乐更有张力',noteCount:5})});
+  expect(response.status).toBe(200);
+  const result=await response.json();
+  expect(result).toMatchObject({pitchOnly:false,protectedPrefixCount:null,
+   protectedNoteOrdinals:[],maxLeapSemitones:null});
+  expect(result.unresolved.join('')).toContain('缺少');
  });
  it('rejects malicious or contradictory model feedback instead of applying an edit',async()=>{
   const feedbackFactory=()=>({id:'invalid',async interpret(){

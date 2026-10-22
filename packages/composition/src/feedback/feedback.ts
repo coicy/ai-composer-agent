@@ -164,7 +164,8 @@ export function reconcileFeedbackInterpretation(
  const merged=[...unresolved,...proposed.unresolved,...supported.unresolved];
  const distinct=[...new Set(merged)].slice(0,6);
  return validateFeedbackInterpretation({
-  pitchOnly,protectedPrefixCount:prefix,protectedNoteOrdinals:ordinals,maxLeapSemitones:leap,
+  pitchOnly,protectedPrefixCount:prefix,
+  ...(proposed.protectedNoteOrdinals!==undefined?{protectedNoteOrdinals:ordinals}:{}),maxLeapSemitones:leap,
   explanation,unresolved:distinct
  },noteCount);
 }
