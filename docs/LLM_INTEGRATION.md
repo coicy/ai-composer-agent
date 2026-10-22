@@ -30,3 +30,11 @@ Use the Piano Roll marquee, select **仅重写框选音符**, enable **只改音
 ## Three-track arrangement
 
 Select a melody track and start bar (1–64), with 1–4 bars length. Use the **多轨 AI 编配** panel to request independent harmony, bass and accompaniment. Existing track notes are read-only; the three candidate tracks are shown as overlays on the Piano Roll, can be auditioned with the melody, and are saved only after explicit confirmation. The offline rule-based demo button requires no API credentials, but does not demonstrate professional harmony quality. See [MULTITRACK_ARRANGEMENT.md](MULTITRACK_ARRANGEMENT.md).
+
+## Approved dual-access product contract (D-006; pending implementation)
+
+The product must support **(A) MCP tools callable by an external Agent** and **(B) user-entered LLM API endpoint + API Key for internal generation**. In both modes MIDI candidates remain subject to the same Music Core scope/lock/revision validation, preview, explicit user approval and undo rules; D-005 still requires a general-purpose LLM rather than a dedicated music generation model.
+
+**Current implementation is not either complete mode**: the loopback `agent-api` gets the OpenAI Key/model from process environment, no MCP server exists, and the Web app has no UI for an endpoint/Key. The existing provider's injected endpoint option is not a user-facing settings interface.
+
+Implementation must separate internal Key from external MCP access, avoid embedding or persisting credentials in frontend storage, logs or project JSON, and account for the browser-held MusicProject session when exposing authorized MCP tools. API protocol differences, session security, secret lifetime, endpoint/redirect safety and deployment remain under review. Full specification: [LLM_ACCESS_MODES.md](LLM_ACCESS_MODES.md).
