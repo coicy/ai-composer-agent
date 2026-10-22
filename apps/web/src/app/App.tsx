@@ -3,15 +3,16 @@ import {playProject} from '@ai-composer/audio-engine';
 import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes,tickToX,xToQuantizedTick,pitchToY,yToPitch,makeMoveOperations,makeVelocityOperations} from '@ai-composer/piano-roll';
 import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
-import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,proposeArrangementVariants,combineArrangementVariants,SeededArranger,proposeRegionRegeneration,proposeRegionVariants,findReusableHarmonyPlan,ARRANGEMENT_ROLES,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel,chordEventLabel,effectiveChordEvents} from '@ai-composer/composition';
+import {composeMelody,continueMelody,proposeWithProvider,proposeTranspose,proposeArrangement,proposeArrangementVariants,combineArrangementVariants,SeededArranger,proposeRegionRegeneration,proposeRegionVariants,findReusableHarmonyPlan,ARRANGEMENT_ROLES,interpretFeedbackRules,hasActionableFeedback,DEFAULT_REGISTERS,validateHarmonyPlan,chordLabel,chordEventLabel,effectiveChordEvents} from '@ai-composer/composition';
 import {createRemoteProvider} from '../features/agent/remote.js';
 import {createRemoteArranger} from '../features/agent/remote-arranger.js';
+import {requestRemoteFeedback} from '../features/agent/remote-feedback.js';
 import {ArrangementDiagnostics} from '../features/agent/ArrangementDiagnostics.js';
 import {HarmonyPlanEditor} from '../features/agent/HarmonyPlanEditor.js';
 import type {HarmonyPlanDraft} from '../features/agent/HarmonyPlanEditor.js';
 import {timelineFromDegrees} from '../features/agent/HarmonyPlanEditor.js';
 import {VelocityLane} from '../features/editor/VelocityLane.js';
-import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole,ArrangementRequest,ArrangementPartChoices,RegionRegenerationCandidate,RegionRegenerationRequest} from '@ai-composer/composition';
+import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole,ArrangementRequest,ArrangementPartChoices,RegionRegenerationCandidate,RegionRegenerationRequest,FeedbackInterpretation} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {createSession,commitSession,undoSession,redoSession,applyChangeSet,validateProject} from '@ai-composer/music-core';
 import type {EditSession,MidiNote,MusicProject,NoteOperation,GenerationRecord} from '@ai-composer/music-core';
@@ -56,6 +57,10 @@ export function App(){
  const [regionProtectedPrefixCount,setRegionProtectedPrefixCount]=useState(0);
  const [regionMaxLeap,setRegionMaxLeap]=useState(0);
  const [regionInstruction,setRegionInstruction]=useState('保留其他声部，给选定声部在指定小节写一个新的动机变化。');
+ const [feedbackText,setFeedbackText]=useState('');
+ const [feedbackDraft,setFeedbackDraft]=useState<{key:string;value:FeedbackInterpretation;origin:'规则'|'AI'}|null>(null);
+ const [feedbackPending,setFeedbackPending]=useState(false);
+ const feedbackRequest=useRef<AbortController|null>(null);
  const [regionCandidate,setRegionCandidate]=useState<RegionRegenerationCandidate|null>(null);
  const [regionCandidates,setRegionCandidates]=useState<readonly RegionRegenerationCandidate[]>([]);
  const [regionVariantCount,setRegionVariantCount]=useState(3);
@@ -76,7 +81,7 @@ export function App(){
  const gesture=useRef<Gesture|null>(null);
  const playback=useRef<{stop():void}|null>(null);
  const [playing,setPlaying]=useState(false);
- useEffect(()=>()=>{playback.current?.stop();activeRequest.current?.abort();arrangeRequest.current?.abort();regionRequest.current?.abort();},[]);
+ useEffect(()=>()=>{playback.current?.stop();activeRequest.current?.abort();arrangeRequest.current?.abort();regionRequest.current?.abort();feedbackRequest.current?.abort();},[]);
  useEffect(()=>{if(rollRef.current)rollRef.current.scrollTop=(127-72)*ROW-240;},[]);
  function stop(){playback.current?.stop();playback.current=null;setPlaying(false);}
  async function play(){stop();try{const handle=await playProject(session.project);playback.current=handle;setPlaying(true);setError('');}catch(e){setError(e instanceof Error?e.message:'audio_error');}}
@@ -88,6 +93,13 @@ export function App(){
  const regionTargets=project.tracks.filter(t=>t.trackId!==regionSourceId);
  const regionTargetId=regionTargets.some(t=>t.trackId===regionTarget)?regionTarget:regionTargets[0]?.trackId??'';
  const proposedStart=(regionStartBar-1)*project.ppq*4;
+ const feedbackWindowEnd=proposedStart+regionBars*project.ppq*4;
+ const feedbackTarget=project.tracks.find(t=>t.trackId===regionTargetId);
+ const feedbackNotes=feedbackTarget?.notes.filter(n=>n.startTick<feedbackWindowEnd&&
+  n.startTick+n.durationTicks>proposedStart)??[];
+ const feedbackNoteCount=feedbackNotes.length;
+ const feedbackKey=[project.revision,regionTargetId,regionStartBar,regionBars,feedbackText].join('|');
+ const activeFeedbackDraft=feedbackDraft?.key===feedbackKey?feedbackDraft:null;
  const savedHarmonyPlan=Number.isSafeInteger(regionStartBar)&&Number.isSafeInteger(regionBars)&&regionStartBar>=1&&regionBars>=1&&regionBars<=4?
   findReusableHarmonyPlan(project,regionSourceId,regionTargetId,proposedStart,proposedStart+regionBars*project.ppq*4):null;
  useEffect(()=>{
@@ -262,11 +274,49 @@ export function App(){
   }catch(e){setError(e instanceof Error?e.message:'arrangement_preview_failed');}
  }
  function invalidateRegion(){
+  feedbackRequest.current?.abort();feedbackRequest.current=null;
+  setFeedbackPending(false);setFeedbackDraft(null);
   regionRequest.current?.abort();
   regionRequest.current=null;
   setRegionPending(false);
   setRegionCandidate(null);
   setRegionCandidates([]);
+ }
+ async function analyzeFeedback(useModel:boolean){
+  if(!regionTargetId||feedbackNoteCount<1||feedbackNoteCount>32){
+   setError('反馈解释需要选中 1–32 个目标音符');return;
+  }
+  if(!feedbackText.trim()||feedbackText.length>500){
+   setError('反馈意见需为 1–500 个字符');return;
+  }
+  feedbackRequest.current?.abort();
+  const controller=new AbortController();feedbackRequest.current=controller;
+  setFeedbackPending(true);setFeedbackDraft(null);setError('');
+  const key=feedbackKey;
+  try{
+   const value=useModel?await requestRemoteFeedback(feedbackText,feedbackNoteCount,controller.signal):
+    interpretFeedbackRules(feedbackText,feedbackNoteCount);
+   if(feedbackRequest.current===controller&&!controller.signal.aborted){
+    setFeedbackDraft({key,value,origin:useModel?'AI':'规则'});
+   }
+  }catch(e){if(!controller.signal.aborted&&feedbackRequest.current===controller){
+   setError(e instanceof Error?e.message:'feedback_failed');
+  }}finally{
+   if(feedbackRequest.current===controller){feedbackRequest.current=null;setFeedbackPending(false);}
+  }
+ }
+ function applyFeedbackDraft(withConstraints:boolean){
+  const draft=activeFeedbackDraft;
+  if(!draft)return;
+  if(withConstraints&&!hasActionableFeedback(draft.value))return;
+  invalidateRegion();
+  setRegionInstruction(feedbackText);
+  if(withConstraints){
+   setRegionPitchOnly(true);
+   setRegionProtectedPrefixCount(draft.value.protectedPrefixCount??0);
+   setRegionMaxLeap(draft.value.maxLeapSemitones??0);
+  }
+  setError('');
  }
  async function proposeScopedRegion(useModel:boolean,multiple=false){
   if(!regionTargetId||regionTargetId===regionSourceId){setError('请先选择与参考旋律不同的目标轨道');return;}
@@ -560,6 +610,32 @@ export function App(){
      onChange={e=>{setRegionMaxLeap(Number(e.target.value));invalidateRegion();}}/></label>
     <p>保留开头按起音顺序选取；最大跳进只约束不重叠的连续音符及选区边缘衔接。不会自动推断自由文本里的数值要求。</p>
    </div>}
+   <section className="feedback-interpreter" role="region" aria-label="音乐反馈解释器">
+    <strong>把自然语言意见整理成可审核的修改规则</strong>
+    <textarea aria-label="音乐反馈意见" rows={2} maxLength={500} value={feedbackText}
+     placeholder="例如：保留前两个音，最大跳进不超过五个半音，节奏不变"
+     onChange={e=>{setFeedbackText(e.target.value);setFeedbackDraft(null);feedbackRequest.current?.abort();setFeedbackPending(false);}}/>
+    <div className="feedback-actions">
+     <button type="button" disabled={feedbackPending||!feedbackText.trim()||feedbackNoteCount<1||feedbackNoteCount>32}
+      onClick={()=>void analyzeFeedback(false)}>规则解释（离线）</button>
+     <button type="button" disabled={feedbackPending||!feedbackText.trim()||feedbackNoteCount<1||feedbackNoteCount>32}
+      onClick={()=>void analyzeFeedback(true)}>AI 解释反馈</button>
+     {feedbackPending&&<button type="button" onClick={()=>{feedbackRequest.current?.abort();feedbackRequest.current=null;setFeedbackPending(false);}}>取消解释</button>}
+    </div>
+    <p>解释不会直接生成或修改工程。AI 可能误解你的意见，所有建议须人工审核；不确定的风格要求不会自动变成数值硬约束。</p>
+    {activeFeedbackDraft&&<div className="feedback-draft" role="region" aria-label="反馈解释草案">
+     <strong>{activeFeedbackDraft.origin}解释草案（尚未应用）</strong>
+     <p>{activeFeedbackDraft.value.explanation}</p>
+     <p>仅改音高：{activeFeedbackDraft.value.pitchOnly?'建议':'未建议'}；
+      开头保护：{activeFeedbackDraft.value.protectedPrefixCount??'无'}；
+      最大跳进：{activeFeedbackDraft.value.maxLeapSemitones??'不设置'} 半音</p>
+     {activeFeedbackDraft.value.unresolved.length>0&&<p>仍需判断：{activeFeedbackDraft.value.unresolved.join('；')}</p>}
+     <button type="button" disabled={!hasActionableFeedback(activeFeedbackDraft.value)}
+      onClick={()=>applyFeedbackDraft(true)}>确认并应用建议约束</button>
+     <button type="button" onClick={()=>applyFeedbackDraft(false)}>仅填入创作指令（不改约束）</button>
+     <button type="button" onClick={()=>setFeedbackDraft(null)}>放弃草案</button>
+    </div>}
+   </section>
    <textarea aria-label="局部重编指令" rows={2} maxLength={2000} value={regionInstruction}
     onChange={e=>{setRegionInstruction(e.target.value);invalidateRegion();}}/>
    {savedHarmonyPlan?<label><input type="checkbox" checked={reuseApprovedPlan} onChange={e=>{setReuseApprovedPlan(e.target.checked);invalidateRegion();}}/>继承已批准和声规划（{savedHarmonyPlan.recordId}）</label>:

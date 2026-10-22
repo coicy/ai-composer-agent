@@ -562,3 +562,68 @@ test('remote scoped feedback refuses changing protected opening without mutating
  await expect(page.getByRole('region',{name:'局部重编候选'})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'确认局部替换'})).toHaveCount(0);
 });
+
+test('offline feedback draft requires explicit approval before changing scoped constraints',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ const feedback=page.getByRole('textbox',{name:'音乐反馈意见'});
+ await feedback.fill('保留前一个音，跳进不超过十二个半音，节奏不变');
+ await page.getByRole('button',{name:'规则解释（离线）'}).click();
+ const draft=page.getByRole('region',{name:'反馈解释草案'});
+ await expect(draft).toContainText('开头保护：1');
+ await expect(draft).toContainText('最大跳进：12');
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
+ await expect(page.getByRole('spinbutton',{name:'保留开头音符数'})).toHaveCount(0);
+ await page.getByRole('button',{name:'确认并应用建议约束'}).click();
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).toBeChecked();
+ await expect(page.getByRole('spinbutton',{name:'保留开头音符数'})).toHaveValue('1');
+ await expect(page.getByRole('spinbutton',{name:'最大跳进半音数'})).toHaveValue('12');
+ await expect(page.getByRole('textbox',{name:'局部重编指令'})).toHaveValue('保留前一个音，跳进不超过十二个半音，节奏不变');
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+});
+
+test('vague feedback stays interpretive and cannot silently become a numerical hard rule',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.getByRole('textbox',{name:'音乐反馈意见'}).fill('这里太平淡，想要更有张力');
+ await page.getByRole('button',{name:'规则解释（离线）'}).click();
+ const draft=page.getByRole('region',{name:'反馈解释草案'});
+ await expect(draft).toContainText('未能');
+ await expect(page.getByRole('button',{name:'确认并应用建议约束'})).toBeDisabled();
+ await page.getByRole('button',{name:'仅填入创作指令（不改约束）'}).click();
+ await expect(page.getByRole('textbox',{name:'局部重编指令'})).toHaveValue('这里太平淡，想要更有张力');
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
+});
+
+test('AI feedback suggestion stays a draft, rejects invalid data and stale draft after edit',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ let count=0;
+ await page.route('**/api/feedback',async route=>{
+  count++;
+  const req=route.request().postDataJSON() as {feedback:string;noteCount:number};
+  expect(req.noteCount).toBe(2);
+  const candidate=count===1?
+   {pitchOnly:true,protectedPrefixCount:1,maxLeapSemitones:8,explanation:'AI 建议',unresolved:[]}:
+   {pitchOnly:true,protectedPrefixCount:100,maxLeapSemitones:8,explanation:'越权',unresolved:[]};
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(candidate)});
+ });
+ const input=page.getByRole('textbox',{name:'音乐反馈意见'});
+ await input.fill('保留开头一个音');
+ await page.getByRole('button',{name:'AI 解释反馈'}).click();
+ const draft=page.getByRole('region',{name:'反馈解释草案'});
+ await expect(draft).toContainText('AI 建议');
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
+ await input.fill('改写意见');
+ await expect(draft).toHaveCount(0);
+ await page.getByRole('button',{name:'AI 解释反馈'}).click();
+ await expect(page.getByRole('alert')).toContainText('invalid_feedback_interpretation');
+ await expect(draft).toHaveCount(0);
+ await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
+});

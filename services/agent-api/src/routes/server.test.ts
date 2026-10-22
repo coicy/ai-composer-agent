@@ -250,6 +250,39 @@ describe('agent API',()=>{
   expect(noMode.status).toBe(422);
   expect((await noMode.json()).error).toBe('invalid_arrangement_editing');
  });
+ it('serves only a validated reviewable feedback suggestion, without any project mutations',async()=>{
+  let seen:unknown;
+  const feedbackFactory=()=>({id:'fake',async interpret(feedback:string,noteCount:number){
+   seen={feedback,noteCount};
+   return {pitchOnly:true,protectedPrefixCount:1,maxLeapSemitones:5,
+    explanation:'保留首音，控制跳进',unresolved:[]};
+  }});
+  const url=await launch({apiKey:'fake',feedbackFactory});
+  const send=async(value:unknown)=>fetch(url+'/api/feedback',{method:'POST',
+   headers:{'content-type':'application/json'},body:JSON.stringify(value)});
+  const ok=await send({feedback:'保留第一个音，不超过五个半音',noteCount:3});
+  expect(ok.status).toBe(200);
+  expect(await ok.json()).toEqual({pitchOnly:true,protectedPrefixCount:1,maxLeapSemitones:5,
+   explanation:'保留首音，控制跳进',unresolved:[]});
+  expect(seen).toEqual({feedback:'保留第一个音，不超过五个半音',noteCount:3});
+  const unknown=await send({feedback:'保留首音',noteCount:3,editTrackId:'melody'});
+  expect(unknown.status).toBe(422);
+  expect((await unknown.json()).error).toBe('invalid_request');
+  const count=await send({feedback:'保留首音',noteCount:33});
+  expect(count.status).toBe(422);
+  expect((await count.json()).error).toBe('invalid_feedback_note_count');
+ });
+ it('rejects malicious or contradictory model feedback instead of applying an edit',async()=>{
+  const feedbackFactory=()=>({id:'invalid',async interpret(){
+   return {pitchOnly:true,protectedPrefixCount:2,maxLeapSemitones:99,
+    explanation:'override permission',unresolved:[],targetTrackId:'melody'};
+  }});
+  const url=await launch({apiKey:'test',feedbackFactory});
+  const res=await fetch(url+'/api/feedback',{method:'POST',
+   headers:{'content-type':'application/json'},body:JSON.stringify({feedback:'try',noteCount:3})});
+  expect(res.status).toBe(502);
+  expect(await res.json()).toEqual({error:'generation_failed'});
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});

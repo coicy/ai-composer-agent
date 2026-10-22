@@ -88,3 +88,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Both rules are enforced deterministically *after* model output validation and preflight, in server and client pipelines; malformed parameters or attempts to apply these to unrestricted edits are rejected before provider invocation. Offline Seed candidates follow these same rules.
 - Editor exposes explicit numeric controls only when pitch-only mode is enabled. Accepted scoped generation JSON provenance stores the active values, and project undo restores prior MIDI and provenance.
 - This is a bounded structural feedback primitive, not free-form semantic understanding or verified musical improvement. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
+
+## Feedback interpretation and approval
+- Added a bounded offline rules interpreter for explicit protected-note counts and maximum semitone leaps. Vague aesthetic comments become unresolved advice, never guessed hard parameters.
+- Added a model-backed `POST /api/feedback` strict-schema proposal API, exposing only user feedback text and selected target note count (no MIDI or identifiers). Both server and browser check untrusted output.
+- A scoped editor review panel requires explicit approval to copy recommended settings into existing edit controls. Choosing text-only changes the creative prompt without adding hard rules. This stage never starts generation or edits the project, and stale drafts are invalidated.
+- No genuine human listening study or universal free-form feedback understanding; see docs/SCOPED_ARRANGEMENT_REGENERATION.md.

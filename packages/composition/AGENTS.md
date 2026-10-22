@@ -72,3 +72,8 @@ src/
 - `protectedPrefixCount` is a count of chronological original target notes, not a note ID list. Protected pitches must not change; the value must be less than original target note count.
 - `maxLeapSemitones` bounds adjacent **non-overlapping** pitches in a pitch-only passage (including nearest untouched boundary notes). Do not interpret it as a complete harmonic voice-leading guarantee.
 - Both require `editConstraint:'pitch_only'`, are checked before provider invocation where possible and again after MIDI output, and must not be weakened to improve a sample. Persist approved feedback settings in provenance.
+
+## Reviewable feedback interpretation
+- `interpretFeedbackRules` must remain conservative, recognizing explicit bounded numerical constraints only, not assigning invented semitone values to subjective descriptions.
+- `validateFeedbackInterpretation` rejects out-of-bounds, unknown keys, noninteger and inconsistent model suggestions. An interpretation is *never* a ChangeSet or implicit user approval.
+- Respect the separate UI review barrier: interpretation -> explicit user copy to controls -> provider proposal -> preview -> explicit commit.
