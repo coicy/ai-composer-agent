@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fetch and audit a representative MIDI reference pack. Sources are unmodified."""
 import csv,hashlib,io,json,pathlib,statistics,time,urllib.request,urllib.parse,zipfile
-from collections import defaultdict
+from collections import defaultdict,Counter
 from html.parser import HTMLParser
 import mido
 from midi_reference_facets import enrich_catalog,format_report
@@ -65,6 +65,7 @@ def main():
  with zipfile.ZipFile(io.BytesIO(data)) as z:
   files=z.namelist();info=next(x for x in files if x.endswith('info.csv'))
   rows=list(csv.DictReader(io.StringIO(z.read(info).decode('utf-8-sig'))))
+  print('GMD_BEAT_METER_COUNTS',dict(sorted(Counter(r.get('time_signature') for r in rows if r.get('beat_type')=='beat').items())),flush=True)
   for style,(wanted,target_bpm) in RHYTHM.items():
    candidates=[]
    for r in rows:
