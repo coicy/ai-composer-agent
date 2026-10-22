@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Fetch and audit a representative MIDI reference pack. Sources are unmodified."""
-import csv,hashlib,io,json,pathlib,statistics,time,urllib.request,urllib.parse,zipfile
+import csv,hashlib,io,json,pathlib,statistics,time,urllib.request,urllib.parse,zipfile,re,html
 from collections import defaultdict,Counter
 from html.parser import HTMLParser
 import mido
@@ -17,6 +17,28 @@ RHYTHM={'rock':(3,112),'funk':(3,105),'jazz':(3,125),'latin':(3,110),'hiphop':(3
 GAME={'game_town':['rpgchip03_town','rpgchip04_in_the_royal_court'],'game_dungeon':['rpgchip06_dungeon','rpgchip07_the_shrine_of_mysteries'],'game_battle':['rpgchip13_battle_1','rpgchip14_battle_2'],'game_narrative':['rpgchip02_bittersweet_story','rpgchip09_rainy_streets']}
 SCORE={'baroque_counterpoint':[('Bach Invention No. 3 BWV 774',70),('Bach Invention No. 8 BWV 779',61)],'classical_form':[('Mozart Sonata K309 I',1379),('Beethoven Fuer Elise',931)],'romantic_piano':[('Chopin Minute Waltz',483),('Chopin Waltz B minor Op69 No2',511)],'ragtime_piano':[('Joplin Maple Leaf Rag',23),('Joplin Pineapple Rag',1899)]}
 groups=defaultdict(list)
+# Named maintainers transcribed from each individually reviewed Mutopia work page.
+MUTOPIA_EDITORS={70:'Allen Garvin',61:'Allen Garvin',1379:'Stelios Samelis',
+ 931:'Stelios Samelis',483:'Magnus Lewis-Smith',511:'Roland Goretzki',
+ 23:'Chris Sawer',1899:'Coyau'}
+RIGHTS_URLS={'CC BY 4.0':'https://creativecommons.org/licenses/by/4.0/',
+ 'CC0-1.0':'https://creativecommons.org/publicdomain/zero/1.0/'}
+def rights_record(name,source,title,meta):
+ if name=='CC BY 4.0':
+  return {'license_id':name,'license_url':RIGHTS_URLS[name],
+    'license_evidence_url':'https://magenta.withgoogle.com/datasets/groove',
+    'credit':'Google LLC (Groove MIDI Dataset); '+str(meta.get('drummer','performer unknown')),
+    'original_bytes_unchanged':True}
+ if name=='CC0-1.0':
+  return {'license_id':name,'license_url':RIGHTS_URLS[name],
+    'license_evidence_url':'https://opengameart.org/content/15-melodic-rpg-chiptunes',
+    'credit':'Aureolus_Omicron','original_bytes_unchanged':True}
+ if name=='Public Domain':
+  return {'license_id':name,'license_url':None,
+    'license_evidence_url':source,
+    'credit':title+'; edition maintained by '+str(meta['maintainer'])+' (Mutopia Project)',
+    'original_bytes_unchanged':True}
+ raise RuntimeError('Unrecognized MIDI license: '+name)
 
 class MidiLinks(HTMLParser):
  def __init__(self):super().__init__();self.href=None;self.words='';self.matches=[]
@@ -56,6 +78,7 @@ def add(style,title,blob,source,license_name,source_member,meta):
  path=OUT/'midi'/style/(style+'_'+str(len(groups[style])+1).zfill(2)+'.mid')
  path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(blob)
  item={'style':style,'title':title,'file':str(path.relative_to(OUT)),'source_page':source,'license':license_name,'source_member':source_member,'sha256':hashlib.sha256(blob).hexdigest(),'metadata':meta,
+ 'rights':rights_record(license_name,source,title,meta),
  'analysis':{'note_count':len(events),'track_count':len(midi.tracks),'ppq':midi.ticks_per_beat,'pitch_range':[min(n for _,n,_ in events),max(n for _,n,_ in events)],'tempo_events':tempo[:16],'meter_events':meter[:16],'channel_10_drums':9 in channels,'program_change_count':len(programs),'controller_numbers':sorted(ccs),'velocity_mean':round(statistics.mean(v for _,_,v in events),1),'velocity_sd':round(statistics.pstdev(v for _,_,v in events),1)}}
  groups[style].append(item);print('SELECTED',style,title,path.name,len(events),flush=True)
 
@@ -128,10 +151,19 @@ def main():
  for style,pieces in SCORE.items():
   for title,piece_id in pieces:
    page='https://www.mutopiaproject.org/cgibin/piece-info.cgi?id='+str(piece_id)
-   links=MidiLinks();links.feed(fetch(page,500_000).decode('utf-8','replace'))
+   html_page=fetch(page,500_000).decode('utf-8','replace')
+   # Release is conditional on each specific edition asserting Public Domain.
+   plain=re.sub(r'\\s+',' ',html.unescape(re.sub(r'<[^>]+>',' ',html_page)))
+   if not re.search(r'Copyright:\\s*Public Domain',plain,re.IGNORECASE):
+    raise RuntimeError('No work-specific Public Domain declaration: '+page)
+   if piece_id not in MUTOPIA_EDITORS:raise RuntimeError('Missing edition editor attribution: '+page)
+   links=MidiLinks();links.feed(html_page)
    if len(links.matches)!=1:raise RuntimeError('missing exact MIDI on '+page)
    midi_url=urllib.parse.urljoin(page,links.matches[0])
-   add(style,title,fetch(midi_url,2_000_000),page,'Public Domain',midi_url,{'attribution':title+' · Mutopia Project volunteer edition'})
+   add(style,title,fetch(midi_url,2_000_000),page,'Public Domain',midi_url,
+       {'attribution':title+' · Mutopia Project volunteer edition',
+        'maintainer':MUTOPIA_EDITORS[piece_id],
+        'rights_verified_from_page':page})
  for style,entries in groups.items():
   if not style.startswith('meter_') and not 2<=len(entries)<=3:raise RuntimeError('invalid source index count '+style)
  items=[x for name in sorted(groups) for x in groups[name]]
