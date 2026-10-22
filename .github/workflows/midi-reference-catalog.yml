@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths:
       - 'scripts/build_midi_reference_catalog.py'
+      - 'scripts/midi_reference_facets.py'
+      - 'scripts/test_midi_reference_facets.py'
+      - 'docs/MIDI_STYLE_TAXONOMY_REVIEW.md'
       - '.github/workflows/midi-reference-catalog.yml'
 permissions:
   contents: read
@@ -17,6 +20,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install 'mido==1.3.3'
+      - name: Validate facet extraction with synthetic MIDI fixtures
+        run: python -m unittest discover -s scripts -p 'test_midi_reference_facets.py' -v
       - name: Download, select and audit 2-3 MIDI per style
         run: python scripts/build_midi_reference_catalog.py
       - name: Validate manifest and MIDI counts
@@ -30,6 +35,19 @@ jobs:
           assert len(set(x['sha256'] for x in data['items']))==len(data['items']), 'duplicate MIDI files'
           assert data['total_styles']>=10, data['style_counts']
           assert data['total_files']>=25
+          assert data['facets_schema']=='ai-composer-reference-facets-v1'
+          coverage=json.loads(pathlib.Path('scripts/reference-output/coverage.json').read_text())
+          assert coverage['total_midi']==data['total_files']
+          assert coverage['capabilities']['drum_only']+coverage['capabilities']['pitched_material']==data['total_files']
+          assert coverage['capabilities']['expert_verified_mode']==0, 'unreviewed inferred mode'
+          assert coverage['capabilities']['expert_verified_groove']==0, 'unreviewed inferred groove'
+          assert all(item['facets']['labels']['verified_mode'] is None for item in data['items'])
+          assert coverage['capabilities']['drum_only']>=1
+          assert coverage['capabilities']['pitched_material']>=1
+          assert sum(coverage['observed_meters'].values())>=data['total_files']-coverage['capabilities']['meter_unknown']
+          assert pathlib.Path('scripts/reference-output/COVERAGE.md').is_file()
+          print('FACET_CAPABILITIES',coverage['capabilities'])
+          print('MISSING_PRIORITY_METERS',coverage['missing_priority_meters'])
           with zipfile.ZipFile('scripts/representative_midi_references.zip') as z:
               assert len([p for p in z.namelist() if p.endswith('.mid')])==data['total_files']
           print('VERIFIED_STYLES',data['total_styles'])
@@ -44,4 +62,6 @@ jobs:
             scripts/representative_midi_references.zip
             scripts/reference-output/manifest.json
             scripts/reference-output/README.md
+            scripts/reference-output/coverage.json
+            scripts/reference-output/COVERAGE.md
           retention-days: 14
