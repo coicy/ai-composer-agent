@@ -1,7 +1,7 @@
 import {createInterface} from 'node:readline';
 import {stdin,stdout} from 'node:process';
 import {randomUUID} from 'node:crypto';
-import {validateProject} from '@ai-composer/music-core';
+import {validateProject,applyChangeSet} from '@ai-composer/music-core';
 
 import type {MusicProject} from '@ai-composer/music-core';
 
@@ -42,7 +42,11 @@ async function invoke(name:string,args:Record<string,unknown>){
   if(track.locked)throw Error('locked_track');
   if(!Array.isArray(args.notes)||args.notes.length>64)throw Error('invalid_notes');
   const notes=args.notes.map((n,i)=>{const v=record(n);if(Object.keys(v).some(k=>!['pitch','startTick','durationTicks','velocity'].includes(k)))throw Error('unexpected_note_field');const pitch=integer(v.pitch),startTick=integer(v.startTick),durationTicks=integer(v.durationTicks),velocity=integer(v.velocity);if(pitch>127||velocity<1||velocity>127||durationTicks===0||startTick+durationTicks>project.ppq*4*256)throw Error('invalid_note');return {noteId:`mcp-preview-${i}`,pitch,startTick,durationTicks,velocity};});
-  return content({projectId:project.projectId,baseRevision:project.revision,trackId,notes,approved:false,applied:false,warning:'Validated snapshot proposal only. Requires a future authorized live UI preview and user approval.'});
+  const operations=notes.map((note,i)=>({type:'add_note' as const,trackId,note:{...note,noteId:`mcp-${randomUUID()}-${i}`}}));
+  if(operations.length===0)throw Error('empty_candidate');
+  const preview=applyChangeSet(project,{baseRevision:project.revision,operations});
+  if(!preview.ok)throw Error(preview.reason);
+  return content({projectId:project.projectId,baseRevision:project.revision,trackId,notes,previewRevision:preview.project.revision,approved:false,applied:false,warning:'Music Core dry-run passed against snapshot. Not connected to live editor; no changes applied.'});
  }
  const startTick=integer(args.startTick),endTick=integer(args.endTick);if(endTick<=startTick||endTick-startTick>project.ppq*4*16)throw Error('invalid_scope');
  if(name==='music.inspect_notes')return content({projectId:project.projectId,revision:project.revision,trackId,notes:track.notes.filter(n=>n.startTick<endTick&&n.startTick+n.durationTicks>startTick).slice(0,256),truncated:track.notes.filter(n=>n.startTick<endTick&&n.startTick+n.durationTicks>startTick).length>256});
