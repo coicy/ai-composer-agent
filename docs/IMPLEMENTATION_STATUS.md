@@ -110,3 +110,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Each scoped Seed candidate exposes a read-only evidence panel with added/removed notes, precise original-ID pitch changes, absolute pitch-shift magnitude and before/after maximum non-overlapping melodic leaps.
 - Pitch shifts are explicitly unavailable for fully replaced note IDs; reports never invent a best variant or an aesthetic quality score. Only selected-window note relationships are included in this diagnostic.
 - The comparison runs a Music Core ChangeSet dry-run, rejects stale revisions and target-scope violations, does not mutate the project, and is covered by unit and Chromium E2E tests. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
+
+## Partial-success scoped Seed batches
+- New opt-in `proposeRegionVariantBatch` independently retains compliant 2–4 Seed candidates and returns sanitized error codes for invalid per-Seed proposals.
+- Shared authorization/score/plan/lock errors fail before provider invocation; AbortSignal cancellation discards the batch, never presenting incomplete results as success.
+- Scoped editor now displays a failed-Seed audit section while permitting audition and approval of only valid proposals; when every Seed fails, there is no confirmation action. The legacy strict batch API remains available.
+- No automatic repair or relaxation of hard HarmonyPlan/pitch-only/note-ID protections. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.

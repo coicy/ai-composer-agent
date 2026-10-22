@@ -831,3 +831,51 @@ test('AI feedback review preserves explicit prefix protection but strips an inve
  await expect(page.getByRole('spinbutton',{name:'保留开头音符数'})).toHaveValue('1');
  await expect(page.getByRole('spinbutton',{name:'最大跳进半音数'})).toHaveValue('0');
 });
+
+test('scoped AI batch retains the valid Seed when two generated candidates are rejected',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ let count=0;
+ await page.route('**/api/arrange',async route=>{
+  count++;
+  const bad={role:'bass',notes:[{pitch:36,startTick:0,durationTicks:480,velocity:80}]};
+  const good={role:'harmony',notes:[{pitch:67,startTick:0,durationTicks:480,velocity:80}]};
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(count===2?good:bad)});
+ });
+ await page.getByRole('button',{name:'AI 局部多方案'}).click();
+ const failed=page.getByRole('region',{name:'局部候选失败种子'});
+ await expect(failed).toContainText('1 组通过、2 组未通过');
+ await expect(failed.locator('li')).toHaveCount(2);
+ await expect(failed).toContainText('invalid_single_role_output');
+ const bank=page.getByRole('region',{name:'局部重编方案比较'});
+ await expect(bank.getByRole('button')).toHaveCount(1);
+ await expect(page.getByRole('button',{name:'确认局部替换'})).toBeEnabled();
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+ await page.getByRole('button',{name:'确认局部替换'}).click();
+ await expect(failed).toHaveCount(0);
+ await expect(bank).toHaveCount(0);
+ await page.getByRole('combobox',{name:'当前轨道'}).selectOption('melody');
+ await expect(page.locator('.note')).toHaveCount(1);
+});
+
+test('an all-invalid scoped AI batch reports failed seeds with no commit action',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.route('**/api/arrange',async route=>{
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+   role:'bass',notes:[{pitch:36,startTick:0,durationTicks:480,velocity:80}]
+  })});
+ });
+ await page.getByRole('button',{name:'AI 局部多方案'}).click();
+ const failed=page.getByRole('region',{name:'局部候选失败种子'});
+ await expect(failed).toContainText('0 组通过、3 组未通过');
+ await expect(failed.locator('li')).toHaveCount(3);
+ await expect(page.getByRole('region',{name:'局部重编方案比较'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'确认局部替换'})).toHaveCount(0);
+ await expect(page.getByRole('combobox',{name:'当前轨道'}).locator('option')).toHaveCount(4);
+ await expect(page.getByRole('button',{name:'取消局部请求'})).toHaveCount(0);
+});
