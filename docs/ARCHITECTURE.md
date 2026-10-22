@@ -7,7 +7,7 @@ music-core：tick 与 tempo map、轨道、稳定 note ID、revision、锁、操
 piano-roll：Canvas 2D 起步，按需评估 PixiJS；坐标与 hit-test、绘制和交互只产生命令。
 audio-engine：Tone.js 候选，Transport 调度、音源加载、取消调度和资源释放。
 midi-io：@tonejs/midi 候选；明确 MIDI 格式不能保存所有 Agent 元数据、锁和候选信息，因此 JSON 是无损工程格式。
-composition：LLM 与算法可互换，确定性检查音域、节拍和写入约束，音乐审美另测。
+composition：依据 D-005，AI 音乐生成仅使用通用 LLM；既有离线规则生成用于演示和测试，确定性算法用于检查音域、节拍、和声及写入约束，音乐审美另测；不引入专用音乐生成模型或模型 Provider。
 agent-api：密钥托管、模型适配、请求限额（若采用服务器模式）。
 
 关键边界：模型提议 ≠ 数据写入；播放状态 ≠ 工程数据；视图绘制 ≠ 音符真实来源。

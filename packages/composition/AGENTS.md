@@ -3,14 +3,14 @@
 src/
   contracts/   # ComposeRequest、Candidate、约束与上下文
   planning/    # 风格、动机、乐句和曲式计划
-  generators/  # LLM/规则/符号模型的替换接口
+  generators/  # LLM 生成与现有离线规则演示，不接入专用音乐模型
   harmony/     # 和声与低音方案
   variations/  # 续写、模进和局部变奏
   evaluation/  # 结构/音域/重复等可解释检查
   orchestration/ # 后续配器扩展（非 MVP 先不实现）
   index.ts
 ```
-必须输出可编辑结构化音符或候选 MusicOperation；绝不直接调用 core commit。不得覆盖锁定区间，不把概率或美学评分当确定性事实。LLM 调用通过注入 Provider 接口，密钥及 HTTP 实现不放这里；所有模型结果二次验证。候选保持可比较与可溯源。
+**正式裁决 D-005**：AI 作曲、续写和编曲仅使用通用 LLM。不得新增专用音乐生成模型（含 MIDI-GPT）、权重、推理 sidecar、专用模型 Provider 或相关 PoC；非 AI 的确定性音乐分析、验证与已有 SeededArranger 规则演示允许保留，但不构成第二个 AI 生成引擎。必须输出可编辑结构化音符或候选 MusicOperation；绝不直接调用 core commit。不得覆盖锁定区间，不把概率或美学评分当确定性事实。LLM 调用通过注入 Provider 接口，密钥及 HTTP 实现不放这里；所有模型结果二次验证。候选保持可比较与可溯源。
 ## 强制音乐编辑约束
 - `editConstraint: 'pitch_only'` 要求明确的选中 Note IDs；对候选音符验证原有的 (startTick,durationTicks) 多重集合完全相等，输出只能是原稳定 ID 的 `update_note.pitch`。绝不能通过重建 noteID 或只写提示词代替约束。
 - 对不能满足节奏、音高边界、锁定或选区合法性的模型输出必须拒绝，不自动放宽约束。
