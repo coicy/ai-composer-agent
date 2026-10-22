@@ -63,10 +63,21 @@ export function startMcpStdio(){
   let req:Request|undefined;
   try{
    if(Buffer.byteLength(line)>MAX_LINE)throw Error('request_too_large');
-   req=JSON.parse(line) as Request;
-   if(!req||req.jsonrpc!=='2.0'||typeof req.method!=='string')throw Error('invalid_request');
+   try{req=JSON.parse(line) as Request;}
+   catch{
+    stdout.write(JSON.stringify({jsonrpc:'2.0',id:null,error:{code:-32700,message:'Parse error'}})+'\n');
+    return;
+   }
+   if(!req||req.jsonrpc!=='2.0'||typeof req.method!=='string'){
+    const id=req&&typeof req.id==='string'||req&&typeof req.id==='number'?req.id:null;
+    stdout.write(JSON.stringify({jsonrpc:'2.0',id,error:{code:-32600,message:'Invalid Request'}})+'\n');
+    return;
+   }
    if(req.id===undefined)return;
-   if(typeof req.id!=='string'&&typeof req.id!=='number')throw Error('invalid_request_id');
+   if(typeof req.id!=='string'&&typeof req.id!=='number'){
+    stdout.write(JSON.stringify({jsonrpc:'2.0',id:null,error:{code:-32600,message:'Invalid Request'}})+'\n');
+    return;
+   }
    let result:unknown;
    if(req.method==='initialize')result={protocolVersion:'2025-03-26',capabilities:{tools:{listChanged:false}},serverInfo:{name:'ai-composer-mcp',version:'0.1.0'}};
    else if(req.method==='ping')result={};
