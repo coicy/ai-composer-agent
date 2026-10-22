@@ -88,6 +88,33 @@ def main():
    if len(chosen)<2:raise RuntimeError(style+' has fewer than 2 valid genre beats')
    for r,path in chosen:
     add(style,'GMD '+r['style']+' '+r['drummer'],z.read(path),'https://magenta.withgoogle.com/datasets/groove','CC BY 4.0',path,{**{k:r.get(k) for k in ('style','bpm','time_signature','duration','drummer','beat_type','split')},'attribution':'Google LLC; Groove MIDI Dataset; Gillick et al. 2019'})
+  # Evidence-only meter probes. These are NOT new music genres; scarce
+  # 5/4 and 5/8 samples remain insufficient as representative categories.
+  for meter,wanted in {'6-8':3,'5-4':1,'5-8':1}.items():
+   candidates=[]
+   for row in rows:
+    if row.get('beat_type')!='beat' or row.get('time_signature')!=meter:continue
+    path=row['midi_filename'].lstrip('/')
+    matches=[f for f in files if f==path or f.endswith('/'+path)]
+    if len(matches)!=1:continue
+    candidates.append((abs(float(row['duration'])-18),row,matches[0]))
+   candidates.sort(key=lambda x:(x[0],x[2]))
+   chosen=[];drummers=set()
+   for _,row,path in candidates:
+    if row['drummer'] not in drummers:
+     chosen.append((row,path));drummers.add(row['drummer'])
+    if len(chosen)>=wanted:break
+   for _,row,path in candidates:
+    if len(chosen)>=wanted:break
+    if path not in {p for _,p in chosen}:chosen.append((row,path))
+   if len(chosen)<wanted:raise RuntimeError(f'{meter}: insufficient sample candidates: {len(chosen)}/{wanted}')
+   bucket='meter_'+meter.replace('-','_')
+   for row,path in chosen:
+    meta={k:row.get(k) for k in ('style','bpm','time_signature','duration','drummer','beat_type','split')}
+    meta.update({'sample_role':'meter_coverage_probe',
+                 'attribution':'Google LLC; Groove MIDI Dataset; Gillick et al. 2019'})
+    add(bucket,f"GMD {row['time_signature']} · {row['style']} · {row['drummer']}",
+        z.read(path),'https://magenta.withgoogle.com/datasets/groove','CC BY 4.0',path,meta)
  print('Downloading OpenGameArt CC0 RPG MIDI...',flush=True)
  with zipfile.ZipFile(io.BytesIO(fetch(OGA))) as z:
   names=z.namelist()
@@ -104,22 +131,23 @@ def main():
    if len(links.matches)!=1:raise RuntimeError('missing exact MIDI on '+page)
    midi_url=urllib.parse.urljoin(page,links.matches[0])
    add(style,title,fetch(midi_url,2_000_000),page,'Public Domain',midi_url,{'attribution':title+' · Mutopia Project volunteer edition'})
- for style,items in groups.items():
-  if len(items)<2 or len(items)>3:raise RuntimeError('invalid style count '+style)
+ for style,entries in groups.items():
+  if not style.startswith('meter_') and not 2<=len(entries)<=3:raise RuntimeError('invalid source index count '+style)
  items=[x for name in sorted(groups) for x in groups[name]]
  coverage=enrich_catalog(items,lambda rel:(OUT/rel).read_bytes())
  (OUT/'coverage.json').write_text(json.dumps(coverage,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  (OUT/'COVERAGE.md').write_text(format_report(coverage),encoding='utf-8')
  print('FACET_COVERAGE',coverage['capabilities'],flush=True)
  print('MISSING_METERS',coverage['missing_priority_meters'],flush=True)
- manifest={'total_styles':len(groups),'total_files':len(items),'style_counts':{k:len(groups[k]) for k in sorted(groups)},'items':items,
+ manifest={'total_styles':len(RHYTHM)+len(GAME)+len(SCORE),'total_sampling_buckets':len(groups),'total_files':len(items),'style_counts':{k:len(groups[k]) for k in sorted(groups)},'items':items,
  'licensing':'GMD CC BY 4.0 requires attribution; RPG CC0; selected Mutopia editions are individually labeled Public Domain.',
  'limitations':'GMD is drum-only, not harmony. Mutopia is score-rendered and not a human groove reference. ai-composer-agent MIDI import currently loses tempo/meter/program/CC/channel fidelity.',
  'selection':'GMD beat-type performances; typical BPM, duration, mostly 4/4, differing drummers when available; game tracks selected by named context; Mutopia by canonical style and public-domain notation.',
  'facets_schema':'ai-composer-reference-facets-v1',
+ 'sampling_disclaimer':'meter_* buckets are facet probes, NOT musical style classes; 1-item probes are insufficient to represent a style.',
  'coverage_file':'coverage.json'}
  (OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
- lines=['# Representative MIDI reference catalog','',str(len(groups))+' styles; '+str(len(items))+' original MIDI files; 2–3 per style.','','## Tracks','']
+ lines=['# Representative MIDI reference catalog','',str(len(RHYTHM)+len(GAME)+len(SCORE))+' original indexing groups plus '+str(len(groups)-len(RHYTHM)-len(GAME)-len(SCORE))+' **meter-only probe buckets**; '+str(len(items))+' original MIDI files.','','The meter-only buckets have 1 or 3 samples; a single rare meter example is **not a representative style**.','','## Tracks','']
  for style in sorted(groups):
   lines+=['### '+style,'']
   for x in groups[style]:lines.append('- '+x['file']+' — '+x['title']+' · '+x['license']+' · '+str(x['analysis']['note_count'])+' note-ons · '+x['source_page'])
@@ -129,6 +157,6 @@ def main():
  with zipfile.ZipFile(HERE/'representative_midi_references.zip','w',zipfile.ZIP_DEFLATED) as z:
   for p in sorted(OUT.rglob('*')):
    if p.is_file():z.write(p,p.relative_to(OUT))
- print('READY',len(groups),'styles',len(items),'MIDIs',flush=True)
+ print('READY',len(RHYTHM)+len(GAME)+len(SCORE),'original groups',len(groups),'sampling buckets',len(items),'MIDIs',flush=True)
 
 if __name__=='__main__':main()
