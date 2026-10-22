@@ -2,7 +2,7 @@ import {createInterface} from 'node:readline';
 import {stdin,stdout} from 'node:process';
 import {randomUUID} from 'node:crypto';
 import {validateProject} from '@ai-composer/music-core';
-import {proposeWithProvider,SeededProvider} from '@ai-composer/composition';
+
 import type {MusicProject} from '@ai-composer/music-core';
 
 type Request={jsonrpc:'2.0';id?:string|number;method:string;params?:unknown};
@@ -40,8 +40,7 @@ async function invoke(name:string,args:Record<string,unknown>){
  if(name==='music.propose_midi'){
   const instruction=string(args.instruction);if(instruction.length>2000)throw Error('invalid_instruction');
   const mode=args.mode===undefined?'append':args.mode;if(mode!=='append'&&mode!=='replace')throw Error('invalid_mode');
-  const candidate=await proposeWithProvider(new SeededProvider(),{project,trackId,startTick,endTick,instruction,mode,maxNotes:64});
-  return content({projectId:project.projectId,baseRevision:project.revision,trackId,notes:candidate.notes.map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity})),warning:'Offline deterministic proposal only. External Agent must use its own LLM. No changes applied.'});
+  return content({projectId:project.projectId,baseRevision:project.revision,trackId,startTick,endTick,instruction,mode,notes:[],warning:'No LLM is called by MCP. External Agent must supply proposed MIDI notes in a separate validated tool. No changes applied.'});
  }
  throw Error('unknown_tool');
 }
