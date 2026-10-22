@@ -76,3 +76,9 @@ Not yet complete: production authentication, live model music quality tests, rea
 - Shared composition preflight verifies source melody and locked/cross-boundary target before model invocation. Client/server independently validate the selected role, MIDI fields/timing/quantity and that role's hard HarmonyPlan constraints.
 - Seeded offline demonstration uses the role-specific deterministic stream; E2E and API tests ensure a malicious or legacy three-track payload cannot be committed as a scoped edit.
 - No real-model token-cost measurements or listening assessment yet. See docs/SCOPED_ARRANGEMENT_REGENERATION.md.
+
+## Pitch-only multi-round scoped edits
+- Browser checkbox and scoped request `editConstraint:'pitch_only'` enforce that only pitches may change in a chosen existing track/time window; the user can still generate multiple deterministic Seed variants.
+- Composition checks exact onset/duration/velocity multiplicity, retains original note IDs and creates only `update_note.pitch` operations rather than delete/readd. Locked/crossing/empty/dense target ranges are rejected before provider invocation.
+- API and browser independently validate strict one-role MIDI output, preserve hard HarmonyPlan checks and use the same read-only context; offline mode varies pitches within allowed boundaries without modifying rhythm.
+- Committed project provenance includes the scoped editing constraint, and tests cover invalid output, polyphonic matching, revision safety, undo, and JSON export. Musical/artistic outcome is not yet benchmarked.
