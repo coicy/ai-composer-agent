@@ -1,6 +1,6 @@
 # 基于成熟开源方案的 AI 编曲能力升级实施方案（提案）
 
-> 状态：**Proposed / 待产品与工程评审，非 accepted 决策**
+> 状态：**Proposed / 待产品与工程评审**，但必须遵守已批准的 D-005：**仅由 LLM 生成 AI 音乐，不引入专用音乐生成模型**。
 >
 > 基准：`main@08301c5ddf0f6c41ddd8d4b485414b3bf77491ba`（2026-10-22）；本文件记录拟实施增量，**不代表已实现或已通过音乐听评**。
 >
@@ -14,7 +14,8 @@
 4. **区分三种证据**：结构/权限测试通过、真实模型 API 可运行、人工听评显示音乐质量改进。任何一种不能冒充另一种。
 5. **先做无破坏性验证，后拓展数据模型。** 新的拍号、tempo map、乐器映射、曲式元数据将触及 schema / MIDI I/O / core，必须先做单独 ADR 和兼容性评审；此提案不直接改变任何已有 schema。
 6. **技术许可不是音乐内容许可。** 模型代码、预训练权重、训练素材、SoundFont、附带曲谱分别核查，不把开源代码误判为全部素材都可商用。
-7. 开发遵循 `docs/DEVELOPMENT.md`：功能分支 -> PR -> `check` 和 `e2e` 完整成功 -> 人工审查 -> 合并。不得直接向 main 推送未经验证的中间代码。
+7. **D-005 已定生成引擎：仅用 LLM 创作音乐。** 不接入 MIDI-GPT 等专用音乐生成模型、权重、推理服务、适配器与 PoC；仅参照开源工具的工作流和控制设计。music21、MusPy 及音源合成器等不属于生成模型，作为非 AI 分析/试听工具可评估采用；现有 SeededArranger 仅作离线规则演示和测试。
+8. 开发遵循 `docs/DEVELOPMENT.md`：功能分支 -> PR -> `check` 和 `e2e` 完整成功 -> 人工审查 -> 合并。不得直接向 main 推送未经验证的中间代码。
 
 ## 1. 当前基线：哪些已具备，哪些未被证明
 
@@ -24,7 +25,7 @@
 | 选区重写 | `packages/composition/src/arrangement/regenerate-region.ts`、`single-role.ts` | 目前偏结构约束，缺少广义音乐属性控制 |
 | Seed 与候选 | `region-variants.ts`、`compare-region.ts`、`region-variants.test.ts` | Remote Seed 不保证复现；缺统一候选质量实验 |
 | 编曲分析 | `analysis/tonality.ts`、`evaluation/arrangement.ts`、HarmonyPlan | 调性是假说；缺真实和声/织体解释与听评 |
-| 模型接入 | `services/agent-api/src/providers/openai*.ts` | 模型输出 MIDI JSON，但缺专用符号音乐模型对照 |
+| LLM 接入 | `services/agent-api/src/providers/openai*.ts` | 已输出 MIDI JSON，但缺可验证的音乐规划、Prompt 优化与真实 LLM 听评 |
 | 试听与 MIDI | `audio-engine/src/playback/preview.ts`、`midi-io/src/mapping/midi.ts` | 单三角波、固定 120 BPM，无法客观评估配器 |
 | 质量验证 | unit tests、Chromium Playwright CI | 真实模型生成与固定听评语料尚无通过记录 |
 | 持久化 | JSON 工程导出、generationHistory | 无自动保存；MIDI 不保留工程专用元数据 |
@@ -36,7 +37,6 @@
 | 项目及证据 | 可借鉴机制 | 本仓库落点 | 采用界限 |
 | --- | --- | --- | --- |
 | [Composer's Assistant 2](https://github.com/m-malandro/composers-assistant-REAPER)（[v2 release](https://github.com/m-malandro/composers-assistant-REAPER/releases)） | 多轨指定范围补写；全局/轨道级参数；音符密度、跨度、跳进倾向、保留节奏等细粒度控制 | `composition/contracts`、`arrangement` 与 Web 审批 UI | **先借鉴控制逻辑**；不依赖 REAPER、不复制 JSFX/UI；模型/发布资产另核许可证 |
-| [MIDI-GPT](https://github.com/Metacreation-Lab/MIDI-GPT)（[模型卡](https://huggingface.co/Metacreation/MIDI-GPT)） | `GenerationRequest` / `TrackPrompt`、指定 bars、忽略未授权轨、密度/复调/时值条件、独立推理服务 | 可插拔服务端 `SymbolicMusicProvider` 研究适配器 | **代码 MIT、官方权重 CC BY-NC 4.0**；不得直接进入商用发布路径，PoC 默认禁用 |
 | [music21](https://github.com/cuthbertLab/music21) | 调性分析、和弦归纳、声部上下文的专业分析基础 | 可选后端只读分析服务 | Python 与自身语料分开；软件 BSD-3-Clause，内置 corpus/外部谱例另行核许可 |
 | [MusPy](https://github.com/salu133445/muspy)（[指标](https://github.com/salu133445/muspy/blob/main/doc/source/metrics.rst)） | 音高范围、复调率、pitch-class entropy、空拍率、律动/节奏指标 | 离线评估脚本与基准报告 | 软件 MIT；**这些是描述性指标，不是审美得分** |
 | [Tone.js](https://github.com/Tonejs/Tone.js)（[Transport](https://github.com/Tonejs/Tone.js/wiki/Transport)） | 音乐时间调度、统一传输时钟、起停/循环与合成器适配 | `packages/audio-engine` 的可替换 Adapter | 软件 MIT；验证 tick->seconds、播放生命周期，不把 Tone 对象写进 core |
@@ -46,7 +46,7 @@
 ### 为什么不直接把所有模块换成第三方库
 
 - Composer's Assistant 2 依赖 REAPER 环境；本项目是浏览器单一 Piano Roll，无需移植它的宿主集成。
-- MIDI-GPT 的官方权重非商用，且模型支持的分辨率、拍号、上下文规模与本项目 MIDI contract 不一定吻合。它首先是**对照实验**，不是默认生产 Provider。
+- D-005 已排除 MIDI-GPT 等专用音乐模型；即使仅为对照实验，也不规划接入、训练、推理或下载相关权重。
 - music21/MusPy 属 Python 生态；如果需要采用，先以离线评估或可选本地 HTTP sidecar 隔离，前端不直接运行 Python。
 - FluidSynth 提供合成器，不等于附赠可安全分发的完整音色库。先在授权明确的测试音色上验证，再判断发行形态。
 
@@ -62,10 +62,10 @@ Web: Intent Draft & Review（只读；未授权不得升级为 hard）
 agent-api / composition orchestration
   ├── Project Snapshot + Selection + Locks + Revision
   ├── Optional Analysis Context（仅建议，不写工程）
-  ├── Provider capability negotiation
-  │      ├── Existing OpenAI structured MIDI
-  │      ├── Existing offline SeededArranger
-  │      └── Optional MIDI-GPT research adapter（仅获许可环境）
+  ├── LLM capability negotiation + bounded musical context
+  │      ├── Existing OpenAI structured MIDI (LLM)
+  │      ├── Optional other general-purpose LLM endpoint
+  │      └── Existing SeededArranger (offline rules/demo/tests only)
   └── Existing server-side preflight/validation
         |
         v
@@ -79,7 +79,7 @@ composition: hard validation -> music-core dry-run -> Candidate
                       -> generationHistory/undo/redo
 ```
 
-**依赖约束**：`music-core` 不依赖第三方音频、Python 或模型 SDK；`composition` 仅管理领域规则和 Provider 接口；LLM HTTP 与 Python 适配置于 `services/agent-api`（或独立 sidecar）；`audio-engine` 只读取 MusicProject；`apps/web` 只做编排与交互。
+**依赖约束**：`music-core` 不依赖第三方音频、Python 或模型 SDK；`composition` 仅管理领域规则和 Provider 接口；LLM HTTP 适配置于 `services/agent-api`；可选 Python sidecar 仅作 music21/MusPy 等非模型分析/评估，不承载音乐生成模型；`audio-engine` 只读取 MusicProject；`apps/web` 只做编排与交互。
 
 ### 3.1 建议新增的契约（示意，尚未批准）
 
@@ -184,22 +184,23 @@ interface ProviderCapabilities {
 
 **验收门槛 C**：至少 8 个带人工说明的正反例中能输出可追溯的统计；无依据的调性返回 uncertain；analysis 不改变 Project、revision 或锁；sidecar 离线不可用时不会阻止现有 MIDI 编辑。
 
-### Phase D — Composer's Assistant 式可控补写 + MIDI-GPT 实验（高优先级）
+### Phase D — Composer's Assistant 式 LLM 可控补写与迭代优化（高优先级）
 
-**D1 / 先实现独立于模型的音乐属性**
-- 首批候选：`note_density`（每个指定 beat/bar 的音符起音数）、`polyphony_limit`（同刻发音数量上限）、`register_range`（pitch 界限）、`duration_bias`（偏好，不做 hard）、`rhythmic_activity`（偏好）。
-- 对每个 hard 控制写清含义与确定性验证器；在候选中记录“满足/违反/不支持”，而不是从 LLM 的自述判断。
-- 局部补写必须保留现有 `editConstraint:'pitch_only'` / protectedPrefix / protectedNoteIds / maxLeap / source/target/plan 规则。冲突约束在请求前诊断为 `unrealizable_controls`，不可静默放松。
-- Web 先展示可选参数与 Provider 支持能力；仅新增本次确实用到的控件，避免无证据 UI 扩张。
+**D1 / 建立独立于模型的音乐属性及其可验证语义**
+- 首批建议：`note_density`（每拍/小节起音密度）、`polyphony_limit`（最大同时发声数）、`register_range`（音域）、`duration_bias`（时值偏好）、`rhythmic_activity`（节奏活跃度偏好）。
+- 所有 hard 控制需要确定性验证器和严格定义（计数、范围、时间边界）；不支持的 hard 控制在请求 LLM 前拒绝，不降级为提示词；advisory 只产生建议。
+- 维持现有 `pitch_only`、protectedPrefix、protectedNoteIds、maxLeap、source/target、锁、HarmonyPlan、revision 与候选审批边界。
+- UI 先允许用户审阅 LLM 提出的音乐属性草案；“更丰满”“更激昂”等主观表达不能自动变为未经用户批准的数值硬规则。
 
-**D2 / 可替换模型适配**
-- 接口结构建议 `SymbolicMusicProvider` -> `ProviderCapabilities` -> 提取声部音符 -> `proposeRegionRegeneration` 或 `proposeArrangement`；音符实体和提交仍由已有 TS core 权威校验。
-- MIDI-GPT 独立 Python 本地服务 **research-only**，不把 PyTorch/模型权重打包进前端；配置开关默认关闭，失败回退现有 Provider，不发生自动重试越权提交。
-- 将项目中的 selected scope 映射为模型的 `TrackPrompt` / `bars` / `ignore`；需检查 PPQ、四分拍/小节含义、非整小节选区、跨边界延音、复调和角色语义，不能以“模型输出完整 MIDI”替代现有校验。
-- 外部模型可能改变未授权轨道：**只能提取被授权窗口**再建立受控候选；对非授权变动直接拒绝/记录，绝不可把模型返回的整个 Score 覆盖工程。
-- 比较多次真实模型调用的延迟、错误率、成本、结构拒绝率、属性命中率和盲听分数；远程 Seed 仅存为提示，不保证复现。
+**D2 / LLM 音乐创作编排与有限反馈回路**
+- 继续使用现有 `CompositionProvider` / `ArrangementProvider` 边界，AI 推理实现**仅使用通用 LLM**；可支持不同通用 LLM 服务，禁止引入专用音乐模型及 `SymbolicMusicProvider` 等独立模型接口。
+- 将项目快照、源旋律、目标轨道与小节、上下文乐句、HarmonyPlan、受保护声部映射为有界的结构化 LLM 输入；将乐曲规划意图与 MIDI 音符生成分为可审核阶段。
+- LLM 不可输出可信 note ID 或 ChangeSet，不得获得提交权限；继续使用 server/client 的 Schema 检查、Music Core dry-run 和显式批准流程。
+- 失败时可按有限次数再请求 **LLM 新候选**，记录脱敏失败原因、时延与费用；不得放松 hard 约束、扩大范围、自动提交、无限重试或覆盖已批准轨道。
+- 同一 LLM、同一输入和同一渲染设定下对比旧/新提示词、规划上下文与反馈循环；评测结构通过率、属性命中率、费用/时延与人工盲听结果，Seed 只作为变奏提示。
+- 已有 SeededArranger 保留为规则演示与测试工具，不作为第二种 AI 模型或实际 LLM 音乐质量证据。
 
-**验收门槛 D**：新 Provider 至少在单轨局部补写和三轨编配的受控样例上产出结构合法、可试听、可撤销的候选；恶意/超范围/不支持 hard 控制均被拒；A/B 报告实际比较新旧 Provider；商业发布不依赖 CC BY-NC 官方权重。
+**验收门槛 D**：在单轨局部补写和三轨编配下，LLM 产出合规、可试听、可撤销候选；非法、越权和不受支持的 hard 要求被拒绝；提供真实 LLM 调用和盲听 A/B 证据；**不得引入、训练、部署任何专用音乐生成模型**。
 
 ### Phase E — 整曲曲式规划（在前序评测通过后）
 
@@ -221,7 +222,7 @@ interface ProviderCapabilities {
 | 04 | `feat(evaluation): export objective MIDI metrics with limitations` | `composition/evaluation/` 或离线脚本 | 指标定义/边界齐全、报告不输出伪审美分数 |
 | 05 | `feat(composition): introduce capability-gated generation intents` | `composition/contracts/`、客户端控件、schema 检查 | 不支持 hard 的 Provider 在调用前拒绝；旧 API 全通过 |
 | 06 | `feat(composition): add validated density and polyphony constraints` | arrangement validators、unit/E2E | 约束验证、冲突拒绝，锁/Note ID/undo/redo 回归全通过 |
-| 07 | `spike(agent): evaluate symbolic MIDI provider in an isolated service` | `services/agent-api` / 研究脚本、实验报告 | 许可证说明、模型到现有契约映射、AB 评价、不开默认线上路径 |
+| 07 | `feat(agent): add bounded LLM composition review and retry loop` | `services/agent-api`、`composition/contracts/`、测试报告 | 仅 LLM；错误解释、有限重试、不降级硬约束；同模型新旧 Prompt A/B 评测 |
 | 08 | `docs(design): propose multi-section composition plan and migration ADR` | `docs/`，待批准后再变 core | 拍号/tempo/计划存储兼容性与测试矩阵；未批准不写运行时 schema |
 
 每个 PR 应填写：需求与证据、授权范围、修改文件、协议变化、回滚开关、测试实际运行记录和仍未验证事项。建议早期**不要将上述八项合并为单个巨型 PR**。
@@ -243,22 +244,22 @@ interface ProviderCapabilities {
 
 ## 7. 明确的技术/许可风险与回退
 
-1. **非商用模型权重**：MIDI-GPT [模型卡](https://huggingface.co/Metacreation/MIDI-GPT) 标注 CC BY-NC 4.0；代码 [MIT](https://github.com/Metacreation-Lab/MIDI-GPT/blob/main/LICENSE)。任何上线、商业使用或分发前必须重新验证具体权重许可；默认仅作独立研究比较。可回退至现有 OpenAI/离线生成。
+1. **专用音乐模型禁令**：D-005 已禁止 MIDI-GPT 等专用音乐生成模型、权重、推理 sidecar 和相关实验。仅比较通用 LLM 生成策略；音乐分析、MIDI 工具和音源合成可根据其技术与资源许可独立选择。
 2. **SoundFont 与库分开**：FluidSynth [LGPL FAQ](https://github.com/FluidSynth/fluidsynth/blob/master/doc/wiki/LicensingFAQ.md) 明确库与输入文件许可是两回事。js-synthesizer 发行的 externals 另核；改用预设合成器/授权采样作为回退。
 3. **music21 corpus**：代码 BSD-3-Clause，但 bundled scores 不一定统一许可；测试先用原创乐段，报告不携带不明来源原始 MIDI。
 4. **GPL 参照污染**：只学习 LMMS 产品交互，不复制 GPL-2.0 源码、资源或 UI 资产；引入代码前必须做法务/许可证兼容审查。
 5. **复杂拍号和项目格式迁移**：现阶段 `MusicProject` 只有 PPQ/轨道，不存在正式 tempo/time-signature map。未通过独立 ADR 时仅支持已有 4/4、固定 tempo 口径；对不支持输入明确拒绝或告知限制，绝不“猜测换算”。
-6. **额外 sidecar 的可用性**：采用严格超时、输入边界、只读接口、无密钥日志、功能开关；分析/研究模型宕机不得导致现有本地 MIDI 编辑不可用。
+6. **分析 sidecar 可用性**：music21/MusPy 等只读分析/评价工具以超时、限量、脱敏和功能开关隔离；分析服务宕机不得影响现有 LLM 编曲或 MIDI 编辑，且不得部署专用音乐生成模型。
 7. **质量不确定性**：更严格的结构规则可能压制部分音乐风格；默认把复杂音乐建议当软诊断。只有明示的用户 hard 约束才能触发硬拒绝，且必须能被完整机器验证。
 8. **性能**：分轨/分窗增量检查；离线指标异步调用但不影响 Music Core 的审批一致性；不要在主线程进行耗时模型推理或海量 SoundFont 初始化。
-9. **安全**：服务维持 loopback 原型限制；公网部署需正式鉴权、CSRF/Origin、配额、Rate-limit、内容脱敏和用户数据处理方案，不因引入第三方 Provider 而绕过。
+9. **安全**：服务维持 loopback 原型限制；公网部署需鉴权、CSRF/Origin、配额、Rate-limit、音乐数据脱敏和用户数据处理规则；更换通用 LLM 服务提供方亦须遵守。
 
 ## 8. 推荐下一步与决策点
 
 - **先做 PR 01（基线 + 评测协议）和 PR 02（音频时间轴隔离）**，这是后续模型效果有无改善的证据基础。
 - **待审议的问题，不擅自裁决**：
   1. 正式验收主要目标是“游戏 BGM 的可编辑 MIDI 编曲”还是更通用的多风格音乐工作台？两者的音色、曲式与评测语料不同。
-  2. 是否接受**仅在可选研究服务**中使用 Python（music21、MusPy、MIDI-GPT），核心与 Web 仍保持 TypeScript？
+  2. 是否接受**仅在可选分析/离线评测服务**中使用 Python（music21、MusPy），核心与 Web 仍保持 TypeScript？这些服务不得用于音乐模型生成。
   3. 音色是纯本地授权采样、用户自行导入 SoundFont，还是将来配套分发经审查的 SoundFont？
   4. 是否允许将乐器配置、曲式及 tempo/time-signature map 纳入未来版本的 `MusicProject`？需要另做 schema/兼容性决策。
 - 即使上述问题尚未裁定，**不阻塞 Phase A 的只读测试基线工作**；但不要把未定事项写成 accepted。
@@ -267,11 +268,10 @@ interface ProviderCapabilities {
 
 - 本仓库：[Music Core](../packages/music-core/src/model/types.ts)、[局部重编](../packages/composition/src/arrangement/regenerate-region.ts)、[批量候选](../packages/composition/src/arrangement/region-variants.ts)、[AI adapter](../services/agent-api/src/providers/openai-arranger.ts)、[音频试听](../packages/audio-engine/src/playback/preview.ts)、[实施状态](IMPLEMENTATION_STATUS.md)、[AGENTS](../AGENTS.md)。
 - [Composer's Assistant v2 项目](https://github.com/m-malandro/composers-assistant-REAPER) 及发行说明：针对多轨 MIDI infilling 的参数控制（MIT 源码；发行资产需另核）。
-- [MIDI-GPT 仓库](https://github.com/Metacreation-Lab/MIDI-GPT)、[MIT 源码许可](https://github.com/Metacreation-Lab/MIDI-GPT/blob/main/LICENSE)、[模型卡 CC BY-NC 4.0](https://huggingface.co/Metacreation/MIDI-GPT)：轨道/小节补写与预训练权重许可。
 - [music21 BSD-3-Clause 与 corpus 说明](https://github.com/cuthbertLab/music21)。
 - [MusPy metrics](https://github.com/salu133445/muspy/blob/main/doc/source/metrics.rst) 与 [MIT license](https://github.com/salu133445/muspy/blob/main/LICENSE)。
 - [Tone.js](https://github.com/Tonejs/Tone.js)、[Transport](https://github.com/Tonejs/Tone.js/wiki/Transport)。
 - [FluidSynth LGPL](https://github.com/FluidSynth/fluidsynth)、[许可 FAQ](https://github.com/FluidSynth/fluidsynth/blob/master/doc/wiki/LicensingFAQ.md)、[js-synthesizer](https://github.com/jet2jet/js-synthesizer)。
 - [LMMS](https://github.com/LMMS/lmms)：作为 GUI/工作流参考，不移植其 GPL-2.0 实现。
 
-**本文只是一份提案：没有修改应用代码、没有安装模型或依赖，也没有开展真实听评。**
+**本文实施阶段均为待评审提案，但“仅用 LLM 生成 AI 音乐、不引入专用音乐生成模型”已按 D-005 正式确定。本次修订不涉及应用代码、依赖或真实听评。**
