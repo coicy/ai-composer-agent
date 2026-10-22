@@ -20,3 +20,7 @@ M4 Composition Agent：自主生成 4–16 小节旋律、不同候选、人工�
 必须支持外部 Agent **经 MCP 调用本工具**，和用户**在工具内填写 LLM API 地址及 Key** 后内部调用通用 LLM。当前仅有环境变量配置的 OpenAI 调用原型，未交付 MCP Server 与 UI 内 API/Key 配置，不能以此充当双模式验收。工程规范、待裁决细节与建议任务见 [LLM_ACCESS_MODES.md](LLM_ACCESS_MODES.md)。
 
 **候选实施顺序（尚未定优先级）**：凭据会话与地址安全 -> UI API/Key 配置 -> MCP 授权只读/候选工具 -> 当前浏览器 MusicProject 会话桥接及预览 -> 跨入口一致性与 E2E。所有工作遵守 D-005 和 Music Core 约束。
+
+## D-007 已批准的实施顺序（覆盖 D-006 的并行建议）
+
+**MCP First**：当前开发阶段优先交付独立 MCP 客户端可连接的工具入口、授权读取当前浏览器 MusicProject、生成/提交合法 MIDI 候选、UI 预览与人工批准/撤销。**内部 API 地址/Key 输入、凭据管理、多 Provider 配置全部后置**，不阻塞 MCP 首版。现有 OPENAI_API_KEY 原型仅作兼容，不属于 MCP 首版验收要求。MCP 完整闭环验收之后再规划内部 API 模式。
