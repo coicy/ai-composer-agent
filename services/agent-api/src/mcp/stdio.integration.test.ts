@@ -282,7 +282,7 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   expect(accepted).toMatchObject({baseRevision:22,previewRevision:23,approved:false,applied:false});
   expect(value(await tool('music.list_tracks',{sessionId:id}))).toMatchObject({revision:22});
   expect(value(await tool('music.inspect_notes',{
-   sessionId:id,trackId:'melody',startTick:0,endTick:480*80
+   sessionId:id,trackId:'melody',startTick:0,endTick:1920
   })).notes).toEqual([sourceNote]);
   expect(value(await tool('music.close_snapshot',{sessionId:id}))).toEqual({closed:true});
   passed('14 malformed MIDI cases rejected / maximum 64-note candidate dry-run / revision unchanged');
