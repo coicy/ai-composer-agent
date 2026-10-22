@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """MIDI reference features with explicit source evidence and unknown values."""
-from collections import Counter
+from collections import Counter,defaultdict
 from hashlib import sha256
 import io
 import statistics
@@ -114,10 +114,12 @@ def analyze_reference(item,midi_bytes):
  }
 
 def build_coverage(items):
- meters=Counter();groups=Counter();sources=Counter();styles=Counter();usages=Counter();counts=Counter()
+ meters=Counter();groups=Counter();sources=Counter();styles=Counter();usages=Counter();counts=Counter();performers=defaultdict(set)
  for item in items:
   f=item['facets'];label=f['labels']
   sources[label['source_collection']]+=1;groups[item['style']]+=1
+  if label['source_collection']=='human_drum_performance' and item.get('metadata',{}).get('drummer'):
+   performers[item['style']].add(item['metadata']['drummer'])
   if label['source_style_label']:styles[label['source_style_label']]+=1
   if label['game_usage']:usages[label['game_usage']]+=1
   if not f['meter']['values']:counts['meter_unknown']+=1
@@ -136,6 +138,7 @@ def build_coverage(items):
   'original_index_groups':dict(sorted(groups.items())),
   'evidence_source_counts':dict(sorted(sources.items())),
   'source_style_labels':dict(sorted(styles.items())),
+  'known_distinct_drummers_by_bucket':{k:len(v) for k,v in sorted(performers.items())},
   'game_usage':dict(sorted(usages.items())),
   'observed_meters':dict(sorted(meters.items())),
   'priority_meters':targets,
@@ -151,7 +154,14 @@ def build_coverage(items):
    'Game usage labels are not genre labels.',
    'MIDI instrument programs do not fully capture synthesized audio timbre.'
   ],
-  'missing_priority_meters':[m for m,n in targets.items() if n==0]
+  'missing_priority_meters':[m for m,n in targets.items() if n==0],
+  'sampling_warnings':[
+   f'{bucket}: {groups[bucket]} clips from {len(people)} documented drummer(s); recordings are not independent performers.'
+   for bucket,people in sorted(performers.items()) if groups[bucket]>1 and len(people)<2
+  ]+[
+   f'{bucket}: only {groups[bucket]} source clip(s); useful as a meter probe but insufficient for style representativity.'
+   for bucket in sorted(groups) if bucket.startswith('meter_') and groups[bucket]<2
+  ]
  }
 
 def enrich_catalog(items,data_reader):
@@ -171,6 +181,8 @@ def format_report(coverage):
   lines.append(f'| 来源：{source} | {n} |')
  for cap,n in coverage['capabilities'].items():
   lines.append(f'| {cap} | {n} |')
+ lines+=['','## 样本独立性风险','']
+ lines+=['- '+warning for warning in coverage['sampling_warnings']]
  lines+=['','## 重要提示','']
  lines+=['- '+warning for warning in coverage['coverage_warnings']]
  lines+=['','## 报告范围','',
