@@ -2,7 +2,7 @@ import {createServer,type IncomingMessage,type ServerResponse} from 'node:http';
 import {validateProject} from '@ai-composer/music-core';
 import {proposeWithProvider,proposeArrangement,proposeRegionRegeneration,ARRANGEMENT_ROLES} from '@ai-composer/composition';
 import type {CompositionRequest,ArrangementRequest} from '@ai-composer/composition';
-import {validateHarmonyPlan,validateFeedbackInput,validateFeedbackInterpretation} from '@ai-composer/composition';
+import {validateHarmonyPlan,validateFeedbackInput,reconcileFeedbackInterpretation} from '@ai-composer/composition';
 import {createOpenAIProvider} from '../providers/openai.js';
 import {createOpenAIArranger} from '../providers/openai-arranger.js';
 import {createOpenAIFeedbackInterpreter} from '../providers/openai-feedback.js';
@@ -96,7 +96,7 @@ export function createAgentServer(options:ServerOptions={}){
     const provider=(options.feedbackFactory??createOpenAIFeedbackInterpreter)(
      {apiKey:options.apiKey,model:options.model??'gpt-4.1-mini'});
     const proposed=await provider.interpret(input.feedback,input.noteCount,controller.signal);
-    const interpretation=validateFeedbackInterpretation(proposed,input.noteCount);
+    const interpretation=reconcileFeedbackInterpretation(input.feedback,input.noteCount,proposed);
     reply(res,200,interpretation);
    }else if(req.url==='/api/arrange'){
     const request=parseArrangementRequest(body);
