@@ -49,11 +49,12 @@ describe('OpenAI arrangement API adapter',()=>{
   const near={noteId:'SECRET_TARGET_NEIGHBOR',pitch:64,startTick:0,durationTicks:480,velocity:85};
   const protectedNote={noteId:'SECRET_OTHER_TRACK',pitch:40,startTick:0,durationTicks:480,velocity:70};
   expect(await provider.generate({...context,editing:{
-   targetTrackId:'SECRET_TARGET_TRACK',targetRole:'harmony',before:[near],
-   original:[],after:[],protectedParts:[{trackIndex:2,notes:[protectedNote]}]
+   targetTrackId:'SECRET_TARGET_TRACK',targetRole:'harmony',protectedNoteIds:['SECRET_PROTECTED_ID'],before:[near],
+   original:[{...near,noteId:'SECRET_PROTECTED_ID'}],after:[],protectedParts:[{trackIndex:2,notes:[protectedNote]}]
   }})).toEqual({role:'harmony',notes:[note]});
-  const input=observed as {editingScope?:{targetRole:string;targetBefore:unknown[];protectedParts:unknown[]}};
+  const input=observed as {editingScope?:{targetRole:string;targetBefore:unknown[];protectedParts:unknown[];protectedOriginalIndices:number[]}};
   expect(input.editingScope?.targetRole).toBe('harmony');
+  expect(input.editingScope?.protectedOriginalIndices).toEqual([0]);
   expect(input.editingScope?.targetBefore).toEqual([{pitch:64,startTick:0,durationTicks:480,velocity:85}]);
   expect(input.editingScope?.protectedParts).toEqual([{trackIndex:2,notes:[{
    pitch:40,startTick:0,durationTicks:480,velocity:70
@@ -62,6 +63,7 @@ describe('OpenAI arrangement API adapter',()=>{
   expect(serialized).not.toContain('SECRET_TARGET_NEIGHBOR');
   expect(serialized).not.toContain('SECRET_OTHER_TRACK');
   expect(serialized).not.toContain('SECRET_TARGET_TRACK');
+  expect(serialized).not.toContain('SECRET_PROTECTED_ID');
  });
  it('rejects malformed responses without forwarding body',async()=>{
   const provider=createOpenAIArranger({apiKey:'fake',model:'test',fetcher:(async()=>new Response('sensitive',{status:400})) as typeof fetch});

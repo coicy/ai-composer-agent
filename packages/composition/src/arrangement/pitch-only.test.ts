@@ -190,3 +190,76 @@ describe('structured iterative feedback in pitch-only scope',()=>{
   expect(validateGenerationRecord({...record,editConstraint:undefined})).toBe(false);
  });
 });
+
+describe('arbitrary protected MIDI note IDs',()=>{
+ const p:MusicProject={projectId:'ids',revision:10,ppq:480,tracks:[
+  {trackId:'melody',name:'Source',locked:true,notes:[n('melody-0',72,0)]},
+  {trackId:'h',name:'Harmony',locked:false,notes:[
+   n('first',60,0),n('middle',64,480),n('last',67,960),n('outside',69,2300)
+  ]},
+  {trackId:'bass',name:'Bass',locked:true,notes:[n('preserved-bass',36,0)]}
+ ]};
+ const req={project:p,sourceTrackId:'melody',targetTrackId:'h',targetRole:'harmony' as const,
+  startTick:0,endTick:1920,editConstraint:'pitch_only' as const,
+  protectedNoteIds:['middle'],instruction:'preserve the middle note',seed:19501};
+ const raw3=(p0:number,p1:number,p2:number)=>({role:'harmony',notes:[
+  {pitch:p0,startTick:0,durationTicks:480,velocity:80},
+  {pitch:p1,startTick:480,durationTicks:480,velocity:80},
+  {pitch:p2,startTick:960,durationTicks:480,velocity:80}
+ ]});
+ it('protects a middle note while allowing other MIDI pitches to change',async()=>{
+  const result=await proposeRegionRegeneration(fake(raw3(62,64,69)),req);
+  expect(result.protectedNoteIds).toEqual(['middle']);
+  expect(result.changes.operations).toEqual([
+   {type:'update_note',trackId:'h',noteId:'first',changes:{pitch:62}},
+   {type:'update_note',trackId:'h',noteId:'last',changes:{pitch:69}}
+  ]);
+  const applied=applyChangeSet(p,result.changes);
+  expect(applied.ok).toBe(true);
+  if(applied.ok){
+   expect(applied.project.tracks[1]!.notes.find(n=>n.noteId==='middle')?.pitch).toBe(64);
+   expect(applied.project.tracks[2]).toEqual(p.tracks[2]);
+   expect(applied.project.tracks[1]!.notes.find(n=>n.noteId==='outside')?.pitch).toBe(69);
+  }
+ });
+ it('rejects a returned pitch change to any explicitly protected note',async()=>{
+  await expect(proposeRegionRegeneration(fake(raw3(62,65,69)),req))
+   .rejects.toThrow('protected_note_changed');
+ });
+ it('deterministically generates alternative seeds preserving the selected middle note',async()=>{
+  const a=await proposeRegionRegeneration(new SeededArranger(),req);
+  const b=await proposeRegionRegeneration(new SeededArranger(),req);
+  expect(a.notes).toEqual(b.notes);
+  expect(a.notes.find(n=>n.noteId==='middle')?.pitch).toBe(64);
+  expect(a.changes.operations.every(op=>op.type==='update_note'&&op.noteId!=='middle')).toBe(true);
+ });
+ it('rejects invalid, duplicate, nonexistent and out-of-window IDs before model invocation',async()=>{
+  let calls=0;const spy:ArrangementProvider={id:'spy',async generate(){calls++;throw new Error('unexpected');}};
+  for(const patch of [
+   {protectedNoteIds:['outside']},
+   {protectedNoteIds:['absent']},
+   {protectedNoteIds:['middle','middle']},
+   {protectedNoteIds:[]},
+   {protectedNoteIds:['first','middle','last']},
+   {protectedNoteIds:['middle'],editConstraint:undefined}
+  ]){
+   await expect(proposeRegionRegeneration(spy,{...req,...patch})).rejects.toThrow();
+  }
+  expect(calls).toBe(0);
+ });
+ it('rejects selecting just one of two identical, anonymous simultaneous notes',async()=>{
+  const duplicate={...p,tracks:p.tracks.map(t=>t.trackId==='h'?{...t,notes:[
+   n('identical-a',60,0),n('identical-b',60,0),n('last',67,960)
+  ]}:t)};
+  await expect(proposeRegionRegeneration(new SeededArranger(),{
+   ...req,project:duplicate,protectedNoteIds:['identical-a']
+  })).rejects.toThrow('ambiguous_protected_note');
+ });
+ it('combines a protected prefix and arbitrary IDs without protecting the entire scope',async()=>{
+  const withTwo={...req,protectedPrefixCount:1,protectedNoteIds:['last']};
+  const result=await proposeRegionRegeneration(fake(raw3(60,66,67)),withTwo);
+  expect(result.changes.operations).toEqual([
+   {type:'update_note',trackId:'h',noteId:'middle',changes:{pitch:66}}
+  ]);
+ });
+});
