@@ -77,3 +77,8 @@ src/
 - `interpretFeedbackRules` must remain conservative, recognizing explicit bounded numerical constraints only, not assigning invented semitone values to subjective descriptions.
 - `validateFeedbackInterpretation` rejects out-of-bounds, unknown keys, noninteger and inconsistent model suggestions. An interpretation is *never* a ChangeSet or implicit user approval.
 - Respect the separate UI review barrier: interpretation -> explicit user copy to controls -> provider proposal -> preview -> explicit commit.
+
+## Arbitrary selected-note protection
+- In pitch-only scoped edits, `protectedNoteIds` must be validated against all fully-contained target notes before invoking a model. Up to 32 unique IDs; no entire-window protection.
+- Combine IDs with protected-prefix notes; preserve each guarded note's pitch, onset, duration, velocity and stable identity. Reject mixed protected/unprotected duplicate notes indistinguishable without IDs.
+- External models receive only protected original indices; stable note identifiers remain strictly local for commit, audit and undo. Do not weaken these checks for random seed variation.

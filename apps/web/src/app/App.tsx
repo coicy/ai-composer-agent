@@ -55,6 +55,7 @@ export function App(){
  const [regionSeed,setRegionSeed]=useState(19501);
  const [regionPitchOnly,setRegionPitchOnly]=useState(false);
  const [regionProtectedPrefixCount,setRegionProtectedPrefixCount]=useState(0);
+ const [regionProtectedSelection,setRegionProtectedSelection]=useState<{key:string;ids:readonly string[]}>({key:'',ids:[]});
  const [regionMaxLeap,setRegionMaxLeap]=useState(0);
  const [regionInstruction,setRegionInstruction]=useState('保留其他声部，给选定声部在指定小节写一个新的动机变化。');
  const [feedbackText,setFeedbackText]=useState('');
@@ -98,6 +99,10 @@ export function App(){
  const feedbackNotes=feedbackTarget?.notes.filter(n=>n.startTick<feedbackWindowEnd&&
   n.startTick+n.durationTicks>proposedStart)??[];
  const feedbackNoteCount=feedbackNotes.length;
+ const regionProtectionKey=[project.revision,regionTargetId,regionStartBar,regionBars].join('|');
+ const regionProtectedNoteIds=regionProtectedSelection.key===regionProtectionKey?regionProtectedSelection.ids:[];
+ const displayedProtectableNotes=[...feedbackNotes].sort((a,b)=>a.startTick-b.startTick||a.pitch-b.pitch||
+  a.noteId.localeCompare(b.noteId));
  const feedbackKey=[project.revision,regionTargetId,regionStartBar,regionBars,feedbackText].join('|');
  const activeFeedbackDraft=feedbackDraft?.key===feedbackKey?feedbackDraft:null;
  const savedHarmonyPlan=Number.isSafeInteger(regionStartBar)&&Number.isSafeInteger(regionBars)&&regionStartBar>=1&&regionBars>=1&&regionBars<=4?
@@ -108,6 +113,7 @@ export function App(){
   setRegionPending(false);
   setRegionCandidate(null);
   setRegionCandidates([]);
+  setRegionProtectedSelection({key:'',ids:[]});
  },[project.revision]);
  const STEP=Math.max(1,Math.round(project.ppq/4));
  const viewport={ppq:project.ppq,pixelsPerQuarter:CELL,rowHeight:ROW,topPitch:TOP_PITCH};
@@ -339,6 +345,7 @@ export function App(){
    instruction:regionInstruction,seed:regionSeed,
    ...(regionPitchOnly?{editConstraint:'pitch_only' as const,
     ...(regionProtectedPrefixCount>0?{protectedPrefixCount:regionProtectedPrefixCount}:{}),
+    ...(regionProtectedNoteIds.length?{protectedNoteIds:regionProtectedNoteIds}:{}),
     ...(regionMaxLeap>0?{maxLeapSemitones:regionMaxLeap}:{})}:{}),
    ...(reuseApprovedPlan&&savedHarmonyPlan?{plan:savedHarmonyPlan.plan}:{})
   };
@@ -369,6 +376,7 @@ export function App(){
    providerId:pending.providerId,instruction:regionInstruction,
    ...(pending.editConstraint?{editConstraint:pending.editConstraint}:{}),
    ...(pending.protectedPrefixCount!==undefined?{protectedPrefixCount:pending.protectedPrefixCount}:{}),
+   ...(pending.protectedNoteIds?.length?{protectedNoteIds:[...pending.protectedNoteIds]}:{}),
    ...(pending.maxLeapSemitones!==undefined?{maxLeapSemitones:pending.maxLeapSemitones}:{}),
    ...(pending.plan?{planJson:JSON.stringify(pending.plan)}:{})
   };
@@ -581,11 +589,11 @@ export function App(){
    <p>AI 定向生成时只返回所选声部的 MIDI 音符，不再生成多余的三轨；其他声部仍作为只读参考。</p>
    <p>先在工程中创建或导入至少两条轨道，选择只读主旋律与需要改写的既有轨道。范围外的音符、其他轨道与锁定音符不会被改变。</p>
    <p>局部 AI 重编会参考目标声部前后音符，以及其他保留声部的音符，用于衔接与避免声部冲突；这些参考内容不会被授权修改。</p>
-   <label>参考旋律 <select aria-label="局部重编参考轨道" value={regionSourceId} onChange={e=>{setRegionSource(e.target.value);setRegionTarget('');invalidateRegion();}}>
+   <label>参考旋律 <select aria-label="局部重编参考轨道" value={regionSourceId} onChange={e=>{setRegionSource(e.target.value);setRegionTarget('');setRegionProtectedSelection({key:'',ids:[]});invalidateRegion();}}>
     {project.tracks.map(t=><option key={t.trackId} value={t.trackId}>{t.name}</option>)}
    </select></label>
    <label>目标轨道 <select aria-label="局部重编目标轨道" value={regionTargetId} disabled={regionTargets.length===0}
-    onChange={e=>{const id=e.target.value;setRegionTarget(id);const name=project.tracks.find(t=>t.trackId===id)?.name??'';
+    onChange={e=>{const id=e.target.value;setRegionTarget(id);setRegionProtectedSelection({key:'',ids:[]});const name=project.tracks.find(t=>t.trackId===id)?.name??'';
      if(name.includes('低音'))setRegionRole('bass');else if(name.includes('伴奏'))setRegionRole('accompaniment');else if(name.includes('和声'))setRegionRole('harmony');
      invalidateRegion();}}>
     {regionTargets.length===0?<option value="">暂无目标轨道</option>:regionTargets.map(t=><option key={t.trackId} value={t.trackId}>{t.name}</option>)}
@@ -594,9 +602,9 @@ export function App(){
     <option value="harmony">和声</option><option value="bass">低音</option><option value="accompaniment">伴奏</option>
    </select></label>
    <label>起始小节 <input type="number" aria-label="局部重编起始小节" min={1} max={64} value={regionStartBar}
-    onChange={e=>{setRegionStartBar(Number(e.target.value));invalidateRegion();}}/></label>
+    onChange={e=>{setRegionStartBar(Number(e.target.value));setRegionProtectedSelection({key:'',ids:[]});invalidateRegion();}}/></label>
    <label>长度 <input type="number" aria-label="局部重编小节数" min={1} max={4} value={regionBars}
-    onChange={e=>{setRegionBars(Number(e.target.value));invalidateRegion();}}/></label>
+    onChange={e=>{setRegionBars(Number(e.target.value));setRegionProtectedSelection({key:'',ids:[]});invalidateRegion();}}/></label>
    <label>Seed <input type="number" aria-label="局部重编随机种子" min={0} max={4294967295} step={1} value={regionSeed}
     onChange={e=>{setRegionSeed(Number(e.target.value));invalidateRegion();}}/></label>
    <label><input type="checkbox" aria-label="局部重编仅改音高" checked={regionPitchOnly}
@@ -609,6 +617,28 @@ export function App(){
      min={0} max={24} step={1} value={regionMaxLeap}
      onChange={e=>{setRegionMaxLeap(Number(e.target.value));invalidateRegion();}}/></label>
     <p>保留开头按起音顺序选取；最大跳进只约束不重叠的连续音符及选区边缘衔接。不会自动推断自由文本里的数值要求。</p>
+    <div className="protected-note-picker" role="group" aria-label="指定保护音符">
+     <strong>指定任意要保留的音符（当前 {regionProtectedNoteIds.length} 个）</strong>
+     <p>按当前目标声部和小节范围列出音符。勾选保护音高；其他时间、时长、力度与 ID 本来就由“仅改音高”保护。</p>
+     <button type="button" disabled={activeTrack!==regionTargetId||!selectedNoteIds.some(id=>feedbackNotes.some(n=>n.noteId===id))}
+      onClick={()=>{const set=new Set([...regionProtectedNoteIds,...selectedNoteIds.filter(id=>feedbackNotes.some(n=>n.noteId===id))]);
+       setRegionProtectedSelection({key:regionProtectionKey,ids:[...set]});invalidateRegion();}}>
+      保护钢琴卷帘已框选音符</button>
+     <button type="button" disabled={!regionProtectedNoteIds.length}
+      onClick={()=>{setRegionProtectedSelection({key:regionProtectionKey,ids:[]});invalidateRegion();}}>清空单独保护</button>
+     {displayedProtectableNotes.length>32&&<p>当前片段超过 32 个音符，无法执行仅改音高模式。</p>}
+     {displayedProtectableNotes.slice(0,32).map((n,i)=>
+      <label key={n.noteId} className="protected-note-option">
+       <input type="checkbox" aria-label={`保护第${i+1}个目标音符`}
+        checked={regionProtectedNoteIds.includes(n.noteId)}
+        onChange={e=>{
+         setRegionProtectedSelection({key:regionProtectionKey,ids:e.target.checked?
+          [...regionProtectedNoteIds,n.noteId]:regionProtectedNoteIds.filter(id=>id!==n.noteId)});
+         invalidateRegion();
+        }}/>
+       音高 {n.pitch} · 起点 {n.startTick} tick · 时长 {n.durationTicks} tick
+      </label>)}
+    </div>
    </div>}
    <section className="feedback-interpreter" role="region" aria-label="音乐反馈解释器">
     <strong>把自然语言意见整理成可审核的修改规则</strong>
@@ -662,6 +692,8 @@ export function App(){
     <strong>{regionCandidate.editConstraint==='pitch_only'
      ?`待确认：仅更新 ${regionCandidate.changes.operations.length} 个音高，保留 ${regionCandidate.notes.length} 个音符的节奏、力度与 ID，Seed ${regionCandidate.seed}`
      :`待确认：${regionCandidate.removedNotes.length} 个旧音符将替换为 ${regionCandidate.notes.length} 个新音符，Seed ${regionCandidate.seed}`}</strong>
+    {regionCandidate.editConstraint==='pitch_only'&&regionCandidate.protectedNoteIds?.length?
+     <p>另外保护 {regionCandidate.protectedNoteIds.length} 个指定音符的音高。</p>:null}
     {regionCandidate.editConstraint==='pitch_only'&&
      (regionCandidate.protectedPrefixCount||regionCandidate.maxLeapSemitones)&&
      <p>反馈约束：保留开头 {regionCandidate.protectedPrefixCount??0} 音；

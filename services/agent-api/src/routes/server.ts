@@ -45,19 +45,24 @@ function parseArrangementRequest(value:unknown):ArrangementRequest{
  if(body.editing!==undefined){
   if(!body.editing||typeof body.editing!=='object'||Array.isArray(body.editing))throw new Error('invalid_arrangement_editing');
   const value=body.editing as Record<string,unknown>;
-  if(Object.keys(value).some(k=>k!=='targetTrackId'&&k!=='targetRole'&&k!=='editConstraint'&&k!=='protectedPrefixCount'&&k!=='maxLeapSemitones')||
+  if(Object.keys(value).some(k=>k!=='targetTrackId'&&k!=='targetRole'&&k!=='editConstraint'&&k!=='protectedPrefixCount'&&k!=='protectedNoteIds'&&k!=='maxLeapSemitones')||
    typeof value.targetTrackId!=='string'||!['harmony','bass','accompaniment'].includes(value.targetRole as string)||
    (value.editConstraint!==undefined&&value.editConstraint!=='pitch_only')||
    (value.protectedPrefixCount!==undefined&&(!Number.isSafeInteger(value.protectedPrefixCount)||
     (value.protectedPrefixCount as number)<0||(value.protectedPrefixCount as number)>16))||
+   (value.protectedNoteIds!==undefined&&(!Array.isArray(value.protectedNoteIds)||
+    value.protectedNoteIds.length<1||value.protectedNoteIds.length>32||
+    value.protectedNoteIds.some(x=>typeof x!=='string'||!x||x.length>180)||
+    new Set(value.protectedNoteIds).size!==value.protectedNoteIds.length))||
    (value.maxLeapSemitones!==undefined&&(!Number.isSafeInteger(value.maxLeapSemitones)||
     (value.maxLeapSemitones as number)<1||(value.maxLeapSemitones as number)>24))||
    (value.editConstraint!=='pitch_only'&&(value.protectedPrefixCount!==undefined||
-    value.maxLeapSemitones!==undefined)))
+    value.protectedNoteIds!==undefined||value.maxLeapSemitones!==undefined)))
    throw new Error('invalid_arrangement_editing');
   editing={targetTrackId:value.targetTrackId,targetRole:value.targetRole as 'harmony'|'bass'|'accompaniment',
    ...(value.editConstraint?{editConstraint:'pitch_only' as const}:{}),
    ...(value.protectedPrefixCount!==undefined?{protectedPrefixCount:value.protectedPrefixCount as number}:{}),
+   ...(value.protectedNoteIds!==undefined?{protectedNoteIds:value.protectedNoteIds as string[]}:{}),
    ...(value.maxLeapSemitones!==undefined?{maxLeapSemitones:value.maxLeapSemitones as number}:{})};
  }
  return {project,sourceTrackId:body.sourceTrackId,startTick,endTick,instruction:body.instruction,plan,seed:body.seed as number|undefined,editing};
@@ -100,7 +105,8 @@ export function createAgentServer(options:ServerOptions={}){
      const candidate=await proposeRegionRegeneration(provider,{
       ...request,targetTrackId:request.editing.targetTrackId,targetRole:request.editing.targetRole,
       editConstraint:request.editing.editConstraint,
-      protectedPrefixCount:request.editing.protectedPrefixCount,maxLeapSemitones:request.editing.maxLeapSemitones
+      protectedPrefixCount:request.editing.protectedPrefixCount,protectedNoteIds:request.editing.protectedNoteIds,
+      maxLeapSemitones:request.editing.maxLeapSemitones
      },controller.signal);
      reply(res,200,{role:candidate.targetRole,notes:candidate.notes.map(({pitch,startTick,durationTicks,velocity})=>({pitch,startTick,durationTicks,velocity}))});
     }else{
@@ -117,7 +123,8 @@ export function createAgentServer(options:ServerOptions={}){
   }catch(e){
    if(res.destroyed)return;
    const reason=e instanceof Error?e.message:'internal_error';
-   const clientError=['invalid_request','invalid_feedback_text','invalid_feedback_note_count','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','pitch_only_requires_notes','pitch_only_region_too_dense','invalid_protected_prefix','invalid_leap_constraint','feedback_requires_pitch_only','rhythm_constraint_violated','no_pitch_changes','invalid_arrangement_scope','invalid_arrangement_seed','invalid_arrangement_role','invalid_arrangement_editing','source_track_is_target','target_track_not_found','source_track_not_found','empty_source_range','source_range_too_dense','invalid_harmony_plan','invalid_plan_key','invalid_plan_progression','invalid_plan_register','invalid_plan_enforcement','invalid_plan_timeline','invalid_plan_passing_tones','plan_requires_whole_bars'].includes(reason) || /^plan_(scale|chords|registers|inversions)_violation:(harmony|bass|accompaniment)$/.test(reason);
+   const clientError=['invalid_request','invalid_feedback_text','invalid_feedback_note_count','invalid_project','invalid_json','request_too_large','invalid_instruction','invalid_scope','track_not_found','track_locked','scope_not_empty','locked_note_in_range','cross_boundary_note','invalid_mode','invalid_note_limit','invalid_note_selection','selected_note_not_found','invalid_edit_constraint','pitch_only_requires_selection','pitch_only_requires_notes','pitch_only_region_too_dense','invalid_protected_prefix','invalid_protected_notes','protected_note_outside_scope',
+   'all_target_notes_protected','ambiguous_protected_note','invalid_leap_constraint','feedback_requires_pitch_only','rhythm_constraint_violated','no_pitch_changes','invalid_arrangement_scope','invalid_arrangement_seed','invalid_arrangement_role','invalid_arrangement_editing','source_track_is_target','target_track_not_found','source_track_not_found','empty_source_range','source_range_too_dense','invalid_harmony_plan','invalid_plan_key','invalid_plan_progression','invalid_plan_register','invalid_plan_enforcement','invalid_plan_timeline','invalid_plan_passing_tones','plan_requires_whole_bars'].includes(reason) || /^plan_(scale|chords|registers|inversions)_violation:(harmony|bass|accompaniment)$/.test(reason);
    reply(res,clientError?422:502,{error:clientError?reason:'generation_failed'});
   }
  });

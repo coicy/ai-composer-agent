@@ -627,3 +627,67 @@ test('AI feedback suggestion stays a draft, rejects invalid data and stale draft
  await expect(draft).toHaveCount(0);
  await expect(page.getByRole('checkbox',{name:'局部重编仅改音高'})).not.toBeChecked();
 });
+
+test('arbitrary note protection changes other pitches while preserving selected IDs and project history',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ const snapshot=async()=>{
+  const downloadPromise=page.waitForEvent('download');
+  await page.getByRole('button',{name:'导出工程 JSON'}).click();
+  return JSON.parse(await readFile(await (await downloadPromise).path(),'utf8')).project;
+ };
+ const before=await snapshot();
+ const origin=before.tracks.find((t:{name:string})=>t.name==='AI 和声').notes;
+ expect(origin).toHaveLength(8);
+ await page.getByRole('checkbox',{name:'局部重编仅改音高'}).check();
+ const protector=page.getByRole('group',{name:'指定保护音符'});
+ await expect(protector.getByRole('checkbox')).toHaveCount(2);
+ await protector.getByRole('checkbox',{name:'保护第2个目标音符'}).check();
+ await expect(protector).toContainText('当前 1 个');
+ await page.getByRole('button',{name:'按种子局部重编（离线）'}).click();
+ const candidate=page.getByRole('region',{name:'局部重编候选'});
+ await expect(candidate).toContainText('另外保护 1 个指定音符');
+ await page.getByRole('button',{name:'确认局部替换'}).click();
+ const after=await snapshot();
+ const next=after.tracks.find((t:{name:string})=>t.name==='AI 和声').notes;
+ expect(next[1]).toEqual(origin[1]);
+ expect(next.slice(2)).toEqual(origin.slice(2));
+ expect(next[0].noteId).toBe(origin[0].noteId);
+ expect(next[0].pitch).not.toBe(origin[0].pitch);
+ expect(after.tracks[0]).toEqual(before.tracks[0]);
+ expect(after.tracks[2]).toEqual(before.tracks[2]);
+ expect(after.generationHistory.at(-1).protectedNoteIds).toEqual([origin[1].noteId]);
+ await page.getByRole('button',{name:'撤销'}).click();
+ expect((await snapshot()).tracks).toEqual(before.tracks);
+});
+
+test('all selected protected notes are rejected before proposing an edit',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.getByRole('checkbox',{name:'局部重编仅改音高'}).check();
+ const picker=page.getByRole('group',{name:'指定保护音符'});
+ await picker.getByRole('checkbox',{name:'保护第1个目标音符'}).check();
+ await picker.getByRole('checkbox',{name:'保护第2个目标音符'}).check();
+ await page.getByRole('button',{name:'按种子局部重编（离线）'}).click();
+ await expect(page.getByRole('alert')).toContainText('all_target_notes_protected');
+ await expect(page.getByRole('region',{name:'局部重编候选'})).toHaveCount(0);
+});
+
+test('protected note selection is scoped to the current bar and cannot carry stale IDs',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'+ 添加音符'}).click();
+ await page.getByRole('button',{name:'规则编配预览（离线）'}).click();
+ await page.getByRole('button',{name:'确认新增 3 轨'}).click();
+ await page.getByRole('checkbox',{name:'局部重编仅改音高'}).check();
+ const picker=page.getByRole('group',{name:'指定保护音符'});
+ await picker.getByRole('checkbox',{name:'保护第1个目标音符'}).check();
+ await expect(picker).toContainText('当前 1 个');
+ await page.getByRole('spinbutton',{name:'局部重编起始小节'}).fill('2');
+ await expect(picker).toContainText('当前 0 个');
+ await page.getByRole('spinbutton',{name:'局部重编起始小节'}).fill('1');
+ await expect(picker).toContainText('当前 0 个');
+});

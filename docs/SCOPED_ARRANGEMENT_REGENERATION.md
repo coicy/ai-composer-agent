@@ -99,3 +99,15 @@ Optionally, a local agent API at `POST /api/feedback` uses OpenAI Responses Stru
 Both interpretations produce a review UI that lists the proposed editing mode, numerical constraints and unresolved ambiguity. The user must deliberately select **确认并应用建议约束** to copy suggestions into the existing controls, or **仅填入创作指令（不改约束）** to use subjective wording as a soft composition instruction. The first button is disabled when no actionable constraint was identified. Neither button creates notes or commits a project edit. Applying a draft invalidates outstanding scoped candidates; changing the feedback, project revision, edit target or time window makes prior suggestions stale.
 
 This is a bounded draft interpreter, **not full conversational music cognition**. “Better harmony”, “more tension”, etc. remain stylistic guidance without deterministic authorization. Model suggestions may be wrong; a reviewer can edit numeric values before generation, and all established pitch-only, note-lock, score-scope and plan checks still apply at final proposal and commit.
+
+## Arbitrary protected notes (selected MIDI IDs)
+
+The pitch-only editor can also protect **specific existing target notes** independently of the chronological prefix. The UI lists the notes in the target window and permits individual checkboxes or adding the current Piano Roll multi-selection while its active track is the chosen target.
+
+The editable request includes up to 32 unique `protectedNoteIds` in `editing` only when `editConstraint:'pitch_only'` is active. The server reconstructs the target MusicProject and rejects forged, duplicate, unknown, outside-window or all-protected IDs **before requesting model generation**. Protected-prefix and individually protected notes form a union, with at least one original editable note required.
+
+For anonymous model output the composition layer matches MIDI notes by the exact (startTick, durationTicks, velocity) multiset and then stable sorted pitches. A protected note must retain its original pitch and stable ID, or the entire proposal is rejected. If two indistinguishable MIDI notes share pitch and timing but only one is protected, the operation is rejected as `ambiguous_protected_note`; the model cannot identify which duplicate to preserve. For initial model input, the server sends **numeric protected indices**, not stable note IDs; all validation uses authoritative server/project IDs independently of model text. Other tracks remain read-only and source melody remains untouched.
+
+The offline deterministic SeededArranger respects these notes for every seed. The approved generation record stores `protectedNoteIds` for auditing inside the project JSON (not ordinary MIDI), and undo restores the previous project. If target track, scope or project revision changes, the browser stops applying stale selections; invalid IDs are still rejected server-side.
+
+This is positional MIDI protection, not high-level musical motif recognition. Protecting a note's pitch is not the same as copying an immutable musical phrase across voices.

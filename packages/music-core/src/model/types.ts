@@ -15,6 +15,7 @@ export interface GenerationRecord {
  /** Auditable hard editing mode for a scoped approved candidate. */
  readonly editConstraint?:'pitch_only';
  readonly protectedPrefixCount?:number;
+ readonly protectedNoteIds?:readonly string[];
  readonly maxLeapSemitones?:number;
  readonly planJson?:string;
 }

@@ -283,6 +283,43 @@ describe('agent API',()=>{
   expect(res.status).toBe(502);
   expect(await res.json()).toEqual({error:'generation_failed'});
  });
+ it('validates explicitly protected MIDI note IDs before scoped model invocation',async()=>{
+  const notes=[
+   {noteId:'first',pitch:60,startTick:0,durationTicks:480,velocity:80},
+   {noteId:'protected-middle',pitch:64,startTick:480,durationTicks:480,velocity:80},
+   {noteId:'last',pitch:67,startTick:960,durationTicks:480,velocity:80}
+  ];
+  const music={...project,tracks:[
+   {trackId:'melody',name:'Melody',locked:true,notes:[{noteId:'source',pitch:72,startTick:0,durationTicks:480,velocity:80}]},
+   {trackId:'target',name:'Harmony',locked:false,notes}
+  ]};
+  let seenIds:readonly string[]|undefined;let calls=0;
+  const feedbackFactory=()=>({id:'mock',async generate(ctx:{editing?:{protectedNoteIds?:readonly string[]}}){
+   calls++;seenIds=ctx.editing?.protectedNoteIds;
+   return {role:'harmony',notes:[
+    {pitch:62,startTick:0,durationTicks:480,velocity:80},
+    {pitch:64,startTick:480,durationTicks:480,velocity:80},
+    {pitch:69,startTick:960,durationTicks:480,velocity:80}
+   ]};
+  }});
+  const url=await launch({apiKey:'test',arrangerFactory:feedbackFactory});
+  const body={project:music,sourceTrackId:'melody',startTick:0,endTick:1920,
+   instruction:'protect middle',editing:{targetTrackId:'target',targetRole:'harmony',
+    editConstraint:'pitch_only',protectedNoteIds:['protected-middle']}};
+  const post=async (p:unknown)=>fetch(url+'/api/arrange',{method:'POST',
+   headers:{'content-type':'application/json'},body:JSON.stringify(p)});
+  expect((await post(body)).status).toBe(200);
+  expect(seenIds).toEqual(['protected-middle']);
+  expect(calls).toBe(1);
+  const duplicate=await post({...body,editing:{...body.editing,protectedNoteIds:['first','first']}});
+  expect(duplicate.status).toBe(422);
+  const stale=await post({...body,editing:{...body.editing,protectedNoteIds:['outside-id']}});
+  expect(stale.status).toBe(422);
+  expect((await stale.json()).error).toBe('protected_note_outside_scope');
+  const wrongMode=await post({...body,editing:{...body.editing,editConstraint:undefined}});
+  expect(wrongMode.status).toBe(422);
+  expect(calls).toBe(1);
+ });
  it('rejects occupied scope',async()=>{
   const occupied={...project,tracks:[{...project.tracks[0]!,notes:[{noteId:'old',pitch:60,startTick:0,durationTicks:480,velocity:90}]}]};
   const url=await launch({apiKey:'fake',providerFactory:fakeFactory});

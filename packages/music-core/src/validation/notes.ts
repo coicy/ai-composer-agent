@@ -15,10 +15,14 @@ export function validateGenerationRecord(record:GenerationRecord):boolean {
   (record.editConstraint!==undefined&&(record.kind!=='scoped'||record.editConstraint!=='pitch_only'))||
   (record.protectedPrefixCount!==undefined&&(!integer(record.protectedPrefixCount)||
    record.protectedPrefixCount<0||record.protectedPrefixCount>16))||
+  (record.protectedNoteIds!==undefined&&(!Array.isArray(record.protectedNoteIds)||
+   record.protectedNoteIds.length<1||record.protectedNoteIds.length>32||
+   record.protectedNoteIds.some(id=>typeof id!=='string'||!id||id.length>180)||
+   new Set(record.protectedNoteIds).size!==record.protectedNoteIds.length))||
   (record.maxLeapSemitones!==undefined&&(!integer(record.maxLeapSemitones)||
    record.maxLeapSemitones<1||record.maxLeapSemitones>24))||
   (record.editConstraint!=='pitch_only'&&
-   (record.protectedPrefixCount!==undefined||record.maxLeapSemitones!==undefined))||
+   (record.protectedPrefixCount!==undefined||record.protectedNoteIds!==undefined||record.maxLeapSemitones!==undefined))||
   (record.seed!==undefined&&(!integer(record.seed)||record.seed<0||record.seed>0xffffffff)))return false;
  if(record.seedsByRole!==undefined){
   const seeds=record.seedsByRole;
