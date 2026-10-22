@@ -47,3 +47,25 @@ jobs:
           name: playwright-report
           path: apps/web/test-results/
           retention-days: 7
+
+  mcp-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: pnpm install --no-frozen-lockfile
+      - name: Run real MCP stdio JSON-RPC subprocess tests
+        run: pnpm --filter @ai-composer/agent-api test:mcp-e2e
+      - name: Upload actual MCP JSON-RPC request/response transcript
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mcp-stdio-transcript
+          path: services/agent-api/test-results/mcp-stdio-transcript.json
+          if-no-files-found: warn
+          retention-days: 14
