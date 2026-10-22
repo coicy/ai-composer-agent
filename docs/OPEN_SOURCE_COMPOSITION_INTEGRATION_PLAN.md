@@ -50,6 +50,10 @@
 - music21/MusPy 属 Python 生态；如果需要采用，先以离线评估或可选本地 HTTP sidecar 隔离，前端不直接运行 Python。
 - FluidSynth 提供合成器，不等于附赠可安全分发的完整音色库。先在授权明确的测试音色上验证，再判断发行形态。
 
+### 双入口依赖（D-006 已批准，具体实现待开发）
+
+此方案中的通用 LLM 创作能力必须同时支持两类接入：**外部 Agent 经 MCP 调用本工具**，以及**用户输入 API 地址、API Key 后由本工具内部调用 LLM**。两者共享同一 composition + Music Core 候选校验/预览/批准流程；不能用后端环境变量配置代替内部用户配置，也不能让 MCP 直接访问用户的内部 Key。浏览器权威 MusicProject 与 MCP 的授权会话桥接、密钥安全会话等详细建议见 [LLM_ACCESS_MODES.md](LLM_ACCESS_MODES.md)。本文原阶段 A–E 仍为待审议实施提案，本段仅同步已裁定的双入口边界。
+
 ## 3. 建议的增量架构
 
 ```text

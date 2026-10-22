@@ -22,6 +22,7 @@
 - [数据协议](docs/DATA_AND_TOOLS.md)
 - [路线图](docs/ROADMAP.md)
 - [裁决与待定事项](docs/DECISIONS.md)
+- [LLM 双接入模式](docs/LLM_ACCESS_MODES.md)
 - [操作 Schema](schemas/music-operation.schema.json)
 
 技术候选：React、TypeScript、Vite、Canvas 2D、Tone.js、@tonejs/midi；可选 Zustand 与 FastAPI，均待验证。许可证尚未决定。
@@ -31,3 +32,7 @@
 如需调用 OpenAI 模型，在终端 2 的 shell 中设置 `OPENAI_API_KEY`，再执行 `pnpm dev:agent`。模型可通过 `OPENAI_MODEL` 配置，默认 `gpt-4.1-mini`。不要将密钥写入前端或提交仓库。详细说明见 [docs/LLM_INTEGRATION.md](docs/LLM_INTEGRATION.md)。
 
 目前 AI 请求默认在现有轨道末尾追加音符，进入候选预览，不会自动覆盖作品。音乐质量及真实模型 API 调用尚未通过生产环境验证。
+
+## LLM 双接入方向（已批准，待实现）
+
+产品规则 **D-006**：① 外部 Agent 通过 **MCP** 调用本工具的 MIDI 编辑/创作能力；② 用户在本工具中填写 **LLM API 地址与 API Key**，由工具内部调用通用 LLM。二者都须经过现有候选预览和人工确认。**当前只有环境变量 `OPENAI_API_KEY` 驱动的本地 OpenAI 原型**；MCP Server、MCP 与活动项目会话桥接、应用内 API/Key 设置 UI 尚未开发。详细规范见 [docs/LLM_ACCESS_MODES.md](docs/LLM_ACCESS_MODES.md)。

@@ -4,6 +4,13 @@
 **音乐创作由大语言模型（LLM）完成，不引入专用音乐生成模型及其权重。** 可调用确定性音乐理论分析、和声约束校验、候选评估和已有离线规则演示辅助工作，但不得替代 LLM。优化方向是改善 LLM 音乐上下文、分阶段规划、结构化 MIDI 输出、外部验证和人工听评，而非引入 MIDI-GPT 类模型。
 
 
+
+## 双 LLM 接入方式（D-006）
+
+- **MCP 入口**：外部 Agent 可通过已授权的 MCP 工具调用本工具的音乐候选/预览功能；外部 Agent 负责其自身 LLM 交互，不得默认得到内部 API 凭据。
+- **内部 API/Key 入口**：用户在工具中输入/配置上游 LLM API 地址及 Key，由受控服务端调用通用 LLM 并形成同样的 MIDI 候选。
+- 两条模式的输入都必须重新接受结构、作用域、锁、revision 等验证，AI/MCP 不得自行批准或提交。MCP Tool 具体协议/部署尚在设计，当前仅环境变量驱动的 OpenAI 原型可用。详见 [LLM_ACCESS_MODES.md](LLM_ACCESS_MODES.md)。
+
 ## 任务类型
 compose_melody（从零创作）、continue_phrase（续写）、variation（变奏）、reharmonize（重配和声）、create_bass（低音）、create_accompaniment（伴奏）、evaluate_candidate（结构评估）。
 
