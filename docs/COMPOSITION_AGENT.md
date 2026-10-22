@@ -1,5 +1,9 @@
 # 音乐创作 Agent 协议
 
+## AI 生成模型边界（D-005，2026-10-22）
+**音乐创作由大语言模型（LLM）完成，不引入专用音乐生成模型及其权重。** 可调用确定性音乐理论分析、和声约束校验、候选评估和已有离线规则演示辅助工作，但不得替代 LLM。优化方向是改善 LLM 音乐上下文、分阶段规划、结构化 MIDI 输出、外部验证和人工听评，而非引入 MIDI-GPT 类模型。
+
+
 ## 任务类型
 compose_melody（从零创作）、continue_phrase（续写）、variation（变奏）、reharmonize（重配和声）、create_bass（低音）、create_accompaniment（伴奏）、evaluate_candidate（结构评估）。
 
