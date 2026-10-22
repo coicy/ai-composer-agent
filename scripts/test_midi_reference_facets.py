@@ -5,6 +5,7 @@ import unittest
 import mido
 from midi_reference_facets import analyze_reference,build_coverage,_meter_metadata
 from query_midi_references import select_references
+from midi_reference_targets import evaluate_targets
 
 def midi_fixture(percussion=False,meter=None,velocity=(70,90),key=None):
  m=mido.MidiFile(ticks_per_beat=480);t=mido.MidiTrack();m.tracks.append(t)
@@ -88,6 +89,21 @@ class ReferenceFacetTests(unittest.TestCase):
   self.assertEqual(select_references(catalog,meter='6/8')['match_count'],0)
   self.assertIsNone(select_references(catalog,meter='4/4')['matches'][0]['verified_mode'])
   with self.assertRaises(ValueError):select_references(catalog,limit=0)
+ def test_sample_targets_require_independent_performers(self):
+  raw=midi_fixture(percussion=True,meter='6/8')
+  entries=[]
+  for n in range(3):
+   entry=item(raw,'jazz',{'drummer':'drummer-one','time_signature':'6-8'})
+   entry['file']=f'{n}.mid'
+   entry['facets']=analyze_reference(item(raw,'jazz',{'drummer':'drummer-one'}),raw)
+   entries.append(entry)
+  result=evaluate_targets(entries)
+  targets={t['id']:t for t in result['targets']}
+  self.assertEqual(targets['meter_6_8']['samples'],3)
+  self.assertEqual(targets['meter_6_8']['distinct_drummers'],1)
+  self.assertEqual(targets['meter_6_8']['status'],'partial')
+  self.assertEqual(targets['meter_12_8']['status'],'missing')
+  self.assertEqual(targets['mode_dorian']['status'],'missing')
  def test_invalid_meters_not_inferred(self):
   self.assertEqual(_meter_metadata('6-8'),'6/8')
   for bad in ('C','0/4','7/3',None):
