@@ -6,6 +6,7 @@
 - 唯一主音符编辑器：Piano Roll，不引入五线谱。
 - Agent 自主生成真实、可编辑的 MIDI 音符；人工编辑与 Agent 共享 MusicProject。
 - **正式裁决 D-005（2026-10-22）**：AI 音乐创作与编曲仅使用通用 LLM；禁止引入 MIDI-GPT 等专用音乐生成模型、权重、专用模型适配器/部署及其研究接入任务。允许保留确定性音乐分析、Music Core 验证、音频合成和现有离线规则演示，但不得替代 LLM 成为 AI 生成引擎。
+- **正式裁决 D-006（2026-10-22）**：支持外部 Agent 通过 MCP 调用本工具，以及用户在工具内输入/配置 API 地址与 Key 后由工具内部调用通用 LLM。两入口共用 music-core 的作用域/锁/revision 校验、候选预览和用户批准。MCP 不得读取内部 API Key 或直接无授权提交。现有环境变量 OpenAI 模式不能冒充已完成 MCP 或交互式 API/Key UI；详见 docs/LLM_ACCESS_MODES.md。
 - 所有变更通过 music-core 命令执行器，`baseRevision` + 授权范围 + 锁检查 + 原子提交；AI 变更先 preview，显式批准后应用；支持撤销。
 - 外来内容与 AI 返回不可信；密钥不能放前端、仓库或日志；不得虚报已实现功能或测试。
 
