@@ -95,3 +95,28 @@
 - 本仓库 PR #19 的参考样本 `manifest.json`、SHA-256 及 MIDI 事件记录。
 
 注意：本文所有「建议」「优先级」「验收目标」均为**待审核提案**。未修改现有 39 首原始 MIDI 或接受/拒绝标准。
+
+## 6. 第一阶段实施状态（新增工程实现）
+
+PR #19 现有构建脚本增加了以下可重现能力（以最新 CI 结果为验收准绳）：
+
+- `scripts/midi_reference_facets.py`：逐条读取未修改的 MIDI，提取来源标注、拍号、Tempo、鼓通道/音高声部、力度变化、控制器及音符相对拍位的统计分布。它**不推断**未经验证的调式、Swing 感或曲式。
+- `scripts/reference-output/manifest.json`：每首额外附 `facets`，并保留原文件来源、许可证和 SHA-256。
+- `scripts/reference-output/coverage.json` 与 `COVERAGE.md`：输出分面覆盖、来源区别、未知状态和显式缺口；与 MIDI 参考包一起上传为 GitHub Actions Artifact。
+- `scripts/query_midi_references.py`：对生成清单进行**独立条件、可追溯匹配**，支持 `--meter`、`--source-style`、`--usage`、`--require-pitched` 和 `--drum-only`。**不支持输入一种未验证调式就假装查出相应作品**。
+- `scripts/test_midi_reference_facets.py`：构造鼓组/音高、6/8、7/8、未知拍号和伪造哈希等离线回归样本，约束元数据行为。
+
+可重复的本地检查：
+
+```sh
+python -m pip install mido==1.3.3
+python -m unittest discover -s scripts -p 'test_midi_reference_facets.py' -v
+python scripts/build_midi_reference_catalog.py
+python scripts/query_midi_references.py --usage battle
+python scripts/query_midi_references.py --source-style dance/disco --drum-only
+python scripts/query_midi_references.py --meter 6/8
+```
+
+第三条命令需要下载约 3.11MB Groove MIDI 数据及 OpenGameArt、Mutopia 公开文件。末尾的 6/8 查询按当前样本预计返回 `match_count=0`，这说明此批样本**没有代表证据**，并不意味着音乐系统不存在该拍号。
+
+**已实施的仅是事实特征提取和参考资料检索**；模式分类学、专家标注、正负示例、实时检索 MCP 工具、参考驱动的 LLM 音乐生成及真实音乐质量 A/B 尚未实现。
