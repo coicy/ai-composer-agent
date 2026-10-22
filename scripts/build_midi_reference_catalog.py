@@ -4,6 +4,7 @@ import csv,hashlib,io,json,pathlib,statistics,time,urllib.request,urllib.parse,z
 from collections import defaultdict
 from html.parser import HTMLParser
 import mido
+from midi_reference_facets import enrich_catalog,format_report
 
 HERE=pathlib.Path(__file__).resolve().parent
 OUT=HERE/'reference-output'
@@ -105,17 +106,24 @@ def main():
  for style,items in groups.items():
   if len(items)<2 or len(items)>3:raise RuntimeError('invalid style count '+style)
  items=[x for name in sorted(groups) for x in groups[name]]
+ coverage=enrich_catalog(items,lambda rel:(OUT/rel).read_bytes())
+ (OUT/'coverage.json').write_text(json.dumps(coverage,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+ (OUT/'COVERAGE.md').write_text(format_report(coverage),encoding='utf-8')
+ print('FACET_COVERAGE',coverage['capabilities'],flush=True)
+ print('MISSING_METERS',coverage['missing_priority_meters'],flush=True)
  manifest={'total_styles':len(groups),'total_files':len(items),'style_counts':{k:len(groups[k]) for k in sorted(groups)},'items':items,
  'licensing':'GMD CC BY 4.0 requires attribution; RPG CC0; selected Mutopia editions are individually labeled Public Domain.',
  'limitations':'GMD is drum-only, not harmony. Mutopia is score-rendered and not a human groove reference. ai-composer-agent MIDI import currently loses tempo/meter/program/CC/channel fidelity.',
- 'selection':'GMD beat-type performances; typical BPM, duration, mostly 4/4, differing drummers when available; game tracks selected by named context; Mutopia by canonical style and public-domain notation.'}
+ 'selection':'GMD beat-type performances; typical BPM, duration, mostly 4/4, differing drummers when available; game tracks selected by named context; Mutopia by canonical style and public-domain notation.',
+ 'facets_schema':'ai-composer-reference-facets-v1',
+ 'coverage_file':'coverage.json'}
  (OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  lines=['# Representative MIDI reference catalog','',str(len(groups))+' styles; '+str(len(items))+' original MIDI files; 2–3 per style.','','## Tracks','']
  for style in sorted(groups):
   lines+=['### '+style,'']
   for x in groups[style]:lines.append('- '+x['file']+' — '+x['title']+' · '+x['license']+' · '+str(x['analysis']['note_count'])+' note-ons · '+x['source_page'])
   lines.append('')
- lines+=['## Usage','', '1. Hear the originals in an external General MIDI player.', '2. In ai-composer-agent use Import MIDI; verify note content and track division, not instrument/tempo fidelity.', '3. Feed feature summaries to an external LLM Agent rather than pasting entire copyrighted music into context.', '4. Preserve source and license information from manifest.json.', '', 'These original MIDI bytes have NOT been quantized, normalized, edited or re-exported.']
+ lines+=['## Coverage','', 'See COVERAGE.md and coverage.json. Feature dimensions are independent; no verified genre, mode, swing or form claims are inferred from MIDI alone.', '','## Usage','', '1. Hear the originals in an external General MIDI player.', '2. In ai-composer-agent use Import MIDI; verify note content and track division, not instrument/tempo fidelity.', '3. Feed feature summaries to an external LLM Agent rather than pasting entire copyrighted music into context.', '4. Preserve source and license information from manifest.json.', '', 'These original MIDI bytes have NOT been quantized, normalized, edited or re-exported.']
  (OUT/'README.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
  with zipfile.ZipFile(HERE/'representative_midi_references.zip','w',zipfile.ZIP_DEFLATED) as z:
   for p in sorted(OUT.rglob('*')):
