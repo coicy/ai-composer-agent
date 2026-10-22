@@ -55,6 +55,7 @@ export function App(){
  const [regionSeed,setRegionSeed]=useState(19501);
  const [regionPitchOnly,setRegionPitchOnly]=useState(false);
  const [regionProtectedPrefixCount,setRegionProtectedPrefixCount]=useState(0);
+ const [regionProtectedSelection,setRegionProtectedSelection]=useState<{key:string;ids:readonly string[]}>({key:'',ids:[]});
  const [regionMaxLeap,setRegionMaxLeap]=useState(0);
  const [regionInstruction,setRegionInstruction]=useState('保留其他声部，给选定声部在指定小节写一个新的动机变化。');
  const [feedbackText,setFeedbackText]=useState('');
@@ -98,6 +99,10 @@ export function App(){
  const feedbackNotes=feedbackTarget?.notes.filter(n=>n.startTick<feedbackWindowEnd&&
   n.startTick+n.durationTicks>proposedStart)??[];
  const feedbackNoteCount=feedbackNotes.length;
+ const regionProtectionKey=[project.revision,regionTargetId,regionStartBar,regionBars].join('|');
+ const regionProtectedNoteIds=regionProtectedSelection.key===regionProtectionKey?regionProtectedSelection.ids:[];
+ const displayedProtectableNotes=[...feedbackNotes].sort((a,b)=>a.startTick-b.startTick||a.pitch-b.pitch||
+  a.noteId.localeCompare(b.noteId));
  const feedbackKey=[project.revision,regionTargetId,regionStartBar,regionBars,feedbackText].join('|');
  const activeFeedbackDraft=feedbackDraft?.key===feedbackKey?feedbackDraft:null;
  const savedHarmonyPlan=Number.isSafeInteger(regionStartBar)&&Number.isSafeInteger(regionBars)&&regionStartBar>=1&&regionBars>=1&&regionBars<=4?
@@ -339,6 +344,7 @@ export function App(){
    instruction:regionInstruction,seed:regionSeed,
    ...(regionPitchOnly?{editConstraint:'pitch_only' as const,
     ...(regionProtectedPrefixCount>0?{protectedPrefixCount:regionProtectedPrefixCount}:{}),
+    ...(regionProtectedNoteIds.length?{protectedNoteIds:regionProtectedNoteIds}:{}),
     ...(regionMaxLeap>0?{maxLeapSemitones:regionMaxLeap}:{})}:{}),
    ...(reuseApprovedPlan&&savedHarmonyPlan?{plan:savedHarmonyPlan.plan}:{})
   };
@@ -369,6 +375,7 @@ export function App(){
    providerId:pending.providerId,instruction:regionInstruction,
    ...(pending.editConstraint?{editConstraint:pending.editConstraint}:{}),
    ...(pending.protectedPrefixCount!==undefined?{protectedPrefixCount:pending.protectedPrefixCount}:{}),
+   ...(pending.protectedNoteIds?.length?{protectedNoteIds:[...pending.protectedNoteIds]}:{}),
    ...(pending.maxLeapSemitones!==undefined?{maxLeapSemitones:pending.maxLeapSemitones}:{}),
    ...(pending.plan?{planJson:JSON.stringify(pending.plan)}:{})
   };
@@ -609,6 +616,28 @@ export function App(){
      min={0} max={24} step={1} value={regionMaxLeap}
      onChange={e=>{setRegionMaxLeap(Number(e.target.value));invalidateRegion();}}/></label>
     <p>保留开头按起音顺序选取；最大跳进只约束不重叠的连续音符及选区边缘衔接。不会自动推断自由文本里的数值要求。</p>
+    <div className="protected-note-picker" role="group" aria-label="指定保护音符">
+     <strong>指定任意要保留的音符（当前 {regionProtectedNoteIds.length} 个）</strong>
+     <p>按当前目标声部和小节范围列出音符。勾选保护音高；其他时间、时长、力度与 ID 本来就由“仅改音高”保护。</p>
+     <button type="button" disabled={activeTrack!==regionTargetId||!selectedNoteIds.some(id=>feedbackNotes.some(n=>n.noteId===id))}
+      onClick={()=>{const set=new Set([...regionProtectedNoteIds,...selectedNoteIds.filter(id=>feedbackNotes.some(n=>n.noteId===id))]);
+       setRegionProtectedSelection({key:regionProtectionKey,ids:[...set]});invalidateRegion();}}>
+      保护钢琴卷帘已框选音符</button>
+     <button type="button" disabled={!regionProtectedNoteIds.length}
+      onClick={()=>{setRegionProtectedSelection({key:regionProtectionKey,ids:[]});invalidateRegion();}}>清空单独保护</button>
+     {displayedProtectableNotes.length>32&&<p>当前片段超过 32 个音符，无法执行仅改音高模式。</p>}
+     {displayedProtectableNotes.slice(0,32).map((n,i)=>
+      <label key={n.noteId} className="protected-note-option">
+       <input type="checkbox" aria-label={`保护第${i+1}个目标音符`}
+        checked={regionProtectedNoteIds.includes(n.noteId)}
+        onChange={e=>{
+         setRegionProtectedSelection({key:regionProtectionKey,ids:e.target.checked?
+          [...regionProtectedNoteIds,n.noteId]:regionProtectedNoteIds.filter(id=>id!==n.noteId)});
+         invalidateRegion();
+        }}/>
+       音高 {n.pitch} · 起点 {n.startTick} tick · 时长 {n.durationTicks} tick
+      </label>)}
+    </div>
    </div>}
    <section className="feedback-interpreter" role="region" aria-label="音乐反馈解释器">
     <strong>把自然语言意见整理成可审核的修改规则</strong>
@@ -662,6 +691,8 @@ export function App(){
     <strong>{regionCandidate.editConstraint==='pitch_only'
      ?`待确认：仅更新 ${regionCandidate.changes.operations.length} 个音高，保留 ${regionCandidate.notes.length} 个音符的节奏、力度与 ID，Seed ${regionCandidate.seed}`
      :`待确认：${regionCandidate.removedNotes.length} 个旧音符将替换为 ${regionCandidate.notes.length} 个新音符，Seed ${regionCandidate.seed}`}</strong>
+    {regionCandidate.editConstraint==='pitch_only'&&regionCandidate.protectedNoteIds?.length?
+     <p>另外保护 {regionCandidate.protectedNoteIds.length} 个指定音符的音高。</p>:null}
     {regionCandidate.editConstraint==='pitch_only'&&
      (regionCandidate.protectedPrefixCount||regionCandidate.maxLeapSemitones)&&
      <p>反馈约束：保留开头 {regionCandidate.protectedPrefixCount??0} 音；
