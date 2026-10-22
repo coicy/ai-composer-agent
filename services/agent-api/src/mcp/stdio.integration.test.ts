@@ -87,7 +87,7 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   child=spawn(process.execPath,[
    '--import','tsx',
    fileURLToPath(new URL('./index.ts',import.meta.url))
-  ],{cwd:fileURLToPath(new URL('../../../',import.meta.url)),stdio:['pipe','pipe','pipe']});
+  ],{cwd:fileURLToPath(new URL('../../',import.meta.url)),stdio:['pipe','pipe','pipe']});
   child.stderr.setEncoding('utf8');
   child.stderr.on('data',(data:string)=>{stderr+=data;});
   child.on('error',error=>{
@@ -221,7 +221,9 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
  });
  it('handles unknown methods, unknown tools and malformed JSON-RPC',async()=>{
   expect((await request('method/does_not_exist')).error).toMatchObject({code:-32601,message:'Method not found'});
-  expect(toolError(await tool('music.unknown_tool',{}))).toBe('session_not_found');
+  const unknownSession=await open();
+  expect(toolError(await tool('music.unknown_tool',{sessionId:unknownSession,trackId:'melody',startTick:0,endTick:480}))).toBe('unknown_tool');
+  expect(value(await tool('music.close_snapshot',{sessionId:unknownSession}))).toEqual({closed:true});
   const id=nextId+1;
   // For malformed payloads with no usable request ID, JSON-RPC requires id:null.
   raw('{not-json');
@@ -229,6 +231,10 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   const response=await request('ping');
   expect(response.id).toBe(id);
   expect(response.result).toEqual({});
+  const parseError=transcript.find(item=>item.direction==='response'&&
+   (item.payload as RpcResponse).id===null&&
+   (item.payload as RpcResponse).error?.code===-32700);
+  expect(parseError).toBeDefined();
   const invalid=await request('tools/call',{name:1,arguments:{}});
   expect(invalid.result?.isError).toBe(true);
   passed('unknown method / malformed input / server remains responsive');
