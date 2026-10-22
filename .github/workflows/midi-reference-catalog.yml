@@ -6,6 +6,7 @@ on:
       - 'scripts/build_midi_reference_catalog.py'
       - 'scripts/midi_reference_facets.py'
       - 'scripts/test_midi_reference_facets.py'
+      - 'scripts/query_midi_references.py'
       - 'docs/MIDI_STYLE_TAXONOMY_REVIEW.md'
       - '.github/workflows/midi-reference-catalog.yml'
 permissions:
@@ -46,6 +47,12 @@ jobs:
           assert coverage['capabilities']['pitched_material']>=1
           assert sum(coverage['observed_meters'].values())>=data['total_files']-coverage['capabilities']['meter_unknown']
           assert pathlib.Path('scripts/reference-output/COVERAGE.md').is_file()
+          from scripts.query_midi_references import select_references
+          assert select_references(data,meter='6/8')['match_count']==0
+          assert select_references(data,usage='battle')['match_count']==2
+          assert select_references(data,source_style='dance/disco')['match_count']==1
+          assert select_references(data,meter='3/4',pitched=True)['match_count']>=2
+          print('REFERENCE_QUERY_EXAMPLES_PASSED')
           print('FACET_CAPABILITIES',coverage['capabilities'])
           print('MISSING_PRIORITY_METERS',coverage['missing_priority_meters'])
           with zipfile.ZipFile('scripts/representative_midi_references.zip') as z:
