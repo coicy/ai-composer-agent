@@ -20,3 +20,32 @@ The MCP server does not expose OPENAI_API_KEY or other internal LLM credentials.
 Run `pnpm --filter @ai-composer/agent-api test:mcp-e2e` from the repository root (Node.js 22 and pnpm 10). The test launches `src/mcp/index.ts` in an independent Node.js subprocess with `--import tsx`, writes newline-delimited JSON-RPC requests to stdin, and parses actual stdout responses. It checks initialization, tool schemas, snapshots, MIDI preview dry-run, invalid inputs, locked tracks, revision conflicts, isolation, revocation, and JSON-RPC parse errors. No paid model, API key, browser, or remote server is used.
 
 Every completed run writes `services/agent-api/test-results/mcp-stdio-transcript.json` with the literal request/response messages and assertion names. GitHub Actions job `mcp-e2e` uploads it as artifact `mcp-stdio-transcript` for 14 days, including failed test runs when the test teardown can write its report. This report contains **synthetic fixture projects only** and is not evidence of a live browser-editor bridge. A successful `mcp-e2e` job proves the protocol paths exercised by the checks, not generic compatibility with all MCP hosts.
+
+## Licensed MIDI reference lookup — dependent PR
+
+This branch implements **three public-data, read-only MCP tools**:
+
+- `music.reference_coverage` (no parameters): observed meters, pitched vs. drum-only counts, license counts, explicitly absent or unknown features.
+- `music.search_references` (optional `meter`, exact `sourceStyle`, `usage`, `pitched`, `verifiedMode`, `verifiedGroove`, `limit` 1–10, `offset` 0–500): returns an AND-filtered, bounded list, with title, exact SHA-256 identifier, source credit, license and evidence URLs.
+- `music.get_reference` (`id` is SHA-256): returns observed pitch/onset/dynamic statistics and license provenance; no original MIDI note events or bytes.
+
+These tools do **not** access project snapshots, editor state, API credentials or approval tokens. They do not commit music changes.
+
+### Local reference setup
+
+The complete corpus is versioned on [PR #19](https://github.com/coicy/ai-composer-agent/pull/19). Once both dependent branches are merged, the MCP server discovers `references/catalog/manifest.json` automatically. Prior to merging, set the operator-owned `AI_COMPOSER_MIDI_CATALOG_PATH` environment variable to the absolute path to the **PR #19 checkout** at `references/catalog/manifest.json`.
+
+```sh
+pnpm install
+AI_COMPOSER_MIDI_CATALOG_PATH=/absolute/path/to/references/catalog/manifest.json pnpm --filter @ai-composer/agent-api start:mcp
+```
+
+Missing catalog returns `reference_catalog_unavailable` (not fabricated matches). The server verifies all MIDI files' SHA-256 hashes against the checked-in catalog and requires per-file credit and rights evidence. Query parameters cannot supply files, URLs or network endpoints. The catalog is cached after first use; restart the MCP subprocess after replacing the reference files.
+
+All original MIDI licensing remains independent of the application's own code license. CC BY 4.0 materials require the specified attribution. The response returns `credit`, `license`, `licenseUrl`, `rightsEvidenceUrl` and `sourceUrl` for traceability. A source genre tag is not an expert-verified style; mode or groove queries return **zero** until independently reviewed labels are available.
+
+### Test scope and CI dependency
+
+This is a dependent integration PR, based on MCP PR #18. CI pins the immutable reference corpus commit `a06a9ed7` from PR #19; it tests the true stdio subprocess against the 44 copyrighted/licensed MIDI references, and publishes literal request/response logs. Synthetic unit tests cover modified MIDI bytes, invalid rights, path traversal, missing corpus, unsupported filters and cases where scale or Swing would be wrongly inferred. No specialized music model or private keys are used.
+
+**Not implemented:** LLM music quality evaluation, live browser-to-MCP project bridge, preview approval, replay of reference audio, or automated verification of the full musical style.
