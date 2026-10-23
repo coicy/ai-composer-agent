@@ -147,7 +147,8 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   const declared=list.result?.tools as {name:string;inputSchema:{type:string}}[];
   expect(declared.map(t=>t.name)).toEqual([
    'music.open_snapshot','music.list_tracks','music.inspect_notes',
-   'music.propose_midi','music.submit_candidate','music.close_snapshot'
+   'music.propose_midi','music.submit_candidate','music.close_snapshot',
+   'music.search_references','music.get_reference','music.reference_coverage'
   ]);
   expect(declared.every(t=>t.inputSchema.type==='object')).toBe(true);
   passed('initialize / initialized / ping / tools/list');
@@ -334,6 +335,60 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   expect(toolError(await tool('music.list_tracks',{sessionId:openedSession}))).toBe('session_not_found');
   expect(value(await tool('music.close_snapshot',{sessionId:other}))).toEqual({closed:true});
   passed('multiple session isolation / explicit close / revoked read');
+ });
+ it('searches the pinned real 44-file corpus over stdio and keeps the music project unchanged',async()=>{
+  if(!process.env.AI_COMPOSER_MIDI_CATALOG_PATH){
+   expect(toolError(await tool('music.reference_coverage',{}))).toBe('reference_catalog_unavailable');
+   passed('missing corpus fails explicitly (no fabricated references)');
+   return;
+  }
+  const coverage=value(await tool('music.reference_coverage',{}));
+  expect(coverage).toMatchObject({
+   totalReferences:44,pitchedReferences:16,drumOnlyReferences:28,
+   expertVerifiedModeReferences:0,expertVerifiedGrooveReferences:0,
+   licenseCounts:{'CC BY 4.0':28,'CC0-1.0':8,'Public Domain':8}
+  });
+  const meters=coverage.meters as Record<string,number>;
+  expect(meters['6/8']).toBe(3);
+  expect(meters['5/4']).toBe(1);
+  expect(meters['5/8']).toBe(1);
+  expect(meters['7/8']).toBeUndefined();
+  const compound=value(await tool('music.search_references',{meter:'6/8',pitched:false,limit:10}));
+  expect(compound).toMatchObject({matchCount:3,returnedCount:3});
+  const hits=compound.results as {id:string;license:string;credit:string;sourceUrl:string;meter:{source:string}}[];
+  for(const hit of hits){
+   expect(hit.id).toMatch(/^[0-9a-f]{64}$/);
+   expect(hit.license).toBe('CC BY 4.0');
+   expect(hit.credit).toContain('Google LLC');
+   expect(hit.sourceUrl).toStartWith('https://');
+   expect(hit.meter.source).toMatch(/^(midi_event|source_annotation)$/);
+  }
+  const detail=value(await tool('music.get_reference',{id:hits[0]!.id}));
+  expect(detail).toMatchObject({
+   id:hits[0]!.id,license:'CC BY 4.0',
+   provenance:'Source MIDI bytes SHA-256 verified at catalog load; original files never sent over MCP.'
+  });
+  expect(JSON.stringify(detail)).not.toContain('note_on');
+  const battle=value(await tool('music.search_references',{usage:'battle',pitched:true,limit:10}));
+  expect(battle.matchCount).toBe(2);
+  expect((battle.results as {license:string}[]).every(x=>x.license==='CC0-1.0')).toBe(true);
+  const dance=value(await tool('music.search_references',{sourceStyle:'dance/disco',pitched:false}));
+  expect(dance.matchCount).toBeGreaterThanOrEqual(1);
+  const noMode=value(await tool('music.search_references',{verifiedMode:'dorian'}));
+  const noSwing=value(await tool('music.search_references',{verifiedGroove:'swing'}));
+  expect(noMode.matchCount).toBe(0);
+  expect(noSwing.matchCount).toBe(0);
+  const slice=value(await tool('music.search_references',{meter:'6/8',offset:2,limit:1}));
+  expect(slice).toMatchObject({matchCount:3,returnedCount:1,offset:2});
+  expect(toolError(await tool('music.search_references',{limit:99}))).toBe('invalid_reference_filter');
+  expect(toolError(await tool('music.get_reference',{id:'../../config.json'}))).toBe('invalid_reference_id');
+  expect(toolError(await tool('music.get_reference',{id:'0'.repeat(64)}))).toBe('reference_not_found');
+  // Public catalog lookup is unrelated to any project snapshot, and never commits.
+  const unchanged=value(await tool('music.inspect_notes',{
+   sessionId:await open(),trackId:'melody',startTick:0,endTick:960
+  }));
+  expect(unchanged.notes).toEqual([sourceNote]);
+  passed('real CC-licensed 44-file MIDI corpus search / grounded read-only detail / unknown mode rejected');
  });
  it('handles unknown methods, unknown tools and malformed JSON-RPC',async()=>{
   expect((await request('method/does_not_exist')).error).toMatchObject({code:-32601,message:'Method not found'});
