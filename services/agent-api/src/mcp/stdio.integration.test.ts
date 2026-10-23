@@ -360,7 +360,7 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
    expect(hit.id).toMatch(/^[0-9a-f]{64}$/);
    expect(hit.license).toBe('CC BY 4.0');
    expect(hit.credit).toContain('Google LLC');
-   expect(hit.sourceUrl).toStartWith('https://');
+   expect(hit.sourceUrl.startsWith('https://')).toBe(true);
    expect(hit.meter.source).toMatch(/^(midi_event|source_annotation)$/);
   }
   const detail=value(await tool('music.get_reference',{id:hits[0]!.id}));
@@ -384,10 +384,12 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   expect(toolError(await tool('music.get_reference',{id:'../../config.json'}))).toBe('invalid_reference_id');
   expect(toolError(await tool('music.get_reference',{id:'0'.repeat(64)}))).toBe('reference_not_found');
   // Public catalog lookup is unrelated to any project snapshot, and never commits.
+  const reviewSession=await open();
   const unchanged=value(await tool('music.inspect_notes',{
-   sessionId:await open(),trackId:'melody',startTick:0,endTick:960
+   sessionId:reviewSession,trackId:'melody',startTick:0,endTick:960
   }));
   expect(unchanged.notes).toEqual([sourceNote]);
+  expect(value(await tool('music.close_snapshot',{sessionId:reviewSession}))).toEqual({closed:true});
   passed('real CC-licensed 44-file MIDI corpus search / grounded read-only detail / unknown mode rejected');
  });
  it('handles unknown methods, unknown tools and malformed JSON-RPC',async()=>{
