@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, feat/mcp-first-stdio-bridge]
 
 # Only the newest run for a PR (or main) should consume CI capacity.
 # This does not conceal real failures; completed failed checks remain visible.
@@ -52,6 +52,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Load fixed, independently licensed reference corpus from PR 19
+        uses: actions/checkout@v4
+        with:
+          repository: coicy/ai-composer-agent
+          ref: a06a9ed7e091a0480a637648a5396a602b2dfec0
+          path: reference-assets
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
         with:
           version: 10.18.0
@@ -59,7 +66,9 @@ jobs:
         with:
           node-version: '22'
       - run: pnpm install --no-frozen-lockfile
-      - name: Run real MCP stdio JSON-RPC subprocess tests
+      - name: Run real MCP stdio JSON-RPC subprocess tests with 44 licensed MIDI files
+        env:
+          AI_COMPOSER_MIDI_CATALOG_PATH: ${{ github.workspace }}/reference-assets/references/catalog/manifest.json
         run: pnpm --filter @ai-composer/agent-api test:mcp-e2e
       - name: Upload actual MCP JSON-RPC request/response transcript
         uses: actions/upload-artifact@v4
