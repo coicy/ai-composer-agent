@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Composer Agent · 匿名 A/B/C 编曲试听</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light dark}
+body{max-width:940px;padding:22px 22px 64px;margin:auto;line-height:1.55}
+h1{font-size:1.65rem;letter-spacing:-.02em}p,small{color:color-mix(in srgb,currentColor 70%, transparent)}
+header{border-bottom:1px solid #8884;padding-bottom:18px;margin-bottom:24px}
+.cue{border:1px solid #8886;border-radius:14px;padding:20px;margin:14px 0;box-shadow:0 3px 9px #0000000a}
+.cue h2{margin:0 0 8px;font-size:1.15rem}audio{width:100%;margin:9px 0;display:block}
+select,button,textarea{font:inherit;background:transparent;color:inherit;border:1px solid #8888;border-radius:7px;padding:8px}
+option{color:black;background:white}button{cursor:pointer;background:color-mix(in srgb,CanvasText 9%,Canvas)}button:hover{filter:brightness(.9)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(156px,1fr));gap:10px}.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600;font-size:.87rem}textarea{width:100%;min-height:60px;box-sizing:border-box;resize:vertical}
+.actions{margin:24px 0;display:flex;gap:10px;flex-wrap:wrap}.warn{border-left:3px solid #8b5e3c;padding-left:12px}
+.result{white-space:pre-wrap;background:color-mix(in srgb,CanvasText 6%,Canvas);padding:16px;border-radius:10px}
+#reveal{display:none}.notice{font-size:.9rem}
+</style>
+</head>
+<body>
+<header>
+<h1>匿名编曲试听 · 第一轮 A/B/C</h1>
+<p>请先听完三段再评分，不要打开文件名确认组别。系统随机展示播放顺序，完成评分并提交后才显示条件名称。</p>
+<p class="notice">固定：16 小节 · 112 BPM · 4/4 · D Dorian · 四轨 · 约 36 秒。各组的音响素材、主旋律音高、和声顺序一致，处理方式有所不同。音频目标响度约 −18 LUFS。</p>
+</header>
+<p class="warn"><strong>评估维度：</strong>节奏清晰度、Shuffle 律动自然度、声部融合度、整体音乐性，各按 1–5 分。请勿仅把“音符更多”判定为“音乐更好”。匿名并非真正的双盲：制作人已知组别，试听者也可能从编配识别不同版本。</p>
+<div id="tracks"></div>
+<section class="actions"><button id="submit">完成三组评分并揭晓</button><button id="download" disabled>保存评分 CSV</button><button id="reset">重新随机排序</button></section>
+<div id="warn" aria-live="polite"></div>
+<section id="reveal" class="result" aria-live="polite"></section>
+<footer><p class="notice">所有文件均可离线播放，不会上传音频或评分。试听项目由同一通用语言模型在同一会话中设计，不能作为有因果识别的模型效果测试；可作为之后独立模型调用与真实盲听的准备材料。</p></footer>
+<script>
+'use strict';
+const variants=['A','B','C'];const conditions={A:'A｜无参考',B:'B｜仅来源风格标签 blues/shuffle',C:'C｜真实 MIDI 特征参考'};
+const dimensions=[['pulse','节奏清晰度'],['shuffle','Shuffle 律动自然度'],['mix','声部融合度'],['musicality','整体音乐性']];
+let current=[];let submission=null;
+function shuffle(a){
+ const out=[...a];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out;
+}
+function draw(){
+ current=shuffle(variants);submission=null;document.getElementById('reveal').style.display='none';document.getElementById('download').disabled=true;
+ document.getElementById('warn').textContent='';
+ document.getElementById('tracks').innerHTML=current.map((id,index)=>{
+ const label=['X','Y','Z'][index];
+ const cols=dimensions.map(([key,title])=>`<div class="field"><label for="${label}_${key}">${title}</label><select id="${label}_${key}" required><option value="">未评分</option>${[1,2,3,4,5].map(n=>`<option value="${n}">${n}</option>`).join('')}</select></div>`).join('');
+ return `<article class="cue"><h2>作品 ${label}</h2><audio preload="metadata" controls src="variant_${id}.mp3"></audio><div class="grid">${cols}</div><div class="field" style="margin-top:10px"><label for="${label}_comment">听感备注（可选）</label><textarea id="${label}_comment" placeholder="例如：重拍明确，贝斯抢拍，后半拍过于机械，声部过密……"></textarea></div></article>`;
+ }).join('');
+}
+function gather(){
+ const values=[];
+ for(let i=0;i<current.length;i++){
+  const label=['X','Y','Z'][i];const item={order:i+1,blind_name:label,condition:current[i]};
+  for(const [k] of dimensions){const v=document.getElementById(`${label}_${k}`).value;if(!v)throw Error('请先给全部三段的四项指标评分');item[k]=Number(v);}
+  item.comment=document.getElementById(`${label}_comment`).value;values.push(item);
+ }
+ return values;
+}
+document.getElementById('submit').addEventListener('click',()=>{
+ try{const values=gather();submission={protocol:'AIComposer-A/B/C-v1',timestamp:new Date().toISOString(),ratings:values};
+ const result=values.map(x=>`${x.blind_name} = ${conditions[x.condition]}：节奏${x.pulse}，Shuffle ${x.shuffle}，融合${x.mix}，音乐性${x.musicality}${x.comment?'；备注 '+x.comment:''}`);
+ const el=document.getElementById('reveal');el.textContent='评分已记录（仅当前浏览器内）。\n\n'+result.join('\n')+'\n\n点击「保存评分 CSV」导出结果。';el.style.display='block';document.getElementById('download').disabled=false;
+ }catch(error){document.getElementById('warn').textContent=String(error.message??error);}
+});
+document.getElementById('download').addEventListener('click',()=>{
+ if(!submission)return;const quote=s=>'"'+String(s).replace(/"/g,'""')+'"';
+ const fields=['timestamp','protocol','order','blind_name','condition','pulse','shuffle','mix','musicality','comment'];
+ const rows=[fields.join(','),...submission.ratings.map(item=>fields.map(key=>quote(item[key]??submission[key]??'')).join(','))];
+ const data=new Blob(['\ufeff'+rows.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});
+ const url=URL.createObjectURL(data);const a=document.createElement('a');a.href=url;a.download='ai-composer-blind-ratings.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+document.getElementById('reset').addEventListener('click',()=>{if(confirm('清空当前评分并重新随机排序？'))draw();});
+draw();
+</script>
+</body>
+</html>

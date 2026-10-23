@@ -1,0 +1,58 @@
+name: MIDI Arrangement A-B-C Experiment
+on:
+  pull_request:
+    branches: [main, feat/mcp-reference-guided-composition]
+    paths:
+      - 'scripts/experiments/groove-abc/**'
+      - 'docs/ARRANGEMENT_EXPERIMENT_ABC_V1.md'
+      - '.github/workflows/music-experiment.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  music-experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Checkout authored experiment source
+        uses: actions/checkout@v4
+      - name: Load exact licensed MIDI reference commit
+        uses: actions/checkout@v4
+        with:
+          repository: coicy/ai-composer-agent
+          ref: a06a9ed7e091a0480a637648a5396a602b2dfec0
+          path: reference-assets
+          persist-credentials: false
+      - name: Python dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install verifiable offline sound rendering
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfluidsynth3 timgm6mb-soundfont ffmpeg
+          python -m pip install 'mido==1.3.3' 'numpy==2.2.6'
+          test -f /usr/share/sounds/sf2/TimGM6mb.sf2
+      - name: Generate three real Type 1 MIDI files and equal-loudness MP3
+        env:
+          AI_COMPOSER_REFERENCE_SOURCE: ${{ github.workspace }}/reference-assets/references
+        run: |
+          python scripts/experiments/groove-abc/build_experiment.py
+      - name: Independent MIDI, audio, meter and Dorian verification
+        run: |
+          python scripts/experiments/groove-abc/verify_experiment.py
+      - name: Publish auditable audio, MIDI, blind player and measurements
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: arrangement-abc-listening-pack
+          path: |
+            scripts/experiments/groove-abc/variant_*.mid
+            scripts/experiments/groove-abc/variant_*.mp3
+            scripts/experiments/groove-abc/blind_listen.html
+            scripts/experiments/groove-abc/experiment_results.json
+            scripts/experiments/groove-abc/source_reference_features.json
+            docs/ARRANGEMENT_EXPERIMENT_ABC_V1.md
+          retention-days: 14

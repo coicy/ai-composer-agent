@@ -3,7 +3,7 @@ on:
   push:
     branches: [main, feat/mcp-reference-guided-composition]
   pull_request:
-    branches: [main, feat/mcp-first-stdio-bridge, feat/mcp-midi-reference-lookup]
+    branches: [main, feat/mcp-first-stdio-bridge, feat/mcp-midi-reference-lookup, feat/mcp-reference-guided-composition]
 
 # Only the newest run for a PR (or main) should consume CI capacity.
 # This does not conceal real failures; completed failed checks remain visible.
