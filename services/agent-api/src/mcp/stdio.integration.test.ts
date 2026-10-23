@@ -394,19 +394,20 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   passed('real CC-licensed 44-file MIDI corpus search / grounded read-only detail / unknown mode rejected');
  });
  it('gives an external general-purpose LLM a licensed Shuffle brief, then rejects off-scale MIDI without writes',async()=>{
+  const guidedSession=await open();
   if(!process.env.AI_COMPOSER_MIDI_CATALOG_PATH){
    expect(toolError(await tool('music.prepare_composition_brief',{
-    sessionId:openedSession,trackId:'melody',startTick:0,endTick:1920,
+    sessionId:guidedSession,trackId:'melody',startTick:0,endTick:1920,
     tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle',
     instruction:'Continue a D Dorian melody with an offbeat shuffle'
    }))).toBe('reference_catalog_unavailable');
    passed('composition brief reports absent reference corpus');
    return;
   }
-  const input={sessionId:openedSession,trackId:'melody',baseRevision:7,
+  const input={sessionId:guidedSession,trackId:'melody',baseRevision:7,
    startTick:0,endTick:1920,tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle'};
   const brief=value(await tool('music.prepare_composition_brief',{
-   sessionId:openedSession,trackId:'melody',startTick:0,endTick:1920,
+   sessionId:guidedSession,trackId:'melody',startTick:0,endTick:1920,
    tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle',instruction:'Compose D Dorian, include the characteristic natural B, 2:1 offbeats',
    sourceStyle:'blues/shuffle',pitched:false
   }));
@@ -471,10 +472,11 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
    sourceStyle:'blues/shuffle',meter:'17/8'
   }))).toBe('invalid_meter');
   const again=value(await tool('music.inspect_notes',{
-   sessionId:openedSession,trackId:'melody',startTick:0,endTick:1920
+   sessionId:guidedSession,trackId:'melody',startTick:0,endTick:1920
   }));
   expect(again.notes).toEqual([sourceNote]);
-  expect(value(await tool('music.list_tracks',{sessionId:openedSession}))).toMatchObject({revision:7});
+  expect(value(await tool('music.list_tracks',{sessionId:guidedSession}))).toMatchObject({revision:7});
+  expect(value(await tool('music.close_snapshot',{sessionId:guidedSession}))).toEqual({closed:true});
   passed('Dorian + source-labeled Shuffle brief / scoped Music Core dry-run / no unapproved writes');
  });
  it('handles unknown methods, unknown tools and malformed JSON-RPC',async()=>{
