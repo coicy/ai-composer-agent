@@ -40,6 +40,18 @@ describe('reference-guided composition — deterministic and auditable, not AI g
   expect(triplet.grooveEvidence.status).toBe('matches_requested_eighth_offbeat_target');
   expect(triplet.diagnostics.some(e=>e.code==='shuffle_requires_phrase_evidence')).toBe(true);
  });
+ it('strict groove option rejects unmatched or under-observed eighth offbeats',()=>{
+  const wrong=checkCandidate(dorian,spec({groove:'straight',strictGroove:true}));
+  expect(wrong.passed).toBe(false);
+  expect(wrong.diagnostics.some(d=>d.code==='groove_timing_deviation'&&d.severity==='error')).toBe(true);
+  const good=checkCandidate(dorian,spec({strictGroove:true}));
+  expect(good.passed).toBe(true);
+  const one=checkCandidate([{pitch:62,startTick:0,durationTicks:320,velocity:90},
+   {pitch:65,startTick:320,durationTicks:160,velocity:80}],spec({strictGroove:true}));
+  expect(one.passed).toBe(false);
+  expect(one.diagnostics.some(d=>d.code==='groove_not_observable'&&d.severity==='error')).toBe(true);
+  expect(()=>spec({strictGroove:'true'})).toThrow('invalid_strict_groove');
+ });
  it('records missing rhythmic evidence rather than pretending Swing was validated',()=>{
   const quarters=[{pitch:62,startTick:0,durationTicks:480,velocity:80},
     {pitch:65,startTick:480,durationTicks:480,velocity:85}];
