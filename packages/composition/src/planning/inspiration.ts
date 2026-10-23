@@ -1,21 +1,21 @@
 /** Reproducible, musically contextual *ideas*, never an AI note-generation engine. */
-export type Axis='rhythm'|'motif'|'harmony'|'texture'|'form'|'expression';
-export type Level='subtle'|'balanced'|'adventurous';
+export type InspirationAxis='rhythm'|'motif'|'harmony'|'texture'|'form'|'expression';
+export type InspirationLevel='subtle'|'balanced'|'adventurous';
 export type Mode='ionian'|'aeolian'|'dorian'|'mixolydian'|'phrygian'|'lydian'|'locrian'|'major_pentatonic'|'minor_pentatonic';
 export type Groove='straight'|'swing'|'shuffle';
 export interface InspirationInput {
- readonly seed:number;readonly level:Level;readonly ppq:number;
+ readonly seed:number;readonly level:InspirationLevel;readonly ppq:number;
  readonly meter:string;readonly mode:Mode;readonly groove:Groove;
  readonly startTick:number;readonly endTick:number;
- readonly focus?:readonly Axis[];readonly editableOtherTracks?:number;
+ readonly focus?:readonly InspirationAxis[];readonly editableOtherTracks?:number;
 }
 export interface InspirationCard {
- readonly id:string;readonly axis:Axis;readonly title:string;readonly instruction:string;
+ readonly id:string;readonly axis:InspirationAxis;readonly title:string;readonly instruction:string;
  readonly intensity:'low'|'medium'|'high';
 }
 export interface InspirationPack {
  readonly algorithm:'musical-inspiration-v1';
- readonly seed:number;readonly level:Level;
+ readonly seed:number;readonly level:InspirationLevel;
  readonly target:{meter:string;mode:Mode;groove:Groove;scopeBars:number};
  readonly cards:readonly InspirationCard[];readonly briefLines:readonly string[];
  readonly warnings:readonly string[];
@@ -25,9 +25,9 @@ interface Card extends InspirationCard {
  readonly meterFamily?:'compound'|'triple';
  readonly otherTracks?:boolean;readonly density?:'sparse'|'dense';
 }
-const AXES:readonly Axis[]=['rhythm','motif','harmony','texture','form','expression'];
+const AXES:readonly InspirationAxis[]=['rhythm','motif','harmony','texture','form','expression'];
 const MODES:readonly string[]=['ionian','aeolian','dorian','mixolydian','phrygian','lydian','locrian','major_pentatonic','minor_pentatonic'];
-const LEVELS:Record<Level,number>={subtle:0,balanced:1,adventurous:2};
+const LEVELS:Record<InspirationLevel,number>={subtle:0,balanced:1,adventurous:2};
 /** Original directives; not copies of third-party creativity decks. */
 const LIBRARY:readonly Card[]=[
  {id:'r_breath',axis:'rhythm',title:'节奏留白',intensity:'low',density:'sparse',
@@ -80,7 +80,7 @@ function score(seed:number,key:string):number{
  n^=n>>>15;n=Math.imul(n,0x846ca68b)>>>0;
  return (n^(n>>>16))>>>0;
 }
-function inspect(input:InspirationInput):{bars:number;axes:readonly Axis[];family:string}{
+function inspect(input:InspirationInput):{bars:number;axes:readonly InspirationAxis[];family:string}{
  if(!u32(input.seed))throw Error('invalid_inspiration_seed');
  if(!Object.hasOwn(LEVELS,input.level))throw Error('invalid_inspiration_level');
  if(!Number.isSafeInteger(input.ppq)||input.ppq<24||input.ppq>9600)throw Error('invalid_inspiration_ppq');
@@ -99,7 +99,7 @@ function inspect(input:InspirationInput):{bars:number;axes:readonly Axis[];famil
   input.focus.length>AXES.length||input.focus.some(a=>typeof a!=='string'||!AXES.includes(a))||
   new Set(input.focus).size!==input.focus.length))throw Error('invalid_inspiration_focus');
  return {bars:(input.endTick-input.startTick)/barTicks,axes:input.focus??AXES,
-  family:denominator===8&&numerator!>=6&&numerator!%3===0?'compound':numerator===3&&denominator===4?'triple':'other'};
+  family:denominator===8&&numerator>=6&&numerator%3===0?'compound':numerator===3&&denominator===4?'triple':'other'};
 }
 export function drawMusicalInspiration(input:InspirationInput):InspirationPack{
  const {bars,axes,family}=inspect(input);
