@@ -3,6 +3,7 @@ import {readFileSync,realpathSync,statSync} from 'node:fs';
 import {dirname,resolve,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {env} from 'node:process';
+import {getSourceGrooveClaim} from './reference-claims.js';
 
 type JsonObject=Record<string,unknown>;
 type SourceRights={
@@ -194,6 +195,7 @@ function compact(ref:Reference){
  return {id:ref.sha256,title:ref.title,file:ref.file,
   sourceCollection:ref.facets.labels.source_collection,
   sourceStyle:ref.facets.labels.source_style_label,
+  sourceGrooveClaim:getSourceGrooveClaim(ref.facets.labels.source_style_label,ref.source_page),
   usage:ref.facets.labels.game_usage,
   meter:ref.facets.meter,
   tempo:ref.facets.tempo,
@@ -256,23 +258,27 @@ export function invokeReferenceTool(name:string,args:JsonObject):unknown{
   if(Object.keys(args).length!==0)throw Error('invalid_reference_filter');
   const meters:Record<string,number>={},licenses:Record<string,number>={};
   const sourceStyles=new Set<string>(),usages=new Set<string>();
-  let pitched=0,drumOnly=0,verifiedMode=0,verifiedGroove=0;
+  let pitched=0,drumOnly=0,verifiedMode=0,verifiedGroove=0,sourceDeclaredShuffle=0;
   for(const ref of catalog.items){
    for(const meter of ref.facets.meter.values)meters[meter]=(meters[meter]??0)+1;
    licenses[ref.license]=(licenses[ref.license]??0)+1;
    if(ref.facets.pitch_language.pitched_notes>0)pitched++;else drumOnly++;
    if(ref.facets.labels.verified_mode!==null)verifiedMode++;
    if(ref.facets.labels.verified_groove!==null)verifiedGroove++;
+   if(getSourceGrooveClaim(ref.facets.labels.source_style_label,ref.source_page)?.value==='shuffle')sourceDeclaredShuffle++;
    if(ref.facets.labels.source_style_label)sourceStyles.add(ref.facets.labels.source_style_label);
    if(ref.facets.labels.game_usage)usages.add(ref.facets.labels.game_usage);
   }
   return {totalReferences:catalog.total_files,meters,licenseCounts:licenses,
    pitchedReferences:pitched,drumOnlyReferences:drumOnly,expertVerifiedModeReferences:verifiedMode,
    expertVerifiedGrooveReferences:verifiedGroove,
+   sourceDeclaredShuffleReferences:sourceDeclaredShuffle,
+   sourceDeclaredSwingReferences:0,
    sourceStyleLabels:[...sourceStyles].sort(),gameUsageLabels:[...usages].sort(),
    absentPriorityMeters:['6/8','9/8','12/8','5/4','5/8','7/8'].filter(m=>(meters[m]??0)===0),
    limitations:['23 original drum patterns plus meter probes give 28 drum-only references in this catalog.',
     '6/8 examples may come from only one drummer; sample counts do not establish representativeness.',
+    'Source-declared Shuffle examples have NOT been independently reviewed; no source-declared Swing samples exist in the current set.',
     'Mode, swing, harmony and form remain unverified until independently annotated.',
     'These reference licenses apply to their MIDI files, not the application source code.']};
  }
