@@ -94,13 +94,13 @@ describe('MIDI catalog tool security and provenance',()=>{
   writeCatalog(raw);
   const x=await loadFresh();
   expect(()=>x.invokeReferenceTool('music.reference_coverage',{})).toThrow('reference_catalog_invalid');
-  const invalid=fixture();invalid.items[0].license='Proprietary';
+  const invalid=fixture();invalid.items[0]!.license='Proprietary';
   writeCatalog(invalid);
   const y=await loadFresh();
   expect(()=>y.invokeReferenceTool('music.reference_coverage',{})).toThrow('reference_catalog_invalid');
  });
  it('rejects manifest directory traversal or symlink escape',async()=>{
-  const raw=fixture();raw.items[0].file='../../secrets.mid';
+  const raw=fixture();raw.items[0]!.file='../../secrets.mid';
   writeCatalog(raw);
   const x=await loadFresh();
   expect(()=>x.invokeReferenceTool('music.reference_coverage',{})).toThrow('reference_catalog_invalid');
