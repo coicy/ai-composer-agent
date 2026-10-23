@@ -31,3 +31,11 @@ MCP 客户端不能自行生成可信 MusicOperation、Note ID 或批准令牌�
 运行时只从服务器操作员设置的本地目录装载参考库，不提供读取任意文件/URL 参数，不联网下载。载入时验证目录边界、文件哈希、许可字段，且不读取项目凭据。失败时显示 `reference_catalog_unavailable` 或 `reference_catalog_invalid`，不会虚构匹配。
 
 本接口仅实现公共参考资料检索，**不改变** D-005 通用 LLM 编曲、D-006 双接入或 D-007 MCP First 的裁决，也不能视为已打通 Web 工程会话桥接、候选预览或用户批准闭环。详见 `services/agent-api/src/mcp/README.md`。
+
+## 可复现音乐灵感抽卡（实验性 MCP 接口，非产品裁决）
+
+`music.draw_inspiration` 读取明确提供的快照会话和未锁定的目标轨道，以 uint32 `seed`、`level`（subtle/balanced/adventurous）以及用户声明的 `mode`、`meter`、`groove`、Tick 选区抽取不超过 4 张原创音乐灵感卡。`focus` 可以限定 rhythm、motif、harmony、texture、form、expression 分面。抽卡返回版本、种子、卡片 ID、音乐方向文本与安全边界，`approved:false`、`applied:false`。不接触项目修改命令。
+
+`music.prepare_composition_brief` 新增可选 `inspirationSeed`、`inspirationLevel`、`inspirationFocus`，**只有显式给出 seed 才开启灵感包**；省略时旧调用不变。灵感文本是软建议，不升级为 Music Core 的硬约束。每次随机使用的 uint32 seed 只保证相同算法版本和输入重复出现同一组卡，不保证远端通用 LLM 的音符可重现。
+
+抽卡过滤不满足小节长度、既定拍号/律动和其他未锁定轨道数目的灵感；禁止目标轨道被锁时抽卡。用户仍需调用生成候选、Music Core dry-run、人工预览/批准/撤销流程。完整实验设计见 [INSPIRATION_AND_NEXT_EXPERIMENT_PLAN.md](INSPIRATION_AND_NEXT_EXPERIMENT_PLAN.md)。这不属于新增专用音乐模型或独立 MIDI 生成器。
