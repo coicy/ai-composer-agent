@@ -96,10 +96,10 @@ function inspect(input:InspirationInput):{bars:number;axes:readonly InspirationA
  if(input.editableOtherTracks!==undefined&&(!Number.isSafeInteger(input.editableOtherTracks)||
   input.editableOtherTracks<0||input.editableOtherTracks>128))throw Error('invalid_inspiration_tracks');
  if(input.focus!==undefined&&(!Array.isArray(input.focus)||input.focus.length<1||
-  input.focus.length>AXES.length||input.focus.some(a=>typeof a!=='string'||!AXES.includes(a))||
+  input.focus.length>AXES.length||input.focus.some(a=>typeof a!=='string'||!AXES.includes(a as InspirationAxis))||
   new Set(input.focus).size!==input.focus.length))throw Error('invalid_inspiration_focus');
  return {bars:(input.endTick-input.startTick)/barTicks,axes:input.focus??AXES,
-  family:denominator===8&&numerator>=6&&numerator%3===0?'compound':numerator===3&&denominator===4?'triple':'other'};
+  family:denominator===8&&numerator!==undefined&&numerator>=6&&numerator%3===0?'compound':numerator===3&&denominator===4?'triple':'other'};
 }
 export function drawMusicalInspiration(input:InspirationInput):InspirationPack{
  const {bars,axes,family}=inspect(input);
