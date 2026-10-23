@@ -18,7 +18,7 @@ export type Mode=keyof typeof MODES;
 export type Groove='straight'|'swing'|'shuffle';
 export type MusicSpec={
  tonic:number;mode:Mode;meter:string;groove:Groove;ppq:number;
- startTick:number;endTick:number;allowChromatic:boolean;
+ startTick:number;endTick:number;allowChromatic:boolean;strictGroove:boolean;
 };
 export type CandidateNote={pitch:number;startTick:number;durationTicks:number;velocity:number};
 type Diagnostic={code:string;severity:'error'|'warning';noteIndex?:number;detail:string};
@@ -42,8 +42,9 @@ export function parseMusicSpec(args:Record<string,unknown>,ppq:number):MusicSpec
  if(!safeInteger(startTick,0,ppq*4*256)||!safeInteger(endTick,1,ppq*4*256)||
   endTick<=startTick||endTick-startTick>ppq*4*16)throw Error('invalid_scope');
  if(args.allowChromatic!==undefined&&typeof args.allowChromatic!=='boolean')throw Error('invalid_allow_chromatic');
+ if(args.strictGroove!==undefined&&typeof args.strictGroove!=='boolean')throw Error('invalid_strict_groove');
  return {tonic,mode:mode as Mode,meter,groove,ppq,startTick,endTick,
-  allowChromatic:args.allowChromatic===true};
+  allowChromatic:args.allowChromatic===true,strictGroove:args.strictGroove===true};
 }
 export function explainSpec(spec:MusicSpec){
  const pitchClasses=MODES[spec.mode].map(step=>(step+spec.tonic)%12);
@@ -59,7 +60,7 @@ export function explainSpec(spec:MusicSpec){
   // Groove positioning remains observable timing, not a guaranteed "feel" classifier.
   proposedOffbeatPositionWithinQuarterTicks:Math.round(spec.ppq*(spec.groove==='straight'?0.5:2/3)),
   requestedScope:{startTick:spec.startTick,endTick:spec.endTick},
-  allowChromatic:spec.allowChromatic,
+  allowChromatic:spec.allowChromatic,strictGroove:spec.strictGroove,
   caveat:'The pitch-class check does not establish a tonal center; swing and shuffle share a triplet-like offbeat target, but differ in accent, phrase and context.'
  };
 }
@@ -111,10 +112,15 @@ export function checkCandidate(notes:CandidateNote[],spec:MusicSpec){
   toleranceTicks:tolerance,
   note:'Timing check only. Swing/shuffle feel requires additional accent and phrase evidence; rests and sparse quarter-note passages cannot be classified.'
  };
- if(sampleCount===0)warnings.push({code:'groove_not_observable',severity:'warning',
-  detail:'No qualifying eighth-note offbeats; the requested groove cannot be verified from this clip.'});
- else if(matched.length!==sampleCount)warnings.push({code:'groove_timing_deviation',severity:'warning',
-  detail:'Some offbeats differ from the user-requested timing target; assess musical intent before changing them.'});
+ if(sampleCount===0||spec.strictGroove&&sampleCount<2){
+  const issue={code:'groove_not_observable',detail:'Not enough eighth-note offbeats to verify the requested timing target (strict groove requires at least two observations).'};
+  if(spec.strictGroove)errors.push({...issue,severity:'error'});
+  else warnings.push({...issue,severity:'warning'});
+ }else if(matched.length!==sampleCount){
+  const issue={code:'groove_timing_deviation',detail:'Some offbeats differ from the user-requested timing target; assess musical intent before changing them.'};
+  if(spec.strictGroove)errors.push({...issue,severity:'error'});
+  else warnings.push({...issue,severity:'warning'});
+ }
  if(spec.groove==='shuffle')warnings.push({code:'shuffle_requires_phrase_evidence',severity:'warning',
   detail:'Shuffle requires recurring long-short subdivision and accents; triplet offbeat timing alone is insufficient.'});
  return {passed:errors.length===0,diagnostics:[...errors,...warnings],
