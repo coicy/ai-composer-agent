@@ -406,7 +406,8 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   const input={sessionId:openedSession,trackId:'melody',baseRevision:7,
    startTick:0,endTick:1920,tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle'};
   const brief=value(await tool('music.prepare_composition_brief',{
-   ...input,instruction:'Compose D Dorian, include the characteristic natural B, 2:1 offbeats',
+   sessionId:openedSession,trackId:'melody',startTick:0,endTick:1920,
+   tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle',instruction:'Compose D Dorian, include the characteristic natural B, 2:1 offbeats',
    sourceStyle:'blues/shuffle',pitched:false
   }));
   expect(brief).toMatchObject({
