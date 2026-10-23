@@ -35,3 +35,5 @@ export {compareRegionCandidate} from './arrangement/compare-region.js';
 export type {RegionCandidateComparison} from './arrangement/compare-region.js';
 export {proposeRegionVariantBatch} from './arrangement/region-variants.js';
 export type {RegionVariantBatch,FailedRegionVariant} from './arrangement/region-variants.js';
+export {drawMusicalInspiration} from './planning/inspiration.js';
+export type {InspirationInput,InspirationPack,InspirationCard,InspirationLevel,InspirationAxis} from './planning/inspiration.js';
