@@ -40,6 +40,7 @@ function referenceSearch(raw:Json,meter:string){
  return invokeReferenceTool('music.search_references',query) as {
   matchCount:number;results:{id:string;title:string;meter:unknown;tempo:unknown;
    sourceStyle:string|null;usage:string|null;license:string;credit:string;
+   sourceGrooveClaim:{value:string;status:'source_declared';sourceEvidenceUrl:string}|null;
    rightsEvidenceUrl:string;sourceUrl:string;verifiedMode:string|null;
    verifiedGroove:string|null;}[]
  };
@@ -93,6 +94,7 @@ export function invokeGuidedTool(name:string,raw:Json,project:MusicProject){
    referenceMatchCount:data.matchCount,
    references:data.results.map(r=>({
     id:r.id,title:r.title,sourceStyle:r.sourceStyle,usage:r.usage,meter:r.meter,
+    sourceGrooveClaim:r.sourceGrooveClaim,
     tempo:r.tempo,license:r.license,credit:r.credit,
     rightsEvidenceUrl:r.rightsEvidenceUrl,sourceUrl:r.sourceUrl,
     modeProof:r.verifiedMode===null?'not_verified':'expert_reviewed',
