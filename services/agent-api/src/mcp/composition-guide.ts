@@ -7,11 +7,11 @@ import type {CandidateNote} from './composition-constraints.js';
 type Json=Record<string,unknown>;
 const allowedBriefKeys=new Set([
  'sessionId','trackId','startTick','endTick','tonic','mode','meter','groove',
- 'allowChromatic','usage','sourceStyle','pitched','instruction','referenceLimit'
+ 'allowChromatic','strictGroove','usage','sourceStyle','pitched','instruction','referenceLimit'
 ]);
 const allowedAssessKeys=new Set([
  'sessionId','trackId','baseRevision','startTick','endTick',
- 'tonic','mode','meter','groove','allowChromatic','notes'
+ 'tonic','mode','meter','groove','allowChromatic','strictGroove','notes'
 ]);
 function validateKeys(input:Json,allowed:Set<string>):void{
  if(Object.keys(input).some(x=>!allowed.has(x)))throw Error('unexpected_composition_field');
@@ -54,7 +54,7 @@ export const guidedTools=[
    startTick:{type:'integer'},endTick:{type:'integer'},tonic:{type:'integer',minimum:0,maximum:11},
    mode:{type:'string',enum:['ionian','aeolian','dorian','mixolydian','phrygian','lydian','locrian','major_pentatonic','minor_pentatonic']},
    meter:{type:'string'},groove:{type:'string',enum:['straight','swing','shuffle']},
-   allowChromatic:{type:'boolean'},usage:{type:'string',enum:['town','battle','dungeon','narrative']},
+   allowChromatic:{type:'boolean'},strictGroove:{type:'boolean'},usage:{type:'string',enum:['town','battle','dungeon','narrative']},
    sourceStyle:{type:'string'},pitched:{type:'boolean'},instruction:{type:'string'},
    referenceLimit:{type:'integer',minimum:1,maximum:5}
   },required:['sessionId','trackId','startTick','endTick','tonic','mode','meter','groove','instruction'],additionalProperties:false}},
@@ -64,7 +64,7 @@ export const guidedTools=[
    sessionId:{type:'string'},trackId:{type:'string'},baseRevision:{type:'integer'},
    startTick:{type:'integer'},endTick:{type:'integer'},tonic:{type:'integer',minimum:0,maximum:11},
    mode:{type:'string'},meter:{type:'string'},groove:{type:'string'},
-   allowChromatic:{type:'boolean'},
+   allowChromatic:{type:'boolean'},strictGroove:{type:'boolean'},
    notes:{type:'array',minItems:1,maxItems:64,items:{type:'object',properties:{
     pitch:{type:'integer'},startTick:{type:'integer'},durationTicks:{type:'integer'},velocity:{type:'integer'}
    },required:['pitch','startTick','durationTicks','velocity'],additionalProperties:false}}
@@ -110,6 +110,7 @@ export function invokeGuidedTool(name:string,raw:Json,project:MusicProject){
      'Compose NEW MIDI note candidates yourself; no model is hosted by this server.',
      'Treat user musical constraints as instructions, referenced MIDI as illustrative observations only.',
      'Use requested pitch classes and bounded integer ticks; do not copy complete melodies from reference tracks.',
+     'If strictGroove is enabled, include at least two eighth-note offbeats near the user-specified position; this is a timing check, not a style certificate.',
      'Call evaluate_composition_candidate with these constraints, then inspect warnings/errors.',
      'This is an unapproved preview; never claim the active browser project was modified.'
     ]
