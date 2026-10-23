@@ -2,6 +2,7 @@ import {createInterface} from 'node:readline';
 import {stdin,stdout} from 'node:process';
 import {randomUUID} from 'node:crypto';
 import {validateProject,applyChangeSet} from '@ai-composer/music-core';
+import {referenceTools,isReferenceTool,invokeReferenceTool} from './reference-catalog.js';
 
 import type {MusicProject} from '@ai-composer/music-core';
 
@@ -17,7 +18,8 @@ const tools=[
  {name:'music.inspect_notes',description:'Read bounded notes from an authorized snapshot track and tick range.',inputSchema:{type:'object',properties:{sessionId:{type:'string'},trackId:{type:'string'},startTick:{type:'integer'},endTick:{type:'integer'}},required:['sessionId','trackId','startTick','endTick'],additionalProperties:false}},
  {name:'music.propose_midi',description:'Create a deterministic, validated MIDI proposal for the selected snapshot region. Never commits. Does not use an internal LLM key.',inputSchema:{type:'object',properties:{sessionId:{type:'string'},trackId:{type:'string'},startTick:{type:'integer'},endTick:{type:'integer'},instruction:{type:'string'},mode:{type:'string',enum:['append','replace']}},required:['sessionId','trackId','startTick','endTick','instruction'],additionalProperties:false}},
  {name:'music.submit_candidate',description:'Validate external Agent proposed MIDI notes without committing. Requires an existing snapshot session.',inputSchema:{type:'object',properties:{sessionId:{type:'string'},trackId:{type:'string'},baseRevision:{type:'integer'},notes:{type:'array',maxItems:64,items:{type:'object',properties:{pitch:{type:'integer'},startTick:{type:'integer'},durationTicks:{type:'integer'},velocity:{type:'integer'}},required:['pitch','startTick','durationTicks','velocity'],additionalProperties:false}}},required:['sessionId','trackId','baseRevision','notes'],additionalProperties:false}},
- {name:'music.close_snapshot',description:'Revoke an MCP snapshot session.',inputSchema:{type:'object',properties:{sessionId:{type:'string'}},required:['sessionId'],additionalProperties:false}}
+ {name:'music.close_snapshot',description:'Revoke an MCP snapshot session.',inputSchema:{type:'object',properties:{sessionId:{type:'string'}},required:['sessionId'],additionalProperties:false}},
+ ...referenceTools
 ] as const;
 function record(value:unknown):Record<string,unknown>{if(!value||typeof value!=='object'||Array.isArray(value))throw Error('invalid_arguments');return value as Record<string,unknown>;}
 function string(v:unknown):string{if(typeof v!=='string'||!v||v.length>2048)throw Error('invalid_string');return v;}
@@ -25,6 +27,8 @@ function integer(v:unknown):number{if(!Number.isSafeInteger(v)||Number(v)<0)thro
 function session(args:Record<string,unknown>):Session{const id=string(args.sessionId);const found=sessions.get(id);if(!found||found.expires<Date.now()){sessions.delete(id);throw Error('session_not_found');}return found;}
 function content(value:unknown){return {content:[{type:'text',text:JSON.stringify(value)}]};}
 async function invoke(name:string,args:Record<string,unknown>){
+ // Public, locally installed reference data; never grants access to project snapshots or credentials.
+ if(isReferenceTool(name))return content(invokeReferenceTool(name,args));
  if(name==='music.open_snapshot'){
   if(!validateProject(args.project as MusicProject))throw Error('invalid_project');
   if(JSON.stringify(args.project).length>MAX_LINE)throw Error('project_too_large');
