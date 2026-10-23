@@ -468,7 +468,8 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
    ...input,trackId:'locked',notes
   }))).toBe('locked_track');
   expect(toolError(await tool('music.prepare_composition_brief',{
-   ...input,trackId:'melody',instruction:'test',
+   sessionId:guidedSession,trackId:'melody',startTick:0,endTick:1920,
+   tonic:2,mode:'dorian',groove:'shuffle',instruction:'test',
    sourceStyle:'blues/shuffle',meter:'17/8'
   }))).toBe('invalid_meter');
   const again=value(await tool('music.inspect_notes',{
