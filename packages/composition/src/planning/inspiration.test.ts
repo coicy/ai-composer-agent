@@ -79,7 +79,7 @@ describe('musical inspiration — reproducible optional ideas, not algorithmic c
   expect(()=>draw({mode:'made_up' as InspirationInput['mode']})).toThrow('invalid_inspiration_mode');
   expect(()=>draw({focus:[]})).toThrow('invalid_inspiration_focus');
   expect(()=>draw({focus:['rhythm','rhythm']})).toThrow('invalid_inspiration_focus');
-  expect(()=>draw({focus:['../secrets' as InspirationInput['focus'] extends readonly (infer T)[]?T:never]})).toThrow('invalid_inspiration_focus');
+  expect(()=>draw({focus:['../secrets' as unknown as 'rhythm']})).toThrow('invalid_inspiration_focus');
   expect(()=>draw({startTick:480,endTick:480})).toThrow('invalid_inspiration_scope');
  });
  it('is unaffected by global Math.random state',()=>{
