@@ -26,7 +26,7 @@ describe('reference-guided composition — deterministic and auditable, not AI g
   const wrong=[...dorian,{pitch:70,startTick:960,durationTicks:480,velocity:85}]; // Bb
   const failed=checkCandidate(wrong,spec());
   expect(failed.passed).toBe(false);
-  expect(failed.diagnostics.some(e=>e.code==='out_of_scale_pitch'&&e.noteIndex===4)).toBe(true);
+  expect(failed.diagnostics.some(e=>e.code==='out_of_scale_pitch'&&'noteIndex' in e&&e.noteIndex===4)).toBe(true);
   const chromatic=checkCandidate(wrong,spec({allowChromatic:true}));
   expect(chromatic.passed).toBe(true);
   expect(chromatic.diagnostics.some(e=>e.code==='out_of_scale_pitch'&&e.severity==='warning')).toBe(true);
