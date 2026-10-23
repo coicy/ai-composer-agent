@@ -3,6 +3,7 @@ import {stdin,stdout} from 'node:process';
 import {randomUUID} from 'node:crypto';
 import {validateProject,applyChangeSet} from '@ai-composer/music-core';
 import {referenceTools,isReferenceTool,invokeReferenceTool} from './reference-catalog.js';
+import {guidedTools,isGuidedTool,invokeGuidedTool} from './composition-guide.js';
 
 import type {MusicProject} from '@ai-composer/music-core';
 
@@ -19,7 +20,8 @@ const tools=[
  {name:'music.propose_midi',description:'Create a deterministic, validated MIDI proposal for the selected snapshot region. Never commits. Does not use an internal LLM key.',inputSchema:{type:'object',properties:{sessionId:{type:'string'},trackId:{type:'string'},startTick:{type:'integer'},endTick:{type:'integer'},instruction:{type:'string'},mode:{type:'string',enum:['append','replace']}},required:['sessionId','trackId','startTick','endTick','instruction'],additionalProperties:false}},
  {name:'music.submit_candidate',description:'Validate external Agent proposed MIDI notes without committing. Requires an existing snapshot session.',inputSchema:{type:'object',properties:{sessionId:{type:'string'},trackId:{type:'string'},baseRevision:{type:'integer'},notes:{type:'array',maxItems:64,items:{type:'object',properties:{pitch:{type:'integer'},startTick:{type:'integer'},durationTicks:{type:'integer'},velocity:{type:'integer'}},required:['pitch','startTick','durationTicks','velocity'],additionalProperties:false}}},required:['sessionId','trackId','baseRevision','notes'],additionalProperties:false}},
  {name:'music.close_snapshot',description:'Revoke an MCP snapshot session.',inputSchema:{type:'object',properties:{sessionId:{type:'string'}},required:['sessionId'],additionalProperties:false}},
- ...referenceTools
+ ...referenceTools,
+ ...guidedTools
 ] as const;
 function record(value:unknown):Record<string,unknown>{if(!value||typeof value!=='object'||Array.isArray(value))throw Error('invalid_arguments');return value as Record<string,unknown>;}
 function string(v:unknown):string{if(typeof v!=='string'||!v||v.length>2048)throw Error('invalid_string');return v;}
@@ -39,6 +41,7 @@ async function invoke(name:string,args:Record<string,unknown>){
  }
  if(name==='music.close_snapshot'){const id=string(args.sessionId);return content({closed:sessions.delete(id)});}
  const {project}=session(args);
+ if(isGuidedTool(name))return content(invokeGuidedTool(name,args,project));
  if(name==='music.list_tracks')return content({projectId:project.projectId,revision:project.revision,tracks:project.tracks.map(t=>({trackId:t.trackId,name:t.name,locked:t.locked,noteCount:t.notes.length}))});
  const trackId=string(args.trackId),track=project.tracks.find(t=>t.trackId===trackId);if(!track)throw Error('track_not_found');
  if(name==='music.submit_candidate'){
