@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, feat/mcp-reference-guided-composition]
   pull_request:
     branches: [main, feat/mcp-first-stdio-bridge, feat/mcp-midi-reference-lookup]
 
