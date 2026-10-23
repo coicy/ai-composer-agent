@@ -55,7 +55,7 @@ describe('musical inspiration — reproducible optional ideas, not algorithmic c
   expect(compound.some(p=>p.cards.some(c=>c.id==='r_compound'))).toBe(true);
   expect(compound.every(p=>p.cards.length===1)).toBe(true);
  });
- it('rejects optional card ideas that require more measures than the user's scope',()=>{
+ it('rejects cards requiring more measures than the requested scope',()=>{
   const short=Array.from({length:50},(_,seed)=>draw({
    seed,level:'adventurous',startTick:0,endTick:1920
   }));
