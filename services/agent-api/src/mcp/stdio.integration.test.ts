@@ -149,7 +149,7 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
    'music.open_snapshot','music.list_tracks','music.inspect_notes',
    'music.propose_midi','music.submit_candidate','music.close_snapshot',
    'music.search_references','music.get_reference','music.reference_coverage',
-   'music.prepare_composition_brief','music.evaluate_composition_candidate'
+   'music.prepare_composition_brief','music.evaluate_composition_candidate','music.draw_inspiration'
   ]);
   expect(declared.every(t=>t.inputSchema.type==='object')).toBe(true);
   passed('initialize / initialized / ping / tools/list');
@@ -488,6 +488,65 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   expect(value(await tool('music.list_tracks',{sessionId:guidedSession}))).toMatchObject({revision:7});
   expect(value(await tool('music.close_snapshot',{sessionId:guidedSession}))).toEqual({closed:true});
   passed('Dorian + source-labeled Shuffle brief / scoped Music Core dry-run / no unapproved writes');
+ });
+ it('draws reproducible, opt-in musical inspiration with no project writes',async()=>{
+  const sessionId=await open();
+  const input={
+   sessionId,trackId:'melody',seed:19501,level:'balanced',
+   tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle',
+   startTick:0,endTick:7680
+  };
+  const one=value(await tool('music.draw_inspiration',input));
+  const two=value(await tool('music.draw_inspiration',input));
+  expect(one).toEqual(two);
+  expect(one).toMatchObject({
+   projectId:'stdio-e2e',baseRevision:7,trackId:'melody',approved:false,applied:false,
+   inspiration:{algorithm:'musical-inspiration-v1',seed:19501,level:'balanced',
+    target:{meter:'4/4',mode:'dorian',groove:'shuffle',scopeBars:4}}
+  });
+  const cards=(one.inspiration as {cards:{id:string;axis:string;intensity:string}[]}).cards;
+  expect(cards).toHaveLength(3);
+  expect(new Set(cards.map(c=>c.axis)).size).toBe(3);
+  expect(cards.some(c=>['t_reply','t_subtract'].includes(c.id))).toBe(false);
+  const ideas=new Set<string>();
+  for(let seed=0;seed<12;seed++){
+   const next=value(await tool('music.draw_inspiration',{...input,seed}));
+   ideas.add((next.inspiration as {cards:{id:string}[]}).cards.map(c=>c.id).join(','));
+  }
+  expect(ideas.size).toBeGreaterThan(5);
+  const narrow=value(await tool('music.draw_inspiration',{...input,seed:7,level:'subtle',focus:['rhythm']}));
+  expect((narrow.inspiration as {cards:unknown[]}).cards).toHaveLength(1);
+  expect(toolError(await tool('music.draw_inspiration',{...input,seed:-1}))).toBe('invalid_inspiration_seed');
+  expect(toolError(await tool('music.draw_inspiration',{...input,seed:4294967296}))).toBe('invalid_inspiration_seed');
+  expect(toolError(await tool('music.draw_inspiration',{...input,focus:['rhythm','rhythm']}))).toBe('invalid_inspiration_focus');
+  expect(toolError(await tool('music.draw_inspiration',{...input,trackId:'locked'}))).toBe('locked_track');
+  expect(toolError(await tool('music.draw_inspiration',{...input,unexpectedField:'secret'}))).toBe('unexpected_composition_field');
+  if(process.env.AI_COMPOSER_MIDI_CATALOG_PATH){
+   const briefArgs={
+    sessionId,trackId:'melody',startTick:0,endTick:7680,
+    tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle',
+    sourceStyle:'blues/shuffle',pitched:false,
+    instruction:'Compose a coherent D Dorian phrase with optional inspiration',
+    inspirationSeed:19501,inspirationLevel:'balanced'
+   };
+   const brief=value(await tool('music.prepare_composition_brief',briefArgs));
+   expect(brief.inspiration).toEqual(one.inspiration);
+   expect(brief.referenceMatchCount).toBe(2);
+   const noSeed=value(await tool('music.prepare_composition_brief',{
+    ...briefArgs,inspirationSeed:undefined,inspirationLevel:undefined
+   }));
+   expect(noSeed.inspiration).toBeUndefined();
+   expect(toolError(await tool('music.prepare_composition_brief',{
+    ...briefArgs,inspirationSeed:undefined
+   }))).toBe('inspiration_seed_required');
+  }
+  expect(value(await tool('music.list_tracks',{sessionId}))).toMatchObject({revision:7});
+  expect(value(await tool('music.inspect_notes',{
+   sessionId,trackId:'melody',startTick:0,endTick:960
+  })).notes).toEqual([sourceNote]);
+  expect(value(await tool('music.close_snapshot',{sessionId}))).toEqual({closed:true});
+  expect(toolError(await tool('music.draw_inspiration',input))).toBe('session_not_found');
+  passed('seeded musical inspiration / rerolls / optional brief / lock and revision unchanged');
  });
  it('handles unknown methods, unknown tools and malformed JSON-RPC',async()=>{
   expect((await request('method/does_not_exist')).error).toMatchObject({code:-32601,message:'Method not found'});
