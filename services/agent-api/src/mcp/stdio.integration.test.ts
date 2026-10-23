@@ -149,7 +149,7 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
    'music.open_snapshot','music.list_tracks','music.inspect_notes',
    'music.propose_midi','music.submit_candidate','music.close_snapshot',
    'music.search_references','music.get_reference','music.reference_coverage',
-   'music.prepare_composition_brief','music.evaluate_composition_candidate','music.draw_inspiration'
+   'music.draw_inspiration','music.prepare_composition_brief','music.evaluate_composition_candidate'
   ]);
   expect(declared.every(t=>t.inputSchema.type==='object')).toBe(true);
   passed('initialize / initialized / ping / tools/list');
