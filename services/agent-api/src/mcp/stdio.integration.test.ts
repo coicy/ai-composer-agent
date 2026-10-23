@@ -405,10 +405,10 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
    return;
   }
   const input={sessionId:guidedSession,trackId:'melody',baseRevision:7,
-   startTick:0,endTick:1920,tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle'};
+   startTick:0,endTick:1920,tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle',strictGroove:true};
   const brief=value(await tool('music.prepare_composition_brief',{
    sessionId:guidedSession,trackId:'melody',startTick:0,endTick:1920,
-   tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle',instruction:'Compose D Dorian, include the characteristic natural B, 2:1 offbeats',
+   tonic:2,mode:'dorian',meter:'4/4',groove:'shuffle',strictGroove:true,instruction:'Compose D Dorian, include the characteristic natural B, 2:1 offbeats',
    sourceStyle:'blues/shuffle',pitched:false
   }));
   expect(brief).toMatchObject({
@@ -419,13 +419,17 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
   });
   const references=brief.references as {
    license:string;credit:string;sourceStyle:string;
-   modeProof:string;grooveProof:string;rightsEvidenceUrl:string
+   modeProof:string;grooveProof:string;rightsEvidenceUrl:string;
+   sourceGrooveClaim:{value:string;status:string;independentlyReviewed:boolean}|null
   }[];
   expect(references).toHaveLength(2);
   for(const reference of references){
    expect(reference).toMatchObject({license:'CC BY 4.0',sourceStyle:'blues/shuffle',
     modeProof:'not_verified',grooveProof:'not_verified'});
    expect(reference.credit.includes('Google LLC')).toBe(true);
+   expect(reference.sourceGrooveClaim).toMatchObject({
+    value:'shuffle',status:'source_declared',independentlyReviewed:false
+   });
    expect(reference.rightsEvidenceUrl.startsWith('https://')).toBe(true);
   }
   const notes=[
@@ -459,8 +463,13 @@ describe('real MCP stdio JSON-RPC subprocess',()=>{
    ...input,notes:[{pitch:62,startTick:0,durationTicks:480,velocity:85}]
   }));
   expect(sparse).toMatchObject({
-   passed:true,grooveEvidence:{status:'insufficient_evidence'}
+   passed:false,grooveEvidence:{status:'insufficient_evidence'}
   });
+  expect((sparse.diagnostics as {code:string}[]).some(d=>d.code==='groove_not_observable')).toBe(true);
+  const loose=value(await tool('music.evaluate_composition_candidate',{
+   ...input,strictGroove:false,notes:[{pitch:62,startTick:0,durationTicks:480,velocity:85}]
+  }));
+  expect(loose).toMatchObject({passed:true,grooveEvidence:{status:'insufficient_evidence'}});
   expect(toolError(await tool('music.evaluate_composition_candidate',{
    ...input,baseRevision:8,notes
   }))).toBe('stale_revision');
