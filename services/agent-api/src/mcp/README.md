@@ -49,3 +49,12 @@ All original MIDI licensing remains independent of the application's own code li
 This is a dependent integration PR, based on MCP PR #18. CI pins the immutable reference corpus commit `a06a9ed7` from PR #19; it tests the true stdio subprocess against the 44 copyrighted/licensed MIDI references, and publishes literal request/response logs. Synthetic unit tests cover modified MIDI bytes, invalid rights, path traversal, missing corpus, unsupported filters and cases where scale or Swing would be wrongly inferred. No specialized music model or private keys are used.
 
 **Not implemented:** LLM music quality evaluation, live browser-to-MCP project bridge, preview approval, replay of reference audio, or automated verification of the full musical style.
+
+## Experimental opt-in seeded musical inspiration (stacked PR)
+
+- `music.draw_inspiration`: requires an authorized snapshot session, unlocked `trackId`, explicit `seed` (uint32), `tonic`, `mode`, `meter`, `groove`, and a bounded tick scope. Optional `level`: `subtle` (2 low-intensity cards), `balanced` (3 up to medium), `adventurous` (4 up to high), and `focus` axes (`rhythm`, `motif`, `harmony`, `texture`, `form`, `expression`). The tool returns reproducible *original musical directions* only, with version and seed, never MIDI notes or approval.
+- `music.prepare_composition_brief` may optionally take `inspirationSeed`, `inspirationLevel` and `inspirationFocus`; the returned brief then contains an `inspiration` plan. Without a seed this behavior is completely disabled; an intensity/focus without seed is rejected. The actual external general-purpose LLM still authors the MIDI and must submit it through Music Core dry-run / human approval in later phases.
+- Track locks and project snapshot revisions are still enforced. Cards that require another editable track are filtered if none exists. Meter and phrase length filter inappropriate cards. Re-rolling changes only the caller-supplied seed; neither the model nor local PRNG is guaranteed to create better music.
+- Source license attribution and reference provenance remain in the reference tool; no third-party creativity prompts/cards or MIDI notes have been copied. The seeded card algorithm is deterministic, but a remote LLM output **is not** guaranteed deterministic by the same seed.
+
+Details: `docs/INSPIRATION_AND_NEXT_EXPERIMENT_PLAN.md`.

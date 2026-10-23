@@ -1,4 +1,6 @@
 import {applyChangeSet} from '@ai-composer/music-core';
+import {drawMusicalInspiration} from '@ai-composer/composition';
+import type {InspirationAxis,InspirationLevel} from '@ai-composer/composition';
 import type {MusicProject} from '@ai-composer/music-core';
 import {invokeReferenceTool} from './reference-catalog.js';
 import {checkCandidate,explainSpec,parseMusicSpec} from './composition-constraints.js';
@@ -7,7 +9,12 @@ import type {CandidateNote} from './composition-constraints.js';
 type Json=Record<string,unknown>;
 const allowedBriefKeys=new Set([
  'sessionId','trackId','startTick','endTick','tonic','mode','meter','groove',
- 'allowChromatic','strictGroove','usage','sourceStyle','pitched','instruction','referenceLimit'
+ 'allowChromatic','strictGroove','usage','sourceStyle','pitched','instruction','referenceLimit',
+ 'inspirationSeed','inspirationLevel','inspirationFocus'
+]);
+const allowedDrawKeys=new Set([
+ 'sessionId','trackId','startTick','endTick','tonic','mode','meter','groove',
+ 'seed','level','focus'
 ]);
 const allowedAssessKeys=new Set([
  'sessionId','trackId','baseRevision','startTick','endTick',
@@ -46,7 +53,34 @@ function referenceSearch(raw:Json,meter:string){
  };
 }
 
+function inspirationFor(raw:Json,project:MusicProject,trackId:string,prefix:'draw'|'brief'){
+ const seed=raw[prefix==='draw'?'seed':'inspirationSeed'];
+ const level=raw[prefix==='draw'?'level':'inspirationLevel']??'balanced';
+ const focus=raw[prefix==='draw'?'focus':'inspirationFocus'];
+ if(seed===undefined)throw Error('inspiration_seed_required');
+ const spec=parseMusicSpec(raw,project.ppq);
+ return drawMusicalInspiration({
+  seed:seed as number,level:level as InspirationLevel,ppq:project.ppq,
+  meter:spec.meter,mode:spec.mode,groove:spec.groove,
+  startTick:spec.startTick,endTick:spec.endTick,
+  ...(focus!==undefined?{focus:focus as InspirationAxis[]}:{}),
+  editableOtherTracks:project.tracks.filter(t=>t.trackId!==trackId&&!t.locked).length
+ });
+}
+
 export const guidedTools=[
+ {name:'music.draw_inspiration',
+  description:'Draw versioned, seed-reproducible original musical idea cards for an authorized track. Read-only; LLM still composes notes. Never breaks hard MIDI constraints.',
+  inputSchema:{type:'object',properties:{
+   sessionId:{type:'string'},trackId:{type:'string'},
+   seed:{type:'integer',minimum:0,maximum:4294967295},
+   level:{type:'string',enum:['subtle','balanced','adventurous']},
+   focus:{type:'array',minItems:1,maxItems:6,uniqueItems:true,items:{type:'string',
+    enum:['rhythm','motif','harmony','texture','form','expression']}},
+   startTick:{type:'integer'},endTick:{type:'integer'},tonic:{type:'integer',minimum:0,maximum:11},
+   mode:{type:'string'},meter:{type:'string'},groove:{type:'string'}
+  },required:['sessionId','trackId','seed','startTick','endTick','tonic','mode','meter','groove'],
+  additionalProperties:false}},
  {name:'music.prepare_composition_brief',
   description:'Read a bounded MusicProject snapshot and locally licensed MIDI references, then assemble hard musical constraints, evidence-labeled references and a JSON candidate contract for an EXTERNAL general-purpose LLM. Never generates music or changes the project.',
   inputSchema:{type:'object',properties:{
@@ -56,7 +90,11 @@ export const guidedTools=[
    meter:{type:'string'},groove:{type:'string',enum:['straight','swing','shuffle']},
    allowChromatic:{type:'boolean'},strictGroove:{type:'boolean'},usage:{type:'string',enum:['town','battle','dungeon','narrative']},
    sourceStyle:{type:'string'},pitched:{type:'boolean'},instruction:{type:'string'},
-   referenceLimit:{type:'integer',minimum:1,maximum:5}
+   referenceLimit:{type:'integer',minimum:1,maximum:5},
+   inspirationSeed:{type:'integer',minimum:0,maximum:4294967295},
+   inspirationLevel:{type:'string',enum:['subtle','balanced','adventurous']},
+   inspirationFocus:{type:'array',minItems:1,maxItems:6,uniqueItems:true,items:{type:'string',
+    enum:['rhythm','motif','harmony','texture','form','expression']}}
   },required:['sessionId','trackId','startTick','endTick','tonic','mode','meter','groove','instruction'],additionalProperties:false}},
  {name:'music.evaluate_composition_candidate',
   description:'Deterministically check external MIDI notes against user-stated tonic/mode, track scope, MIDI bounds and offbeat timing (no aesthetic claims), then dry-run valid notes via Music Core. Never applies them.',
@@ -74,6 +112,19 @@ export const guidedTools=[
 export function isGuidedTool(name:string):boolean{return guidedTools.some(tool=>tool.name===name);}
 
 export function invokeGuidedTool(name:string,raw:Json,project:MusicProject){
+ if(name==='music.draw_inspiration'){
+  validateKeys(raw,allowedDrawKeys);
+  const trackId=boundedString(raw.trackId,'track');
+  const track=project.tracks.find(t=>t.trackId===trackId);
+  if(!track)throw Error('track_not_found');
+  if(track.locked)throw Error('locked_track');
+  return {
+   projectId:project.projectId,baseRevision:project.revision,trackId,
+   approved:false,applied:false,
+   inspiration:inspirationFor(raw,project,trackId,'draw'),
+   warning:'Idea cards only, not MIDI generation and not user approval. No MusicProject changes.'
+  };
+ }
  if(name==='music.prepare_composition_brief'){
   validateKeys(raw,allowedBriefKeys);
   const trackId=boundedString(raw.trackId,'track');
@@ -81,6 +132,8 @@ export function invokeGuidedTool(name:string,raw:Json,project:MusicProject){
   if(!track)throw Error('track_not_found');
   if(track.locked)throw Error('locked_track');
   const spec=parseMusicSpec(raw,project.ppq);
+  if(raw.inspirationSeed===undefined&&(raw.inspirationLevel!==undefined||raw.inspirationFocus!==undefined))
+   throw Error('inspiration_seed_required');
   const instruction=boundedString(raw.instruction,'instruction');
   const data=referenceSearch(raw,spec.meter);
   const existingNotes=track.notes.filter(n=>n.startTick<spec.endTick&&
@@ -90,6 +143,9 @@ export function invokeGuidedTool(name:string,raw:Json,project:MusicProject){
    taskType:'external_llm_midi_candidate_brief',
    userInstruction:instruction,
    constraints:explainSpec(spec),
+   ...(raw.inspirationSeed!==undefined?{
+    inspiration:inspirationFor(raw,project,trackId,'brief')
+   }:{}),
    existingNotes,
    referenceMatchCount:data.matchCount,
    references:data.results.map(r=>({

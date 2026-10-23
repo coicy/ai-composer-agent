@@ -101,3 +101,7 @@ src/
 ## Failure-tolerant scoped variant generation
 - `proposeRegionVariantBatch` is a distinct opt-in workflow: shared illegal edits, locks, plans, bad seeds and cancellation must reject the entire batch; individual Seed-specific malformed/invalid generations may be reported separately without discarding other valid ChangeSets.
 - Publish only independently validated proposals; report sanitized/allowlisted error codes, never model responses or secrets. Do not relax hard musical constraints or treat zero valid candidates as an approval success. Preserve strict `proposeRegionVariants` API compatibility.
+
+## Seeded musical inspiration (opt-in soft planning)
+
+`src/planning/inspiration.ts` may produce *only* original, reproducible optional idea cards. It is not a MIDI generator, ChangeSet executor, aesthetic scorer or AI provider. Require a caller-supplied uint32 seed, preserve `musical-inspiration-v1` algorithm identity, filter cards for user meter/groove, phrase duration and other unlocked track count, and avoid incompatible density instructions. No global `Math.random`, clock, model API or reference song copying. Do not convert selected ideas into enforceable musical hard rules without an explicit user choice; actual MIDI always comes from the general-purpose LLM and passes the existing approval workflow. See `docs/INSPIRATION_AND_NEXT_EXPERIMENT_PLAN.md`.
