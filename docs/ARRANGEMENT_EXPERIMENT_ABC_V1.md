@@ -70,11 +70,11 @@
 ```bash
 python verify_experiment.py
 # 若有 Python mido + numpy、系统 FluidSynth 与 FFmpeg、合法的 TimGM6mb SoundFont
-python build_experiment.py
+AI_COMPOSER_REFERENCE_SOURCE=/absolute/path/to/pr19-checkout/references python build_experiment.py
 python verify_experiment.py
 ```
 
-`build_experiment.py` 默认从已有的 `/mnt/data/ai_composer_reference_pack_v2_44_midis.zip` 提取两个官方来源样本以验证 SHA-256；在其他机器运行时需修改源 ZIP 路径或提供同一份 44 文件的可信 ZIP。采用的 MIDI 文件未复制进交付包，以免重复分发 CC BY 4.0 数据。代码重运行也可能因系统音源、浮点版本或合成参数与此处产生不同的 MP3 位级哈希。
+`build_experiment.py` 支持通过 `AI_COMPOSER_REFERENCE_SOURCE=/path/to/references` 读取 GitHub PR #19 的持久化参考目录，也可以指向前一轮提供的 44 文件 ZIP；它会在使用两个来源样本前核对各自的 SHA-256。采用的 MIDI 文件未复制进交付包，以免重复分发 CC BY 4.0 数据。代码重运行也可能因系统音源、浮点版本或合成参数与此处产生不同的 MP3 位级哈希。
 
 ## 许可与权属边界
 
