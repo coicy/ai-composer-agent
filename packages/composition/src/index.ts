@@ -50,3 +50,6 @@ export type {SignatureAudit} from './evaluation/signature-audit.js';
 
 export {prepareDrumContext,checkDrumEvidence,proposeDrumCandidate} from './arrangement/drum-candidate.js';
 export type {DrumRequest,DrumContext,DrumProvider,DrumEvidence,DrumCandidate} from './arrangement/drum-candidate.js';
+
+export {proposeDrumWithRetry} from './arrangement/drum-retry.js';
+export type {DrumRetryResult} from './arrangement/drum-retry.js';
