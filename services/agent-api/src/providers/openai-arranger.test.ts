@@ -30,6 +30,24 @@ describe('OpenAI arrangement API adapter',()=>{
   expect(await provider.generate(context)).toEqual(raw);
   expect(request).toHaveBeenCalledOnce();
  });
+ it('sends automatically prioritized electronic techniques and meaningful seeded variation to the general LLM',async()=>{
+  const {recommendElectronicTechniques}=await import('@ai-composer/composition');
+  const plan=recommendElectronicTechniques({style:'house',seed:19501});
+  const request=vi.fn(async(_url:string|URL|Request,init?:RequestInit)=>{
+   const body=JSON.parse(String(init?.body));
+   const input=JSON.parse(body.input);
+   expect(input.electronicTechniquePlan).toEqual(plan);
+   expect(input.electronicTechniquePlan.choices.some((c:{id:string})=>c.id==='four_floor')).toBe(true);
+   expect(input.electronicTechniquePlan.choices.some((c:{id:string})=>c.id==='offbeat_bass')).toBe(true);
+   expect(body.instructions).toContain('ELECTRONIC TECHNIQUES');
+   expect(body.instructions).toContain('does NOT include a dedicated drums role');
+   expect(JSON.stringify(input)).not.toContain('locked-source');
+   return new Response(JSON.stringify(response),{status:200});
+  });
+  const provider=createOpenAIArranger({apiKey:'fake-key',model:'test-model',fetcher:request as typeof fetch});
+  expect(await provider.generate({...context,techniquePlan:plan})).toEqual(raw);
+  expect(request).toHaveBeenCalledOnce();
+ });
  it('passes protected neighbor notes without note IDs or writable track metadata',async()=>{
   const responseBody={status:'completed',output:[{type:'message',content:[{type:'output_text',
    text:JSON.stringify({role:'harmony',notes:[note]})}]}]};
