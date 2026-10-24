@@ -54,7 +54,7 @@ describe('OpenAI arrangement API adapter',()=>{
    const input=JSON.parse(body.input);
    expect(input.compositionSection).toMatchObject({kind:'return',motifId:'A',energy:78});
    expect(body.instructions).toContain('STRUCTURE:');
-   expect(body.instructions).toContain('retain');
+   expect(body.instructions).toContain('coherent transition');
    return new Response(JSON.stringify(response),{status:200});
   });
   const provider=createOpenAIArranger({apiKey:'fake-key',model:'test-model',fetcher:fetcher as typeof fetch});
