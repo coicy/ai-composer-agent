@@ -42,7 +42,7 @@ function validateParams(input:BlueprintRequest){
  if(!safeInt(input.ppq)||input.ppq<24||input.ppq>9600)throw Error('invalid_blueprint_ppq');
  const {numerator,denominator}=input.meter??{};
  if(!safeInt(numerator)||numerator<1||numerator>32||
-  ![1,2,4,8,16,32].includes(denominator)||!safeInt(input.ppq*numerator*4/denominator))
+  !safeInt(denominator)||![1,2,4,8,16,32].includes(denominator)||!safeInt(input.ppq*numerator*4/denominator))
   throw Error('invalid_blueprint_meter');
  if(!safeInt(input.songStartTick??0)||(input.songStartTick??0)<0)throw Error('invalid_blueprint_scope');
  if(!VALID_BARS.has(input.totalBars??16))throw Error('invalid_blueprint_bars');
