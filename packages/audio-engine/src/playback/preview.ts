@@ -2,6 +2,8 @@ import type {MidiNote,MusicProject} from '@ai-composer/music-core';
 import {resolveTempoBpm,validateProject} from '@ai-composer/music-core';
 import {createProductionPlan,validateProductionPlan} from '../planning/production.js';
 import type {PresetId,TrackSound,ProductionPlan} from '../planning/production.js';
+import {scheduleAutomation,validatePlaybackAutomation} from './automation.js';
+import type {PlaybackAutomation} from './automation.js';
 
 export interface PlaybackHandle {stop():void;}
 const clamp=(v:number,min:number,max:number)=>Math.min(max,Math.max(min,v));
@@ -74,12 +76,13 @@ function scheduleSynth(
  * All nodes are disposed on stop. No remote samples, external fonts or music models.
  */
 export async function playProject(
- project:MusicProject,bpm=resolveTempoBpm(project),production?:ProductionPlan
+ project:MusicProject,bpm=resolveTempoBpm(project),production?:ProductionPlan,automation?:PlaybackAutomation
 ):Promise<PlaybackHandle>{
  if(!validateProject(project))throw new Error('invalid_project');
  if(!Number.isFinite(bpm)||bpm<20||bpm>300)throw new Error('invalid_bpm');
  const plan=production??createProductionPlan(project);
  validateProductionPlan(project,plan);
+ if(automation)validatePlaybackAutomation(project,automation);
  const ctx=new AudioContext();
  const sources:AudioScheduledSourceNode[]=[];
  try{
@@ -88,18 +91,24 @@ export async function playProject(
   const tickSeconds=60/(bpm*project.ppq),start=ctx.currentTime+.05;
   const sounds=new Map(plan.tracks.map(p=>[p.trackId,p]));
   let noise:AudioBuffer|undefined;
+  const automationNodes=new Map<string,{gain:AudioParam;filter:AudioParam}>();
   for(const track of project.tracks){
    const sound=sounds.get(track.trackId);
    if(!sound)throw Error('invalid_production_plan');
    if(sound.presetId==='drum_machine')noise??=noiseBuffer(ctx);
+   const trackGain=ctx.createGain(),trackFilter=ctx.createBiquadFilter();
+   trackGain.gain.value=1;trackFilter.type='lowpass';trackFilter.frequency.value=16000;
+   trackFilter.connect(trackGain);trackGain.connect(master);
+   automationNodes.set(track.trackId,{gain:trackGain.gain,filter:trackFilter.frequency});
    for(const note of track.notes){
     const begin=start+note.startTick*tickSeconds;
     const end=begin+note.durationTicks*tickSeconds;
     if(sound.presetId==='drum_machine')
-     scheduleDrum(ctx,noise!,note,begin,master,sources,sound);
-    else scheduleSynth(ctx,note,sound.presetId,sound,begin,end,master,sources);
+     scheduleDrum(ctx,noise!,note,begin,trackFilter,sources,sound);
+    else scheduleSynth(ctx,note,sound.presetId,sound,begin,end,trackFilter,sources,sound);
    }
   }
+  if(automation)scheduleAutomation(automation,project,start,tickSeconds,automationNodes);
  }catch(error){
   for(const source of sources){try{source.stop();}catch{/* already stopped */}}
   void ctx.close();
