@@ -6,6 +6,9 @@ export function createRemoteArranger(project:ArrangementRequest['project']):Arra
   try{response=await fetch('/api/arrange',{
    method:'POST',headers:{'content-type':'application/json'},signal,
    body:JSON.stringify({project,sourceTrackId:context.sourceTrackId,startTick:context.startTick,endTick:context.endTick,instruction:context.instruction,plan:context.plan,seed:context.seed,
+    ...(context.techniqueRequest?{electronicStyle:context.techniqueRequest.style,
+     disabledTechniques:context.techniqueRequest.disabled,
+     forcedTechniques:context.techniqueRequest.forced}:{}),
     ...(context.editing?{editing:{targetTrackId:context.editing.targetTrackId,targetRole:context.editing.targetRole,
      ...(context.editing.editConstraint?{editConstraint:context.editing.editConstraint}:{}),
      ...(context.editing.protectedPrefixCount!==undefined?{protectedPrefixCount:context.editing.protectedPrefixCount}:{}),
