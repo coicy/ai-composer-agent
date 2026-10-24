@@ -35,3 +35,6 @@ export {compareRegionCandidate} from './arrangement/compare-region.js';
 export type {RegionCandidateComparison} from './arrangement/compare-region.js';
 export {proposeRegionVariantBatch} from './arrangement/region-variants.js';
 export type {RegionVariantBatch,FailedRegionVariant} from './arrangement/region-variants.js';
+
+export {listElectronicTechniques,recommendElectronicTechniques,proposeElectronicTechniqueVariations} from './planning/electronic-techniques.js';
+export type {ElectronicStyle,TechniqueId,TechniqueSlot,TechniquePlan,TechniqueRequest,TechniqueChoice,VariationGesture} from './planning/electronic-techniques.js';
