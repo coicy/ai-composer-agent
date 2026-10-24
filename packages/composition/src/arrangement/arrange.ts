@@ -3,6 +3,8 @@ import {analyzeTonality,suggestChords} from '../analysis/tonality.js';
 import type {TonalProfile,ChordSuggestion} from '../analysis/tonality.js';
 import {evaluateArrangement} from '../evaluation/arrangement.js';
 import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js';
+import {recommendElectronicTechniques} from '../planning/electronic-techniques.js';
+import type {ElectronicStyle,TechniqueId,TechniquePlan} from '../planning/electronic-techniques.js';
 import type {HarmonyPlan,PlanFinding} from '../planning/harmony-plan.js';
 import type {ArrangementAssessment} from '../evaluation/arrangement.js';
 import {createArrangementEditingContext} from './editing-context.js';
@@ -19,6 +21,10 @@ export interface ArrangementRequest {
  readonly instruction:string;
  readonly plan?:HarmonyPlan;
  readonly seed?:number;
+ /** Explicit electronic style enables strong, editable technique defaults. */
+ readonly electronicStyle?:ElectronicStyle;
+ readonly disabledTechniques?:readonly TechniqueId[];
+ readonly forcedTechniques?:readonly TechniqueId[];
  readonly editing?:ArrangementEditingIntent;
 }
 export interface ArrangementContext {
@@ -31,6 +37,7 @@ export interface ArrangementContext {
  readonly neighborNotes:readonly MidiNote[];
  readonly plan?:HarmonyPlan;
  readonly seed?:number;
+ readonly techniquePlan?:TechniquePlan;
  readonly editing?:ArrangementEditingContext;
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
@@ -51,6 +58,7 @@ export interface ArrangementCandidate {
  readonly assessment:ArrangementAssessment;
  readonly plan?:HarmonyPlan;
  readonly planFindings:readonly PlanFinding[];
+ readonly techniquePlan?:TechniquePlan;
  readonly changes:ChangeSet;
 }
 const NAMES:Record<ArrangementRole,string>={harmony:'AI 和声',bass:'AI 低音',accompaniment:'AI 伴奏'};
@@ -107,8 +115,13 @@ export function prepareArrangementContext(request:ArrangementRequest):Arrangemen
  const chordSuggestions=suggestChords(selected,startTick,endTick,project.ppq);
  const editing=request.editing===undefined?undefined:
   createArrangementEditingContext(project,sourceTrackId,request.editing,startTick,endTick);
+ if(request.electronicStyle===undefined&&
+  (request.disabledTechniques!==undefined||request.forcedTechniques!==undefined))throw new Error('electronic_style_required');
+ const techniquePlan=request.electronicStyle===undefined?undefined:
+  recommendElectronicTechniques({style:request.electronicStyle,seed:request.seed??19501,
+   disabled:request.disabledTechniques,forced:request.forcedTechniques});
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
-  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing};
+  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing,techniquePlan};
  return context;
 }
 
@@ -127,5 +140,5 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  // The proposal does not write the project. Approval must still pass a revision check.
  const assessment=evaluateArrangement(selected,tracks,startTick,endTick,project.ppq);
- return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,changes};
+ return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,techniquePlan:context.techniquePlan,changes};
 }
