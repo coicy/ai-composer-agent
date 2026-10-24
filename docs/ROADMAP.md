@@ -24,3 +24,7 @@ M4 Composition Agent：自主生成 4–16 小节旋律、不同候选、人工�
 ## D-007 已批准的实施顺序（覆盖 D-006 的并行建议）
 
 **MCP First**：当前开发阶段优先交付独立 MCP 客户端可连接的工具入口、授权读取当前浏览器 MusicProject、生成/提交合法 MIDI 候选、UI 预览与人工批准/撤销。**内部 API 地址/Key 输入、凭据管理、多 Provider 配置全部后置**，不阻塞 MCP 首版。现有 OPENAI_API_KEY 原型仅作兼容，不属于 MCP 首版验收要求。MCP 完整闭环验收之后再规划内部 API 模式。
+
+## 电子音乐三层推进：S0 实施切片（开发中）
+
+S0 MusicTimebase：将 tempoMap、meterMap 与显式 GM percussion/program 纳入可选核心数据和 MIDI 读写，并让试听使用变速 Tick 计算；技术入口已在 `feat/s0-midi-timebase-tracks` 实现，CI / 合并状态以 PR 为准。下一步依序建立具有**按风格重要性权重**的 TechniquePlan（用户指定硬约束优先；高权重须让 Agent 自动纳入主计划并提出变化；不应所有段落机械使用）、CompositionBlueprint、基础合成音源及自动化。设计依据见 [ELECTRONIC_MUSIC_THREE_LAYER_RESEARCH.md](ELECTRONIC_MUSIC_THREE_LAYER_RESEARCH.md)，该链接所指研究文档目前位于独立研究 PR，未合并时不应视为 main 已存在。

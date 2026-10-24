@@ -1,18 +1,20 @@
 import type {MusicProject} from '@ai-composer/music-core';
+import {secondsAtTick,validateProject} from '@ai-composer/music-core';
 export interface PlaybackHandle {stop():void;}
-/** A minimal Web Audio preview; one fixed BPM, no tempo map or production synth. */
-export async function playProject(project:MusicProject,bpm=120):Promise<PlaybackHandle>{
- if(!Number.isFinite(bpm)||bpm<=0)throw new Error('invalid_bpm');
+/** Minimal Web Audio preview. Uses the authoritative project tempo map by default. */
+export async function playProject(project:MusicProject,bpm?:number):Promise<PlaybackHandle>{
+ if(!validateProject(project))throw new Error('invalid_project');
+ if(bpm!==undefined&&(!Number.isFinite(bpm)||bpm<=0))throw new Error('invalid_bpm');
  const ctx=new AudioContext();
  await ctx.resume();
  const oscillators:OscillatorNode[]=[];
  const master=ctx.createGain();master.gain.value=0.3;master.connect(ctx.destination);
- const tickSeconds=60/(bpm*project.ppq);
+ const seconds=(tick:number)=>bpm===undefined?secondsAtTick(project,tick):tick*60/(bpm*project.ppq);
  const start=ctx.currentTime+0.05;
  for(const track of project.tracks){
   for(const note of track.notes){
-   const begin=start+note.startTick*tickSeconds;
-   const end=begin+note.durationTicks*tickSeconds;
+   const begin=start+seconds(note.startTick);
+   const end=start+seconds(note.startTick+note.durationTicks);
    const osc=ctx.createOscillator(),gain=ctx.createGain();
    osc.type='triangle';osc.frequency.value=440*Math.pow(2,(note.pitch-69)/12);
    gain.gain.setValueAtTime(0,begin);
