@@ -63,7 +63,7 @@ describe('S3 actual WebAudio graph scheduling',()=>{
   expect(bass[1]!.startTimes).toEqual([2.06]);
   expect(kick?.frequency.events.some(x=>x.method==='exponential'&&x.value===48)).toBe(true);
   expect(noise?.startTimes[0]).toBeCloseTo(1.56);
-  expect(ctx.filters).toHaveLength(2);
+  expect(ctx.filters).toHaveLength(3); // Two track filters + the snare noise filter.
   handle.stop();
   handle.stop();
   expect(ctx.closed).toBe(true);
