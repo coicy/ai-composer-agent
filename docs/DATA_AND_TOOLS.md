@@ -24,3 +24,9 @@ MCP 客户端不能自行生成可信 MusicOperation、Note ID 或批准令牌�
 ## S0 已实现的音频时间轴和轨道身份（分支特性，未合并）
 
 MusicProject 增加可选 `tempoMap`、`meterMap`（tick=0 的首事件、严格递增）和每轨可选 `instrument: {kind,program,channel}`。旧项目缺省为 120 BPM、4/4，音轨仍为旋律轨。导入导出 SMF 保存 BPM、拍号、GM program 和 percussion channel=9（零基）；MIDI 不保存批准、锁及制作效果。Web Audio 预览默认按变速分段换算 tick。此版尚无修改时间轴的 Music Core 命令及浏览器控件，不得将只读状态字段冒称用户可直接编辑。详见 [S0_MUSIC_TIMEBASE.md](S0_MUSIC_TIMEBASE.md)。
+
+## S1 自动编曲技法与源于曲风的高权重规划（功能分支，未合并）
+
+`TechniqueIntent` 允许用户显式选择风格、禁用自动化或排除具体技法；未指定时可从唯一明确的 House/Techno/Trance/Synthwave/DnB/Chiptune/Ambient 曲风词识别，不确定时不作强制推断。引擎依据可调风格权重主动为现有三轨安排琶音、低音、和声击奏或持续音，并设定明确 Tick 窗口的乐句变化。依旧必须由通用 LLM 实际生成 MIDI，用户硬约束高于任何风格权重。
+
+现有三轨生成 API **没有鼓轨**，故 Four-on-the-floor / DnB Breakbeat 高权重项目只标记为 deferred，不声称已生成完整电子鼓。这一缺口会在后续 MusicRole 升级 PR 解决。MCP 相关多分支功能仍未合并；本阶段通过当前 Web → API → CompositionProvider 路径传入结构化规划。见 [S1_WEIGHTED_TECHNIQUES.md](S1_WEIGHTED_TECHNIQUES.md)。

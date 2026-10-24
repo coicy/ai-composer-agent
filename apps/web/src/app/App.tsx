@@ -13,7 +13,7 @@ import {HarmonyPlanEditor} from '../features/agent/HarmonyPlanEditor.js';
 import type {HarmonyPlanDraft} from '../features/agent/HarmonyPlanEditor.js';
 import {timelineFromDegrees} from '../features/agent/HarmonyPlanEditor.js';
 import {VelocityLane} from '../features/editor/VelocityLane.js';
-import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole,ArrangementRequest,ArrangementPartChoices,RegionRegenerationCandidate,RegionRegenerationRequest,FeedbackInterpretation} from '@ai-composer/composition';
+import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole,ArrangementRequest,ArrangementPartChoices,RegionRegenerationCandidate,RegionRegenerationRequest,FeedbackInterpretation,ElectronicGenre} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {createSession,commitSession,undoSession,redoSession,applyChangeSet,validateProject} from '@ai-composer/music-core';
 import type {EditSession,MidiNote,MusicProject,NoteOperation,GenerationRecord} from '@ai-composer/music-core';
@@ -46,6 +46,7 @@ export function App(){
  const [arrangeBars,setArrangeBars]=useState(4);
  const [harmonicPlan,setHarmonicPlan]=useState<HarmonyPlanDraft>({enabled:false,tonic:0,mode:'major',progression:'1,4,5,1',timelineEnabled:false,timeline:[],passingTones:'none',registers:DEFAULT_REGISTERS,enforcement:{scale:'hard',chords:'hard',registers:'hard',inversions:'hard'}});
  const [arrangePrompt,setArrangePrompt]=useState('基于主旋律创作具有奇幻冒险感的和声、低音与节奏性伴奏，保留主旋律的主题动机。');
+ const [genreChoice,setGenreChoice]=useState<'auto'|'disabled'|ElectronicGenre>('auto');
  const [arrangePending,setArrangePending]=useState(false);
  // Scoped regeneration keeps its source independent of the actively displayed Piano Roll track.
  const [regionSource,setRegionSource]=useState('melody');
@@ -221,7 +222,9 @@ export function App(){
    project:snapshot,sourceTrackId:trackId,
    startTick:(arrangeStartBar-1)*snapshot.ppq*4,
    endTick:(arrangeStartBar-1+arrangeBars)*snapshot.ppq*4,
-   instruction:arrangePrompt,plan,seed:variantSeed
+   instruction:arrangePrompt,plan,seed:variantSeed,
+   ...(genreChoice==='disabled'?{techniqueIntent:{auto:false}}:
+     genreChoice==='auto'?{}:{techniqueIntent:{genre:genreChoice,seed:variantSeed}})
   };
   try{
    const provider=useModel?createRemoteArranger(snapshot):new SeededArranger();
@@ -562,6 +565,15 @@ export function App(){
    <label>编配小节 <input type="number" aria-label="编配小节数" min={1} max={4} value={arrangeBars} onChange={e=>{const next=Number(e.target.value);setArrangeBars(next);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);if(Number.isSafeInteger(next)&&next>=1&&next<=4)setHarmonicPlan(p=>{const progression=Array.from({length:next},(_,i)=>p.progression.split(',')[i]??['1','4','5','1'][i]!).join(',');
      return {...p,progression,timeline:p.timelineEnabled?timelineFromDegrees(progression,next):p.timeline};});}}/></label>
    <HarmonyPlanEditor value={harmonicPlan} barCount={arrangeBars} onChange={next=>{setHarmonicPlan(next);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/>
+   <label>自动技法风格 <select aria-label="自动技法风格" value={genreChoice} onChange={e=>{setGenreChoice(e.target.value as typeof genreChoice);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}>
+    <option value="auto">自动识别（明确且单一的曲风名称）</option>
+    <option value="disabled">关闭自动技法</option>
+    <option value="house">House</option><option value="techno">Techno</option>
+    <option value="trance">Trance</option><option value="synthwave">Synthwave</option>
+    <option value="drum_and_bass">Drum &amp; Bass</option><option value="chiptune">Chiptune</option>
+    <option value="ambient">Ambient</option>
+   </select></label>
+   <p>对识别到的曲风，Agent 会主动规划高权重声部技法并在乐句末提出变化；缺少鼓轨的能力会标示为待实现，不会伪造电子鼓声部。</p>
    <textarea aria-label="编配要求" rows={2} maxLength={2000} value={arrangePrompt} onChange={e=>{setArrangePrompt(e.target.value);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/>   <div className="variant-controls" role="group" aria-label="编配随机种子与候选">
     <label>随机种子 <input type="number" aria-label="编配随机种子" min={0} max={4294967295} step={1} value={variantSeed}
      onChange={e=>{setVariantSeed(Number(e.target.value));setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/></label>
@@ -598,6 +610,16 @@ export function App(){
     <strong>候选：新增 3 个轨道，{arrangement.tracks.reduce((sum,t)=>sum+t.notes.length,0)} 个 MIDI 音符（尚未提交）</strong>
     {arrangement.tracks.map((t,i)=><span className="arrangement-track" key={t.trackId}>{t.name} · {t.notes.length} 音符</span>)}
     <ArrangementDiagnostics assessment={arrangement.assessment}/>
+    {arrangement.techniquePlan&&<section className="plan-review" aria-label="自动技法计划">
+     <strong>自动技法 · {arrangement.techniquePlan.genre} · {arrangement.techniquePlan.detection==='explicit'?'用户选择':'指令识别'}</strong>
+     <ul>{arrangement.techniquePlan.assigned.map(t=><li key={t.role}>
+      {t.role}：{t.id}（建议权重 {t.weight}）· {t.instruction}
+      {t.variation&&<span>；句末变化：{t.variation.instruction}</span>}
+     </li>)}</ul>
+     {arrangement.techniquePlan.deferred.length>0&&<p>尚未支持的声部或结构能力：{arrangement.techniquePlan.deferred.map(t=>t.id+'('+t.role+')').join('、')}。不会将它们当成已生成内容。</p>}
+     {arrangement.providerId==='seeded-arranger-dev'&&<p>当前本地 SeededArranger 仅为规则演示，不执行上面的技法计划；需通过 LLM 编配才会尝试落实。</p>}
+     <p>风格权重是可修改的建议，不会覆盖锁定、和声硬约束与人工批准。</p>
+    </section>}
     {arrangement.plan&&<section className="plan-review" aria-label="和声规划执行报告">
      <strong>已应用规划 · {['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'][arrangement.plan.tonic]} {arrangement.plan.mode==='major'?'大调':'自然小调'}</strong>
      <p>和弦：{arrangement.plan.timeline?effectiveChordEvents(arrangement.plan).map(e=>`第${e.startBeat+1}拍 ${chordEventLabel(arrangement.plan!,e)}`).join(' – '):arrangement.plan.degrees.map((_,i)=>chordLabel(arrangement.plan!,i)).join(' – ')}</p>

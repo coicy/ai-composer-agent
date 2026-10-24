@@ -1,5 +1,6 @@
 import {describe,it,expect,vi} from 'vitest';
 import type {ArrangementContext} from '@ai-composer/composition';
+import {planElectronicTechniques} from '@ai-composer/composition';
 import {createOpenAIArranger} from './openai-arranger.js';
 const context:ArrangementContext={
  sourceTrackId:'main',ppq:480,startTick:0,endTick:1920,instruction:'Compose accompanying strings',seed:19501,
@@ -64,6 +65,25 @@ describe('OpenAI arrangement API adapter',()=>{
   expect(serialized).not.toContain('SECRET_OTHER_TRACK');
   expect(serialized).not.toContain('SECRET_TARGET_TRACK');
   expect(serialized).not.toContain('SECRET_PROTECTED_ID');
+ });
+ it('passes an actionable automatic House technique plan to the general-purpose LLM',async()=>{
+  const p=planElectronicTechniques({instruction:'House game cue',ppq:480,startTick:0,endTick:1920,
+   meter:{numerator:4,denominator:4},intent:{genre:'house',seed:11}});
+  expect(p).not.toBeNull();
+  const fetcher=vi.fn(async(_url:string|URL|Request,init?:RequestInit)=>{
+   const req=JSON.parse(String(init?.body));
+   const plan=JSON.parse(req.input).automaticTechniquePlan;
+   expect(plan.assigned.map((x:{id:string})=>x.id)).toEqual(['offbeat_bass','syncopated_comp','pad']);
+   expect(plan.deferred).toEqual(expect.arrayContaining([expect.objectContaining({id:'four_on_floor',role:'drums',weight:100})]));
+   expect(plan.assigned[0].variation.instruction).toContain('retain the motif');
+   expect(req.instructions).toContain('ACTUALLY COMPOSE');
+   expect(req.instructions).toContain('NEVER create fake drums');
+   expect(req.text.format.schema.properties.tracks.items.properties.role.enum).toEqual(['harmony','bass','accompaniment']);
+   return new Response(JSON.stringify(response),{status:200});
+  });
+  const provider=createOpenAIArranger({apiKey:'fake',model:'test-model',fetcher:fetcher as typeof fetch});
+  expect(await provider.generate({...context,techniquePlan:p!})).toEqual(raw);
+  expect(fetcher).toHaveBeenCalledOnce();
  });
  it('rejects malformed responses without forwarding body',async()=>{
   const provider=createOpenAIArranger({apiKey:'fake',model:'test',fetcher:(async()=>new Response('sensitive',{status:400})) as typeof fetch});
