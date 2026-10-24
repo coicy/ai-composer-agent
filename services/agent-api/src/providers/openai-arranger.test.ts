@@ -48,6 +48,22 @@ describe('OpenAI arrangement API adapter',()=>{
   expect(await provider.generate({...context,techniquePlan:plan})).toEqual(raw);
   expect(request).toHaveBeenCalledOnce();
  });
+ it('forwards a bounded motif / energy section without claiming the browser project was changed',async()=>{
+  const fetcher=vi.fn(async(_url:string|URL|Request,init?:RequestInit)=>{
+   const body=JSON.parse(String(init?.body));
+   const input=JSON.parse(body.input);
+   expect(input.compositionSection).toMatchObject({kind:'return',motifId:'A',energy:78});
+   expect(body.instructions).toContain('STRUCTURE:');
+   expect(body.instructions).toContain('retain');
+   return new Response(JSON.stringify(response),{status:200});
+  });
+  const provider=createOpenAIArranger({apiKey:'fake-key',model:'test-model',fetcher:fetcher as typeof fetch});
+  expect(await provider.generate({...context,sectionGuidance:{
+   kind:'return',motifId:'A',motifAction:'reprise',energy:78,
+   instruction:'Reprise the recognizable phrase with a small variation.',
+   startTick:0,endTick:1920
+  }})).toEqual(raw);
+ });
  it('passes protected neighbor notes without note IDs or writable track metadata',async()=>{
   const responseBody={status:'completed',output:[{type:'message',content:[{type:'output_text',
    text:JSON.stringify({role:'harmony',notes:[note]})}]}]};
