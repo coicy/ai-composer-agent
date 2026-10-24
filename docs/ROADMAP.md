@@ -28,3 +28,7 @@ M4 Composition Agent：自主生成 4–16 小节旋律、不同候选、人工�
 ## 电子音乐三层推进：S0 实施切片（开发中）
 
 S0 MusicTimebase：将 tempoMap、meterMap 与显式 GM percussion/program 纳入可选核心数据和 MIDI 读写，并让试听使用变速 Tick 计算；技术入口已在 `feat/s0-midi-timebase-tracks` 实现，CI / 合并状态以 PR 为准。下一步依序建立具有**按风格重要性权重**的 TechniquePlan（用户指定硬约束优先；高权重须让 Agent 自动纳入主计划并提出变化；不应所有段落机械使用）、CompositionBlueprint、基础合成音源及自动化。设计依据见 [ELECTRONIC_MUSIC_THREE_LAYER_RESEARCH.md](ELECTRONIC_MUSIC_THREE_LAYER_RESEARCH.md)，该链接所指研究文档目前位于独立研究 PR，未合并时不应视为 main 已存在。
+
+## S1 工程进展：高权重自动技法规划（待 PR CI / 合并）
+
+从明确的用户电子乐曲风中选择有风格相对高必要性的技法，自动向现有三角色 LLM 编配发出可执行的音型与句末变奏要求；用户可以退出或覆盖，鼓组与完整结构的缺口必须显式报告。具体默认权重、受限范围及验收见 [S1_WEIGHTED_TECHNIQUES.md](S1_WEIGHTED_TECHNIQUES.md)。下一阶段应先补鼓轨和真实技法观测，再进行歌曲结构及制作层改造；不可把发送提示词等同于已音频验收。
