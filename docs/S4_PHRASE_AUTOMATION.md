@@ -43,3 +43,8 @@ This branch builds on S3 PR #32, which builds on S2 #31, S1 #30 and S0 #29.
 - Unit tests cover generated notes, immutable project, absent signatures, invalid pitches and out-of-range notes.
 - Integration into an actual remote LLM provider/API route/UI remains future work. This commit adds no automatic LLM retries and no unconditional accept/commit.
 - CI/Playwright and real audio listening must be separately verified before merge.
+
+## S4.3a bounded retry orchestration
+- `proposeDrumWithRetry` retries at most 3 candidate generations. Only missing 4/4 kick beats cause retries; their absolute ticks are included in corrective instructions.
+- Returns each attempt's evidence and the last candidate for human review. Never automatically commits a ChangeSet, never alters source MIDI, and stops on cancellation.
+- The LLM-backed DrumProvider adapter is still needed to make this operational end-to-end. Mock-provider unit tests cannot certify actual remote LLM behavior or listening quality.
