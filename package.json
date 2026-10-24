@@ -8,7 +8,7 @@
     "dev": "pnpm --filter @ai-composer/web dev",
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm --filter @ai-composer/music-core test && pnpm --filter @ai-composer/piano-roll test && pnpm --filter @ai-composer/composition test && pnpm --filter @ai-composer/agent-api test",
+    "test": "pnpm --filter @ai-composer/audio-engine test && pnpm --filter @ai-composer/music-core test && pnpm --filter @ai-composer/piano-roll test && pnpm --filter @ai-composer/composition test && pnpm --filter @ai-composer/agent-api test",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check": "pnpm check:boundaries && pnpm typecheck && pnpm test && pnpm build",
     "dev:agent": "pnpm --filter @ai-composer/agent-api dev"

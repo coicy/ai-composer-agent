@@ -159,7 +159,12 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  const selected=context.sourceNotes;
  const raw=await provider.generate(context,signal);
  if(signal?.aborted)throw new Error('generation_cancelled');
- const tracks=parseArranged(raw,project,sourceTrackId,startTick,endTick);
+ const parsed=parseArranged(raw,project,sourceTrackId,startTick,endTick);
+ // Only explicit electronic-style sessions assign audible General MIDI role presets.
+ // The LLM cannot choose arbitrary sound assets, synth code, instrument paths or plugins.
+ const tracks=request.electronicStyle?
+  parsed.map((track,index)=>({...track,program:index===0?89:index===1?38:81})):
+  parsed;
  const planFindings=plan?checkHarmonyPlan(plan,tracks,startTick,endTick,project.ppq):[];
  const operations:NoteOperation[]=tracks.map(track=>({type:'add_track',track}));
  const changes:ChangeSet={baseRevision:project.revision,operations};
