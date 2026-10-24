@@ -47,3 +47,6 @@ export type {AutomationLane,AutomationRole,AutomationPoint,AutomationCurve,Autom
 
 export {auditSignatureTechniques} from './evaluation/signature-audit.js';
 export type {SignatureAudit} from './evaluation/signature-audit.js';
+
+export {prepareDrumContext,checkDrumEvidence,proposeDrumCandidate} from './arrangement/drum-candidate.js';
+export type {DrumRequest,DrumContext,DrumProvider,DrumEvidence,DrumCandidate} from './arrangement/drum-candidate.js';
