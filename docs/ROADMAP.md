@@ -32,3 +32,7 @@ S0 MusicTimebase：将 tempoMap、meterMap 与显式 GM percussion/program 纳�
 ## S1 工程进展：高权重自动技法规划（待 PR CI / 合并）
 
 从明确的用户电子乐曲风中选择有风格相对高必要性的技法，自动向现有三角色 LLM 编配发出可执行的音型与句末变奏要求；用户可以退出或覆盖，鼓组与完整结构的缺口必须显式报告。具体默认权重、受限范围及验收见 [S1_WEIGHTED_TECHNIQUES.md](S1_WEIGHTED_TECHNIQUES.md)。下一阶段应先补鼓轨和真实技法观测，再进行歌曲结构及制作层改造；不可把发送提示词等同于已音频验收。
+
+## S2 结构化全曲计划（功能分支，未合并）
+
+已形成带 seed、16 小节段落、共同动机标识、能量级和指定变化维度的 `CompositionBlueprint`。编配时从相同全曲块截取当前 1–4 小节，发送到通用 LLM 要求延续和再现同一主题。旧三轨编配仍不能据此变成真正 16 小节的单次提交；其他拍号的全曲计划通过独立纯函数验证，但完整编配窗口仍有旧 4/4 局限。见 [S2_COMPOSITION_BLUEPRINT.md](S2_COMPOSITION_BLUEPRINT.md)。
