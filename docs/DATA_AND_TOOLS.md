@@ -20,3 +20,7 @@ MIDI 导出可能损失锁、候选、操作历史与语义标签，须警示；
 已批准 MCP 外部 Agent 入口和内部 API/Key LLM 入口，但尚未批准 MCP Transport、具体工具名称、授权 Token 和 JSON Schema。建议的 MCP 资源/工具类别：用户授权项目/选区读取、轨道/音符查询、候选提交、diff 预览、候选状态查询。**这些只是设计示例，不是当前可用 API。**
 
 MCP 客户端不能自行生成可信 MusicOperation、Note ID 或批准令牌；内部 LLM 的模型输出也不能。所有提案都经 `composition` 验证、`music-core` dry-run、revision/锁检查和用户显式批准，且外部 MCP 连接不能读取内部 API Key。当前 MusicProject 主要由浏览器持有，MCP 需明确的授权会话桥接才能读取真实活动项目。参见 [LLM_ACCESS_MODES.md](LLM_ACCESS_MODES.md)。
+
+## S0 已实现的音频时间轴和轨道身份（分支特性，未合并）
+
+MusicProject 增加可选 `tempoMap`、`meterMap`（tick=0 的首事件、严格递增）和每轨可选 `instrument: {kind,program,channel}`。旧项目缺省为 120 BPM、4/4，音轨仍为旋律轨。导入导出 SMF 保存 BPM、拍号、GM program 和 percussion channel=9（零基）；MIDI 不保存批准、锁及制作效果。Web Audio 预览默认按变速分段换算 tick。此版尚无修改时间轴的 Music Core 命令及浏览器控件，不得将只读状态字段冒称用户可直接编辑。详见 [S0_MUSIC_TIMEBASE.md](S0_MUSIC_TIMEBASE.md)。
