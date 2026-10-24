@@ -610,6 +610,14 @@ export function App(){
     <strong>候选：新增 3 个轨道，{arrangement.tracks.reduce((sum,t)=>sum+t.notes.length,0)} 个 MIDI 音符（尚未提交）</strong>
     {arrangement.tracks.map((t,i)=><span className="arrangement-track" key={t.trackId}>{t.name} · {t.notes.length} 音符</span>)}
     <ArrangementDiagnostics assessment={arrangement.assessment}/>
+    {arrangement.compositionWindow&&<section className="plan-review" aria-label="音乐段落与主题连续性">
+     <strong>全曲结构 · {arrangement.compositionWindow.songBars} 小节 · 主题 {arrangement.compositionWindow.motifId}</strong>
+     <ul>{arrangement.compositionWindow.sections.map(section=><li key={section.id}>
+      {section.kind} · 强度建议 {section.energy} · {section.action}：
+      {section.guidance}（发展变化维度：{section.changeDimension}）
+     </li>)}</ul>
+     <p>曲式仅为 LLM 分段创作指导，实际音符必须在当前选区生成并通过预览批准。</p>
+    </section>}
     {arrangement.techniquePlan&&<section className="plan-review" aria-label="自动技法计划">
      <strong>自动技法 · {arrangement.techniquePlan.genre} · {arrangement.techniquePlan.detection==='explicit'?'用户选择':'指令识别'}</strong>
      <ul>{arrangement.techniquePlan.assigned.map(t=><li key={t.role}>
