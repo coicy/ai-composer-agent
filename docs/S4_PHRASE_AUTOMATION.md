@@ -27,3 +27,11 @@ This branch builds on S3 PR #32, which builds on S2 #31, S1 #30 and S0 #29.
 - This is live preview only: no persistence, no offline audio rendering, no sidechain or mix/master claims.
 - Conversion from composition `role` to concrete track ID is intentionally **not automatic**. The caller must explicitly bind roles to existing tracks and obtain user consent to audition; storing automation requires a later schema proposal.
 - CI has not been verified. Local Git checkout failed because the execution environment cannot resolve github.com; this is not a test pass.
+
+## S4.2: MIDI evidence-driven kick ducking
+- `proposeKickDucking` only builds gain envelopes from genuine GM kick note 35/36 events in an explicitly selected percussion track.
+- Requires concrete existing target tracks and clamps depth/release to bounded values.
+- Missing kicks, unsupported source tracks and unsafe settings fail closed; cannot claim a sidechain from an empty arrangement.
+- The preview adapter is opt-in via the existing `playProject(..., automation)` argument.
+- The result is MIDI-triggered gain ducking, **not** a real audio signal sidechain compressor. There is still no standalone LLM percussion arrangement role and no quality claim.
+- Next slices: drum role generation with candidate validation and high-weight technique evidence acceptance/retry.
