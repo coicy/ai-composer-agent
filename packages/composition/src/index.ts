@@ -41,3 +41,15 @@ export type {ElectronicStyle,TechniqueId,TechniqueSlot,TechniquePlan,TechniqueRe
 
 export {buildElectronicCompositionBlueprint,locateBlueprintSection} from './planning/electronic-blueprint.js';
 export type {CompositionBlueprint,PlannedSongSection,BlueprintRequest,SongSectionKind} from './planning/electronic-blueprint.js';
+
+export {planPhraseAutomation} from './planning/phrase-automation.js';
+export type {AutomationLane,AutomationRole,AutomationPoint,AutomationCurve,AutomationRequest,AutomationPlan} from './planning/phrase-automation.js';
+
+export {auditSignatureTechniques} from './evaluation/signature-audit.js';
+export type {SignatureAudit} from './evaluation/signature-audit.js';
+
+export {prepareDrumContext,checkDrumEvidence,proposeDrumCandidate} from './arrangement/drum-candidate.js';
+export type {DrumRequest,DrumContext,DrumProvider,DrumEvidence,DrumCandidate} from './arrangement/drum-candidate.js';
+
+export {proposeDrumWithRetry} from './arrangement/drum-retry.js';
+export type {DrumRetryResult} from './arrangement/drum-retry.js';
