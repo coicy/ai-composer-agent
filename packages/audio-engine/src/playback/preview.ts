@@ -1,7 +1,8 @@
 import type {MusicProject} from '@ai-composer/music-core';
+import {resolveTempoBpm} from '@ai-composer/music-core';
 export interface PlaybackHandle {stop():void;}
-/** A minimal Web Audio preview; one fixed BPM, no tempo map or production synth. */
-export async function playProject(project:MusicProject,bpm=120):Promise<PlaybackHandle>{
+/** A minimal Web Audio preview; project constant BPM, no tempo map or production synth. */
+export async function playProject(project:MusicProject,bpm=resolveTempoBpm(project)):Promise<PlaybackHandle>{
  if(!Number.isFinite(bpm)||bpm<=0)throw new Error('invalid_bpm');
  const ctx=new AudioContext();
  await ctx.resume();
