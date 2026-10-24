@@ -44,3 +44,6 @@ export type {CompositionBlueprint,PlannedSongSection,BlueprintRequest,SongSectio
 
 export {planPhraseAutomation} from './planning/phrase-automation.js';
 export type {AutomationLane,AutomationRole,AutomationPoint,AutomationCurve,AutomationRequest,AutomationPlan} from './planning/phrase-automation.js';
+
+export {auditSignatureTechniques} from './evaluation/signature-audit.js';
+export type {SignatureAudit} from './evaluation/signature-audit.js';
