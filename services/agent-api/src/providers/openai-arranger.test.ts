@@ -1,6 +1,6 @@
 import {describe,it,expect,vi} from 'vitest';
 import type {ArrangementContext} from '@ai-composer/composition';
-import {planElectronicTechniques} from '@ai-composer/composition';
+import {planElectronicTechniques,createCompositionBlueprint,blueprintWindow} from '@ai-composer/composition';
 import {createOpenAIArranger} from './openai-arranger.js';
 const context:ArrangementContext={
  sourceTrackId:'main',ppq:480,startTick:0,endTick:1920,instruction:'Compose accompanying strings',seed:19501,
@@ -83,6 +83,26 @@ describe('OpenAI arrangement API adapter',()=>{
   });
   const provider=createOpenAIArranger({apiKey:'fake',model:'test-model',fetcher:fetcher as typeof fetch});
   expect(await provider.generate({...context,techniquePlan:p!})).toEqual(raw);
+  expect(fetcher).toHaveBeenCalledOnce();
+ });
+ it('passes the actual 16-bar composition section to the LLM without changing the note schema',async()=>{
+  const p=createCompositionBlueprint({seed:19501,style:'synthwave',
+   ppq:480,meter:{numerator:4,denominator:4},totalBars:16});
+  const window=blueprintWindow(p,7680,9600);
+  const fetcher=vi.fn(async(_url:string|URL|Request,init?:RequestInit)=>{
+   const body=JSON.parse(String(init?.body));
+   const input=JSON.parse(body.input);
+   expect(input.compositionWindow).toMatchObject({
+    version:'composition-blueprint-v1',motifId:'primary-motif',songBars:16,
+    sections:[{kind:'theme',activeStartTick:7680,activeEndTick:9600}]
+   });
+   expect(body.instructions).toContain('Follow compositionWindow.sections');
+   expect(body.instructions).toContain('recall the established contour');
+   expect(body.text.format.schema.properties.tracks.items.properties.role.enum).toEqual(['harmony','bass','accompaniment']);
+   return new Response(JSON.stringify(response),{status:200});
+  });
+  const provider=createOpenAIArranger({apiKey:'fake',model:'test',fetcher:fetcher as typeof fetch});
+  expect(await provider.generate({...context,compositionWindow:window})).toEqual(raw);
   expect(fetcher).toHaveBeenCalledOnce();
  });
  it('rejects malformed responses without forwarding body',async()=>{
