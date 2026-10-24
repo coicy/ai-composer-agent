@@ -36,8 +36,8 @@ function scheduleDrum(
  const hat=[42,44,46].includes(note.pitch);
  const sample=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),amp=ctx.createGain();
  sample.buffer=noise;filter.type='highpass';filter.frequency.value=hat?6800:1050;
- const peak=gainFromDb(config.gainDb)*note.velocity/127*(hat?.27:.50);
- const len=hat?(note.pitch===46?.27:.09):.20;
+ const peak=gainFromDb(config.gainDb)*note.velocity/127*(hat ? 0.27 : 0.50);
+ const len=hat ? (note.pitch===46 ? 0.27 : 0.09) : 0.20;
  amp.gain.setValueAtTime(.00001,begin);
  amp.gain.linearRampToValueAtTime(Math.max(.0002,peak),begin+.004);
  amp.gain.exponentialRampToValueAtTime(.00001,begin+len);
@@ -57,8 +57,8 @@ function scheduleSynth(
  osc.frequency.value=440*Math.pow(2,(note.pitch-69)/12);
  filter.type='lowpass';filter.frequency.value=config.cutoffHz;filter.Q.value=.7;
  const duration=end-begin;
- const attack=clamp(config.attackMs/1000,.002,Math.max(.002,duration/3));
- const release=clamp(config.releaseMs/1000,.006,Math.max(.006,duration/3));
+ const attack=Math.min(duration/3,Math.max(.0001,config.attackMs/1000));
+ const release=Math.min(duration/3,Math.max(.0001,config.releaseMs/1000));
  const peak=Math.max(.0001,gainFromDb(config.gainDb)*note.velocity/127*.34);
  amp.gain.setValueAtTime(0,begin);
  amp.gain.linearRampToValueAtTime(peak,begin+attack);
