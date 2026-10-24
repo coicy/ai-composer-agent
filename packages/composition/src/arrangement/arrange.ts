@@ -1,4 +1,4 @@
-import {applyChangeSet,validateNote,validateProject} from '@ai-composer/music-core';
+import {applyChangeSet,validateNote,validateProject,ticksPerBar,resolveMeter} from '@ai-composer/music-core';
 import {analyzeTonality,suggestChords} from '../analysis/tonality.js';
 import type {TonalProfile,ChordSuggestion} from '../analysis/tonality.js';
 import {evaluateArrangement} from '../evaluation/arrangement.js';
@@ -6,6 +6,8 @@ import {evaluateTechniqueEvidence} from '../evaluation/electronic-technique-evid
 import type {TechniqueEvidence} from '../evaluation/electronic-technique-evidence.js';
 import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js';
 import {recommendElectronicTechniques} from '../planning/electronic-techniques.js';
+import {buildElectronicCompositionBlueprint,locateBlueprintSection} from '../planning/electronic-blueprint.js';
+import type {PlannedSongSection} from '../planning/electronic-blueprint.js';
 import type {ElectronicStyle,TechniqueId,TechniquePlan,TechniqueRequest} from '../planning/electronic-techniques.js';
 import type {HarmonyPlan,PlanFinding} from '../planning/harmony-plan.js';
 import type {ArrangementAssessment} from '../evaluation/arrangement.js';
@@ -41,6 +43,7 @@ export interface ArrangementContext {
  readonly seed?:number;
  readonly techniquePlan?:TechniquePlan;
  readonly techniqueRequest?:TechniqueRequest;
+ readonly sectionGuidance?:Pick<PlannedSongSection,'kind'|'motifId'|'motifAction'|'energy'|'instruction'|'startTick'|'endTick'>;
  readonly editing?:ArrangementEditingContext;
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
@@ -99,11 +102,13 @@ function parseArranged(raw:unknown,project:MusicProject,sourceTrackId:string,sta
 export function prepareArrangementContext(request:ArrangementRequest):ArrangementContext{
  const {project,sourceTrackId,startTick,endTick,instruction}=request;
  if(!validateProject(project))throw new Error('invalid_project');
- if(!Number.isSafeInteger(startTick)||!Number.isSafeInteger(endTick)||startTick<0||endTick<=startTick||endTick-startTick>project.ppq*4*4)throw new Error('invalid_arrangement_scope');
+ if(!Number.isSafeInteger(startTick)||!Number.isSafeInteger(endTick)||startTick<0||endTick<=startTick||endTick-startTick>ticksPerBar(project.ppq,resolveMeter(project))*4)throw new Error('invalid_arrangement_scope');
  if(typeof instruction!=='string'||!instruction.trim()||instruction.length>2000)throw new Error('invalid_instruction');
  if(request.seed!==undefined&&(!Number.isSafeInteger(request.seed)||request.seed<0||request.seed>0xffffffff))throw new Error('invalid_arrangement_seed');
  // Validate before sending user-supplied planning data to any provider.
- const barTicks=project.ppq*4;
+ const barTicks=ticksPerBar(project.ppq,resolveMeter(project));
+ if(request.plan!==undefined&&(resolveMeter(project).numerator!==4||resolveMeter(project).denominator!==4))
+  throw new Error('legacy_harmony_plan_requires_4_4');
  const barCount=Math.ceil((endTick-startTick)/barTicks);
  const plan=request.plan===undefined?undefined:validateHarmonyPlan(request.plan,barCount);
  if(plan&&(startTick%barTicks!==0||endTick%barTicks!==0))throw new Error('plan_requires_whole_bars');
@@ -126,8 +131,24 @@ export function prepareArrangementContext(request:ArrangementRequest):Arrangemen
    ...(request.disabledTechniques!==undefined?{disabled:request.disabledTechniques}:{}),
    ...(request.forcedTechniques!==undefined?{forced:request.forcedTechniques}:{})};
  const techniquePlan=techniqueRequest?recommendElectronicTechniques(techniqueRequest):undefined;
+ let sectionGuidance:ArrangementContext['sectionGuidance'];
+ if(techniqueRequest&&startTick%barTicks===0){
+  const cycle=16*barTicks;
+  const cycleStart=Math.floor(startTick/cycle)*cycle;
+  const blueprint=buildElectronicCompositionBlueprint({
+   project,style:techniqueRequest.style,seed:techniqueRequest.seed,startTick:cycleStart,bars:16
+  });
+  try{
+   const section=locateBlueprintSection(blueprint,startTick,endTick);
+   sectionGuidance={kind:section.kind,motifId:section.motifId,motifAction:section.motifAction,
+    energy:section.energy,instruction:section.instruction,startTick:section.startTick,endTick:section.endTick};
+  }catch(error){
+   if(!(error instanceof Error)||error.message!=='blueprint_window_crosses_section')throw error;
+   // Future segmentation may split this scope; never claim one section applies to two.
+  }
+ }
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
-  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing,techniquePlan,techniqueRequest};
+  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing,techniquePlan,techniqueRequest,sectionGuidance};
  return context;
 }
 
