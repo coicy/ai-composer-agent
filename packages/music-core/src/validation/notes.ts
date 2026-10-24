@@ -39,7 +39,15 @@ export function validateGenerationRecord(record:GenerationRecord):boolean {
  return true;
 }
 export function validateProject(p:MusicProject):boolean {
- return !!p&&typeof p.projectId==='string'&&p.projectId.length>0&&integer(p.revision)&&p.revision>=0&&integer(p.ppq)&&p.ppq>0&&Array.isArray(p.tracks)&&new Set(p.tracks.map(t=>t.trackId)).size===p.tracks.length&&p.tracks.every(t=>typeof t.trackId==='string'&&t.trackId.length>0&&typeof t.name==='string'&&typeof t.locked==='boolean'&&Array.isArray(t.notes)&&new Set(t.notes.map((n:MidiNote)=>n.noteId)).size===t.notes.length&&t.notes.every(validateNote))&&
+ return !!p&&
+ (p.tempoBpm===undefined||(typeof p.tempoBpm==='number'&&Number.isFinite(p.tempoBpm)&&p.tempoBpm>=20&&p.tempoBpm<=300))&&
+ (p.meter===undefined||(!!p.meter&&integer(p.meter.numerator)&&p.meter.numerator>=1&&p.meter.numerator<=12&&[2,4,8,16].includes(p.meter.denominator)&&Number.isSafeInteger(p.ppq*4*p.meter.numerator/p.meter.denominator)))&&
+ typeof p.projectId==='string'&&p.projectId.length>0&&integer(p.revision)&&p.revision>=0&&integer(p.ppq)&&p.ppq>0&&Array.isArray(p.tracks)&&new Set(p.tracks.map(t=>t.trackId)).size===p.tracks.length&&p.tracks.every(t=>typeof t.trackId==='string'&&t.trackId.length>0&&typeof t.name==='string'&&typeof t.locked==='boolean'&&
+ (t.program===undefined||(integer(t.program)&&t.program>=0&&t.program<=127))&&
+ (t.channel===undefined||(integer(t.channel)&&t.channel>=0&&t.channel<=15))&&
+ (t.isDrum===undefined||typeof t.isDrum==='boolean')&&
+ (t.channel===undefined||t.isDrum===undefined||((t.channel===9)===t.isDrum))&&
+ Array.isArray(t.notes)&&new Set(t.notes.map((n:MidiNote)=>n.noteId)).size===t.notes.length&&t.notes.every(validateNote))&&
  (p.generationHistory===undefined||(Array.isArray(p.generationHistory)&&p.generationHistory.length<=128&&
   new Set(p.generationHistory.map((r:GenerationRecord)=>r?.recordId)).size===p.generationHistory.length&&
   p.generationHistory.every((r:GenerationRecord)=>validateGenerationRecord(r)&&p.tracks.some(t=>t.trackId===r.sourceTrackId)&&r.targetTrackIds.every((id:string)=>p.tracks.some(t=>t.trackId===id)))));
