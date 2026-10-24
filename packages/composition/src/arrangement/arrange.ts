@@ -55,6 +55,7 @@ export interface ArrangementCandidate {
  readonly seed?:number;
  readonly tracks:readonly MusicTrack[];
  readonly assessment:ArrangementAssessment;
+ readonly techniquePlan?:TechniquePlan;
  readonly plan?:HarmonyPlan;
  readonly planFindings:readonly PlanFinding[];
  readonly changes:ChangeSet;
@@ -141,5 +142,5 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  // The proposal does not write the project. Approval must still pass a revision check.
  const assessment=evaluateArrangement(selected,tracks,startTick,endTick,project.ppq);
- return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,changes};
+ return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,changes,...(context.techniquePlan?{techniquePlan:context.techniquePlan}:{})};
 }
