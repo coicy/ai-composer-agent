@@ -35,3 +35,11 @@ This branch builds on S3 PR #32, which builds on S2 #31, S1 #30 and S0 #29.
 - The preview adapter is opt-in via the existing `playProject(..., automation)` argument.
 - The result is MIDI-triggered gain ducking, **not** a real audio signal sidechain compressor. There is still no standalone LLM percussion arrangement role and no quality claim.
 - Next slices: drum role generation with candidate validation and high-weight technique evidence acceptance/retry.
+
+## S4.3: independent LLM drum MIDI proposal contract
+- `proposeDrumCandidate(provider, request)` now accepts a dedicated asynchronous LLM adapter; returns a separate GM channel-10 drum track and atomic, uncommitted ChangeSet.
+- The provider outputs only notes; the server-controlled candidate layer fixes channel/track identity, permits a bounded GM drum pitch set, checks scope and dry-runs against authoritative Music Core.
+- In 4/4 House/Techno/Trance, the context explicitly carries quarter-note kick expectations and candidate evidence enumerates missing beats. Ambient is never forced into four-floor patterns.
+- Unit tests cover generated notes, immutable project, absent signatures, invalid pitches and out-of-range notes.
+- Integration into an actual remote LLM provider/API route/UI remains future work. This commit adds no automatic LLM retries and no unconditional accept/commit.
+- CI/Playwright and real audio listening must be separately verified before merge.
