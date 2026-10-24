@@ -1,4 +1,9 @@
-import type {MidiNote,MusicProject,GenerationRecord} from '../model/types.js';
+import type {MidiNote,MusicProject,GenerationRecord,TrackInstrument} from '../model/types.js';
+import {validateTempoMap,validateMeterMap} from '../model/timebase.js';
+function validInstrument(value:TrackInstrument|undefined):boolean{
+ if(value===undefined)return true;
+ return !!value&&(value.kind==='drums'||value.kind==='melodic')&&Number.isSafeInteger(value.program)&&value.program>=0&&value.program<=127&&Number.isSafeInteger(value.channel)&&value.channel>=0&&value.channel<=15&&(value.kind==='drums'?value.channel===9:value.channel!==9);
+}
 const integer=(n:number)=>Number.isSafeInteger(n);
 export function validateNote(n:MidiNote):boolean {
  return typeof n.noteId==='string'&&n.noteId.length>0&&integer(n.pitch)&&n.pitch>=0&&n.pitch<=127&&integer(n.startTick)&&n.startTick>=0&&integer(n.durationTicks)&&n.durationTicks>0&&integer(n.velocity)&&n.velocity>=1&&n.velocity<=127&&(n.locked===undefined||typeof n.locked==='boolean');
@@ -39,7 +44,7 @@ export function validateGenerationRecord(record:GenerationRecord):boolean {
  return true;
 }
 export function validateProject(p:MusicProject):boolean {
- return !!p&&typeof p.projectId==='string'&&p.projectId.length>0&&integer(p.revision)&&p.revision>=0&&integer(p.ppq)&&p.ppq>0&&Array.isArray(p.tracks)&&new Set(p.tracks.map(t=>t.trackId)).size===p.tracks.length&&p.tracks.every(t=>typeof t.trackId==='string'&&t.trackId.length>0&&typeof t.name==='string'&&typeof t.locked==='boolean'&&Array.isArray(t.notes)&&new Set(t.notes.map((n:MidiNote)=>n.noteId)).size===t.notes.length&&t.notes.every(validateNote))&&
+ return !!p&&typeof p.projectId==='string'&&p.projectId.length>0&&integer(p.revision)&&p.revision>=0&&integer(p.ppq)&&p.ppq>0&&Array.isArray(p.tracks)&&(p.tempoMap===undefined||validateTempoMap(p.tempoMap))&&(p.meterMap===undefined||validateMeterMap(p.meterMap,p.ppq))&&new Set(p.tracks.map(t=>t.trackId)).size===p.tracks.length&&p.tracks.every(t=>typeof t.trackId==='string'&&t.trackId.length>0&&typeof t.name==='string'&&typeof t.locked==='boolean'&&validInstrument(t.instrument)&&Array.isArray(t.notes)&&new Set(t.notes.map((n:MidiNote)=>n.noteId)).size===t.notes.length&&t.notes.every(validateNote))&&
  (p.generationHistory===undefined||(Array.isArray(p.generationHistory)&&p.generationHistory.length<=128&&
   new Set(p.generationHistory.map((r:GenerationRecord)=>r?.recordId)).size===p.generationHistory.length&&
   p.generationHistory.every((r:GenerationRecord)=>validateGenerationRecord(r)&&p.tracks.some(t=>t.trackId===r.sourceTrackId)&&r.targetTrackIds.every((id:string)=>p.tracks.some(t=>t.trackId===id)))));
