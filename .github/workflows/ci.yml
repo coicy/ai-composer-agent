@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, feat/s0-midi-timebase-tracks]
+    branches: [main, feat/s0-midi-timebase-tracks, feat/s1-weighted-technique-planning]
 
 # Only the newest run for a PR (or main) should consume CI capacity.
 # This does not conceal real failures; completed failed checks remain visible.
