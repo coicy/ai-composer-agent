@@ -34,3 +34,7 @@ MusicProject 增加可选 `tempoMap`、`meterMap`（tick=0 的首事件、严格
 ## S2 CompositionBlueprint（设计的候选计划，非持久批准）
 
 `composition-blueprint-v1` 使用 `ppq/meter/songStartTick/totalBars/mainMotifId/sections` 表达连续歌曲结构；每节含起止 Tick、energy、统一 motifId、对比/再现 action 和一种变化维度。该对象现在从 Authoritative MusicProject 的有效拍号与创作 seed 派生，作为 LLM 只读创作上下文，不属于默认的持久工程 schema，也不替代人工确认或实际音符。结构/技法数据仍不能由普通 MIDI 全量保存。见 [S2_COMPOSITION_BLUEPRINT.md](S2_COMPOSITION_BLUEPRINT.md)。
+
+## S3 音色制作计划（仅试听，不是批准的持久工程）
+
+`audio-engine` 的 `sound-design-v1` 表示经白名单验证的 `trackPresets`，每轨有 `presetId` 和可选 `gainDb/pan/cutoffHz`；它与 MIDI notes/GM patch 数据分离。浏览器只能在已知现有 MusicTrack 上试听，不接受用户或模型提供任意脚本、插件或网络音源 URL。即使声音被预览，工程 notes/revision/用户批准状态仍保持原值。详见 [S3_ELECTRONIC_SOUND_PRESETS.md](S3_ELECTRONIC_SOUND_PRESETS.md)。
