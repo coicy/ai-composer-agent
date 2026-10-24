@@ -1,5 +1,5 @@
 import {createServer,type IncomingMessage,type ServerResponse} from 'node:http';
-import {validateProject} from '@ai-composer/music-core';
+import {validateProject,meterAtTick} from '@ai-composer/music-core';
 import {proposeWithProvider,proposeArrangement,proposeRegionRegeneration,ARRANGEMENT_ROLES} from '@ai-composer/composition';
 import type {CompositionRequest,ArrangementRequest} from '@ai-composer/composition';
 import {validateHarmonyPlan,validateFeedbackInput,reconcileFeedbackInterpretation,planElectronicTechniques} from '@ai-composer/composition';
@@ -47,7 +47,7 @@ function parseArrangementRequest(value:unknown):ArrangementRequest{
  // Planner remains the authority and the model cannot invent technique rights.
  planElectronicTechniques({
   instruction:body.instruction,startTick,endTick,ppq:project.ppq,
-  meter:{numerator:4,denominator:4},intent:techniqueIntent
+  meter:meterAtTick(project,startTick),intent:techniqueIntent
  });
  let editing:ArrangementRequest['editing'];
  if(body.editing!==undefined){
