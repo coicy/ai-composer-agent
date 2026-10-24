@@ -2,6 +2,8 @@
 
 > 2026-10-24。**研究与设计提案，非已批准产品裁决，未实现新技法引擎。** 核验对象是功能分支 `feat/seeded-musical-inspiration` 的提交 `aefc79da78736088ed572b3ec0776e49e9fc86cc`，不是 `main` 当前已发布能力。独立文档 PR 不修改已批准的 D-005 / D-006 / D-007。
 
+**补充实施方案：** [基础技法词表、跨声部搭配、冲突矩阵与四小节琶音对照](ARRANGEMENT_TECHNIQUE_COMBINATIONS_V1.md)（约定 TechniquePlan/CombinationPlan 输入和可验证边界；尚未实现）。
+
 ## 1. 核心诊断：音高合规 ≠ 会编曲
 
 现有工程有音符级数据、`HarmonyPlan` 和弦事件、候选生成及 dry-run 验证、三轨分配与种子变体，却仍缺少在 **同样和弦材料之上形成可控音乐织体** 的显式中间层。
