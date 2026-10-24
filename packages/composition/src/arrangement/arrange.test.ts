@@ -40,6 +40,28 @@ describe('atomic three-track arrangement candidate',()=>{
   expect(saw?.chords).toHaveLength(1);
   expect(original.tracks[0]?.notes).toEqual([melody]);
  });
+ it('passes auto-weighted electronic style to a generic LLM but only returns advisory MIDI technique evidence',async()=>{
+  let sawStyle:string|undefined,signature:string[]=[];
+  const provider:ArrangementProvider={id:'electronic-style-spy',async generate(context){
+   sawStyle=context.techniquePlan?.style;
+   signature=context.techniquePlan?.choices.filter(x=>x.priority==='signature').map(x=>x.id)??[];
+   expect(context.techniqueRequest?.style).toBe('house');
+   return tracks();
+  }};
+  const candidate=await proposeArrangement(provider,{...request,electronicStyle:'house',seed:19501});
+  expect(sawStyle).toBe('house');
+  expect(signature).toContain('four_floor');
+  expect(signature).toContain('offbeat_bass');
+  expect(candidate.techniqueEvidence?.some(x=>x.id==='four_floor'&&x.state==='not_evaluable')).toBe(true);
+  expect(candidate.techniqueEvidence?.some(x=>x.id==='offbeat_bass'&&x.state==='not_observed')).toBe(true);
+  expect(candidate.changes.baseRevision).toBe(3);
+  expect(original.revision).toBe(3);
+  const noBass=await proposeArrangement(fake(tracks()),{...request,electronicStyle:'house',seed:19501,
+   disabledTechniques:['offbeat_bass']});
+  expect(noBass.techniquePlan?.choices.some(x=>x.id==='offbeat_bass')).toBe(false);
+  await expect(proposeArrangement(fake(tracks()),{...request,
+   disabledTechniques:['four_floor']})).rejects.toThrow('electronic_style_required');
+ });
  it('enforces a strict user chord plan before commit while keeping source unchanged',async()=>{
   const plan={tonic:0,mode:'major' as const,degrees:[1] as const,registers:DEFAULT_REGISTERS,enforcement:{scale:'hard' as const,chords:'hard' as const,registers:'hard' as const}};
   const req={...request,plan};
