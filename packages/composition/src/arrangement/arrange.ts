@@ -6,6 +6,9 @@ import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js'
 import type {HarmonyPlan,PlanFinding} from '../planning/harmony-plan.js';
 import type {ArrangementAssessment} from '../evaluation/arrangement.js';
 import {createArrangementEditingContext} from './editing-context.js';
+import {planElectronicTechniques} from '../planning/weighted-techniques.js';
+import type {TechniqueIntent,TechniquePlan} from '../planning/weighted-techniques.js';
+import {meterAtTick} from '@ai-composer/music-core';
 import type {ArrangementEditingContext,ArrangementEditingIntent} from './editing-context.js';
 import type {ChangeSet,MidiNote,MusicProject,MusicTrack,NoteOperation} from '@ai-composer/music-core';
 
@@ -19,6 +22,7 @@ export interface ArrangementRequest {
  readonly instruction:string;
  readonly plan?:HarmonyPlan;
  readonly seed?:number;
+ readonly techniqueIntent?:TechniqueIntent;
  readonly editing?:ArrangementEditingIntent;
 }
 export interface ArrangementContext {
@@ -31,6 +35,8 @@ export interface ArrangementContext {
  readonly neighborNotes:readonly MidiNote[];
  readonly plan?:HarmonyPlan;
  readonly seed?:number;
+ readonly techniqueIntent?:TechniqueIntent;
+ readonly techniquePlan?:TechniquePlan;
  readonly editing?:ArrangementEditingContext;
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
@@ -107,8 +113,16 @@ export function prepareArrangementContext(request:ArrangementRequest):Arrangemen
  const chordSuggestions=suggestChords(selected,startTick,endTick,project.ppq);
  const editing=request.editing===undefined?undefined:
   createArrangementEditingContext(project,sourceTrackId,request.editing,startTick,endTick);
+ const meter=meterAtTick(project,startTick);
+ const techniquePlan=planElectronicTechniques({
+  instruction,startTick,endTick,ppq:project.ppq,
+  meter:{numerator:meter.numerator,denominator:meter.denominator},
+  intent:request.techniqueIntent??(request.seed===undefined?undefined:{seed:request.seed})
+ });
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
-  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing};
+  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,
+  ...(request.techniqueIntent?{techniqueIntent:request.techniqueIntent}:{}),
+  ...(techniquePlan?{techniquePlan}:{}),editing};
  return context;
 }
 
