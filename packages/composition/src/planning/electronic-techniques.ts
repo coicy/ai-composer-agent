@@ -130,7 +130,8 @@ export function recommendElectronicTechniques(request:TechniqueRequest):Techniqu
   if(!candidate)continue;
   const value=weight(candidate);
   // Sparse ambient arrangements should not be forced to use a drum pattern.
-  if(value<50&&!requested)continue;
+  // Non-ambient dance styles keep an alternative pulse when their default kick is explicitly vetoed.
+  if(value<50&&!requested&&!(slot==='drums'&&request.style!=='ambient'))continue;
   choices.push({
    id:candidate.id,slot,priority:value>=90?'signature':value>=65?'supporting':'optional',
    weight:value,evidence:'genre_design_heuristic',
