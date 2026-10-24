@@ -38,6 +38,6 @@ describe('coherent electronic song blueprint planning',()=>{
   expect(()=>buildElectronicCompositionBlueprint({project,style:'house',seed:-1})).toThrow('invalid_blueprint_seed');
   expect(()=>buildElectronicCompositionBlueprint({project,style:'house',seed:1,bars:3})).toThrow('invalid_blueprint_bars');
   expect(()=>buildElectronicCompositionBlueprint({project,style:'house',seed:1,startTick:1})).toThrow('invalid_blueprint_start');
-  expect(()=>buildElectronicCompositionBlueprint({project,style:'house',seed:1,bars:20}).sections).not.toThrow;
+  expect(buildElectronicCompositionBlueprint({project,style:'house',seed:1,bars:20}).sections).toHaveLength(4);
  });
 });
