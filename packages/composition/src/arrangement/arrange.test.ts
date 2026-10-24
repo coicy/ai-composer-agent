@@ -62,6 +62,18 @@ describe('atomic three-track arrangement candidate',()=>{
   await expect(proposeArrangement(fake(tracks()),{...request,
    disabledTechniques:['four_floor']})).rejects.toThrow('electronic_style_required');
  });
+ it('attaches current long-form section identity for an explicit style without changing source notes',async()=>{
+  let section:unknown;
+  const provider:ArrangementProvider={id:'structure-spy',async generate(context){
+   section=context.sectionGuidance;
+   return tracks();
+  }};
+  const candidate=await proposeArrangement(provider,{...request,seed:19501,electronicStyle:'synthwave'});
+  expect(section).toMatchObject({kind:'intro',motifId:'A',motifAction:'introduce',energy:30});
+  expect(candidate.techniquePlan?.choices.some(t=>t.id==='arpeggio_pingpong')).toBe(true);
+  expect(candidate.changes.baseRevision).toBe(original.revision);
+  expect(original.tracks).toHaveLength(1);
+ });
  it('enforces a strict user chord plan before commit while keeping source unchanged',async()=>{
   const plan={tonic:0,mode:'major' as const,degrees:[1] as const,registers:DEFAULT_REGISTERS,enforcement:{scale:'hard' as const,chords:'hard' as const,registers:'hard' as const}};
   const req={...request,plan};

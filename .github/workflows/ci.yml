@@ -1,9 +1,9 @@
 name: CI
 on:
   push:
-    branches: [main, feat/weighted-electronic-technique-planner]
+    branches: [main, feat/weighted-electronic-technique-planner, feat/electronic-song-blueprints]
   pull_request:
-    branches: [main, feat/music-timebase-midi-metadata]
+    branches: [main, feat/music-timebase-midi-metadata, feat/weighted-electronic-technique-planner]
 
 # Only the newest run for a PR (or main) should consume CI capacity.
 # This does not conceal real failures; completed failed checks remain visible.

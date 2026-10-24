@@ -38,3 +38,6 @@ export type {RegionVariantBatch,FailedRegionVariant} from './arrangement/region-
 
 export {listElectronicTechniques,recommendElectronicTechniques,proposeElectronicTechniqueVariations} from './planning/electronic-techniques.js';
 export type {ElectronicStyle,TechniqueId,TechniqueSlot,TechniquePlan,TechniqueRequest,TechniqueChoice,VariationGesture} from './planning/electronic-techniques.js';
+
+export {buildElectronicCompositionBlueprint,locateBlueprintSection} from './planning/electronic-blueprint.js';
+export type {CompositionBlueprint,PlannedSongSection,BlueprintRequest,SongSectionKind} from './planning/electronic-blueprint.js';

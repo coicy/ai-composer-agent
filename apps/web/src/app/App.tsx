@@ -16,7 +16,7 @@ import {VelocityLane} from '../features/editor/VelocityLane.js';
 import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole,ArrangementRequest,ArrangementPartChoices,RegionRegenerationCandidate,RegionRegenerationRequest,FeedbackInterpretation} from '@ai-composer/composition';
 import type {ElectronicStyle} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
-import {createSession,commitSession,undoSession,redoSession,applyChangeSet,validateProject} from '@ai-composer/music-core';
+import {createSession,commitSession,undoSession,redoSession,applyChangeSet,validateProject,ticksPerBar,resolveMeter} from '@ai-composer/music-core';
 import type {EditSession,MidiNote,MusicProject,NoteOperation,GenerationRecord} from '@ai-composer/music-core';
 const initial:MusicProject={projectId:'demo',revision:0,ppq:480,tracks:[{trackId:'melody',name:'主旋律',locked:false,notes:[]}]};
 const ROW=24,TOP_PITCH=127,BOTTOM_PITCH=0;
@@ -219,10 +219,11 @@ export function App(){
   const controller=new AbortController();arrangeRequest.current=controller;
   setArrangePending(true);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);setCandidate(null);setError('');
   const snapshot=session.project;
+  const barTicks=ticksPerBar(snapshot.ppq,resolveMeter(snapshot));
   const request:ArrangementRequest={
    project:snapshot,sourceTrackId:trackId,
-   startTick:(arrangeStartBar-1)*snapshot.ppq*4,
-   endTick:(arrangeStartBar-1+arrangeBars)*snapshot.ppq*4,
+   startTick:(arrangeStartBar-1)*barTicks,
+   endTick:(arrangeStartBar-1+arrangeBars)*barTicks,
    instruction:arrangePrompt,plan,seed:variantSeed,
    ...(electronicStyle!=='none'?{electronicStyle}:{})
   };
