@@ -37,3 +37,5 @@ export {proposeRegionVariantBatch} from './arrangement/region-variants.js';
 export type {RegionVariantBatch,FailedRegionVariant} from './arrangement/region-variants.js';
 export {planElectronicTechniques,inferElectronicGenre} from './planning/weighted-techniques.js';
 export type {ElectronicGenre,TechniqueId,TechniqueRole,TechniqueIntent,TechniquePlan,TechniqueContext,AssignedTechnique,DeferredTechnique} from './planning/weighted-techniques.js';
+export {createCompositionBlueprint,validateCompositionBlueprint,blueprintWindow} from './planning/composition-blueprint.js';
+export type {CompositionBlueprint,CompositionSection,BlueprintRequest,SectionKind} from './planning/composition-blueprint.js';

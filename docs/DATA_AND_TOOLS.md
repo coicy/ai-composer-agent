@@ -30,3 +30,7 @@ MusicProject 增加可选 `tempoMap`、`meterMap`（tick=0 的首事件、严格
 `TechniqueIntent` 允许用户显式选择风格、禁用自动化或排除具体技法；未指定时可从唯一明确的 House/Techno/Trance/Synthwave/DnB/Chiptune/Ambient 曲风词识别，不确定时不作强制推断。引擎依据可调风格权重主动为现有三轨安排琶音、低音、和声击奏或持续音，并设定明确 Tick 窗口的乐句变化。依旧必须由通用 LLM 实际生成 MIDI，用户硬约束高于任何风格权重。
 
 现有三轨生成 API **没有鼓轨**，故 Four-on-the-floor / DnB Breakbeat 高权重项目只标记为 deferred，不声称已生成完整电子鼓。这一缺口会在后续 MusicRole 升级 PR 解决。MCP 相关多分支功能仍未合并；本阶段通过当前 Web → API → CompositionProvider 路径传入结构化规划。见 [S1_WEIGHTED_TECHNIQUES.md](S1_WEIGHTED_TECHNIQUES.md)。
+
+## S2 CompositionBlueprint（设计的候选计划，非持久批准）
+
+`composition-blueprint-v1` 使用 `ppq/meter/songStartTick/totalBars/mainMotifId/sections` 表达连续歌曲结构；每节含起止 Tick、energy、统一 motifId、对比/再现 action 和一种变化维度。该对象现在从 Authoritative MusicProject 的有效拍号与创作 seed 派生，作为 LLM 只读创作上下文，不属于默认的持久工程 schema，也不替代人工确认或实际音符。结构/技法数据仍不能由普通 MIDI 全量保存。见 [S2_COMPOSITION_BLUEPRINT.md](S2_COMPOSITION_BLUEPRINT.md)。

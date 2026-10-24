@@ -9,6 +9,9 @@ import {createArrangementEditingContext} from './editing-context.js';
 import {planElectronicTechniques} from '../planning/weighted-techniques.js';
 import type {TechniqueIntent,TechniquePlan} from '../planning/weighted-techniques.js';
 import {meterAtTick} from '@ai-composer/music-core';
+import {createCompositionBlueprint,blueprintWindow} from '../planning/composition-blueprint.js';
+import type {CompositionBlueprint} from '../planning/composition-blueprint.js';
+import {inferElectronicGenre} from '../planning/weighted-techniques.js';
 import type {ArrangementEditingContext,ArrangementEditingIntent} from './editing-context.js';
 import type {ChangeSet,MidiNote,MusicProject,MusicTrack,NoteOperation} from '@ai-composer/music-core';
 
@@ -37,6 +40,7 @@ export interface ArrangementContext {
  readonly seed?:number;
  readonly techniqueIntent?:TechniqueIntent;
  readonly techniquePlan?:TechniquePlan;
+ readonly compositionWindow?:ReturnType<typeof blueprintWindow>;
  readonly editing?:ArrangementEditingContext;
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
@@ -56,6 +60,7 @@ export interface ArrangementCandidate {
  readonly tracks:readonly MusicTrack[];
  readonly assessment:ArrangementAssessment;
  readonly techniquePlan?:TechniquePlan;
+ readonly compositionWindow?:ReturnType<typeof blueprintWindow>;
  readonly plan?:HarmonyPlan;
  readonly planFindings:readonly PlanFinding[];
  readonly changes:ChangeSet;
@@ -120,10 +125,26 @@ export function prepareArrangementContext(request:ArrangementRequest):Arrangemen
   meter:{numerator:meter.numerator,denominator:meter.denominator},
   intent:request.techniqueIntent??(request.seed===undefined?undefined:{seed:request.seed})
  });
+ // A whole-song creative blueprint is projected read-only onto the requested
+ // 1–4 bar window. It guides LLM continuity without changing scope/permissions.
+ const planMeter=meterAtTick(project,startTick);
+ const blueprintBarTicks=project.ppq*4*planMeter.numerator/planMeter.denominator;
+ const origin=Math.floor(startTick/(16*blueprintBarTicks))*16*blueprintBarTicks;
+ const lastTick=origin+16*blueprintBarTicks;
+ const meters=project.meterMap??[];
+ const meterChangesInside=meters.some(m=>m.tick>origin&&m.tick<lastTick);
+ const songBlueprint:CompositionBlueprint|null=meterChangesInside?null:createCompositionBlueprint({
+  seed:request.seed??0,
+  style:techniquePlan?.genre??inferElectronicGenre(instruction)??'general',
+  ppq:project.ppq,meter:{numerator:planMeter.numerator,denominator:planMeter.denominator},
+  songStartTick:origin,totalBars:16,mainMotifId:'primary-motif'
+ });
+ const compositionWindow=songBlueprint?blueprintWindow(songBlueprint,startTick,endTick):undefined;
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
   sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,
   ...(request.techniqueIntent?{techniqueIntent:request.techniqueIntent}:{}),
-  ...(techniquePlan?{techniquePlan}:{}),editing};
+  ...(techniquePlan?{techniquePlan}:{}),
+  ...(compositionWindow?{compositionWindow}:{}),editing};
  return context;
 }
 
@@ -142,5 +163,5 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  // The proposal does not write the project. Approval must still pass a revision check.
  const assessment=evaluateArrangement(selected,tracks,startTick,endTick,project.ppq);
- return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,changes,...(context.techniquePlan?{techniquePlan:context.techniquePlan}:{})};
+ return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,changes,...(context.techniquePlan?{techniquePlan:context.techniquePlan}:{}),...(context.compositionWindow?{compositionWindow:context.compositionWindow}:{})};
 }
