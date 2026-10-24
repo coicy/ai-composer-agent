@@ -14,6 +14,7 @@ import type {HarmonyPlanDraft} from '../features/agent/HarmonyPlanEditor.js';
 import {timelineFromDegrees} from '../features/agent/HarmonyPlanEditor.js';
 import {VelocityLane} from '../features/editor/VelocityLane.js';
 import type {MelodyCandidate,MelodyStyle,ArrangementCandidate,ArrangementRole,ArrangementRequest,ArrangementPartChoices,RegionRegenerationCandidate,RegionRegenerationRequest,FeedbackInterpretation} from '@ai-composer/composition';
+import type {ElectronicStyle} from '@ai-composer/composition';
 import type {PointerEvent as ReactPointerEvent} from 'react';
 import {createSession,commitSession,undoSession,redoSession,applyChangeSet,validateProject} from '@ai-composer/music-core';
 import type {EditSession,MidiNote,MusicProject,NoteOperation,GenerationRecord} from '@ai-composer/music-core';
@@ -46,6 +47,7 @@ export function App(){
  const [arrangeBars,setArrangeBars]=useState(4);
  const [harmonicPlan,setHarmonicPlan]=useState<HarmonyPlanDraft>({enabled:false,tonic:0,mode:'major',progression:'1,4,5,1',timelineEnabled:false,timeline:[],passingTones:'none',registers:DEFAULT_REGISTERS,enforcement:{scale:'hard',chords:'hard',registers:'hard',inversions:'hard'}});
  const [arrangePrompt,setArrangePrompt]=useState('基于主旋律创作具有奇幻冒险感的和声、低音与节奏性伴奏，保留主旋律的主题动机。');
+ const [electronicStyle,setElectronicStyle]=useState<ElectronicStyle|'none'>('none');
  const [arrangePending,setArrangePending]=useState(false);
  // Scoped regeneration keeps its source independent of the actively displayed Piano Roll track.
  const [regionSource,setRegionSource]=useState('melody');
@@ -221,7 +223,8 @@ export function App(){
    project:snapshot,sourceTrackId:trackId,
    startTick:(arrangeStartBar-1)*snapshot.ppq*4,
    endTick:(arrangeStartBar-1+arrangeBars)*snapshot.ppq*4,
-   instruction:arrangePrompt,plan,seed:variantSeed
+   instruction:arrangePrompt,plan,seed:variantSeed,
+   ...(electronicStyle!=='none'?{electronicStyle}:{})
   };
   try{
    const provider=useModel?createRemoteArranger(snapshot):new SeededArranger();
@@ -562,6 +565,22 @@ export function App(){
    <label>编配小节 <input type="number" aria-label="编配小节数" min={1} max={4} value={arrangeBars} onChange={e=>{const next=Number(e.target.value);setArrangeBars(next);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);if(Number.isSafeInteger(next)&&next>=1&&next<=4)setHarmonicPlan(p=>{const progression=Array.from({length:next},(_,i)=>p.progression.split(',')[i]??['1','4','5','1'][i]!).join(',');
      return {...p,progression,timeline:p.timelineEnabled?timelineFromDegrees(progression,next):p.timeline};});}}/></label>
    <HarmonyPlanEditor value={harmonicPlan} barCount={arrangeBars} onChange={next=>{setHarmonicPlan(next);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/>
+   <label>电子曲风与技法规划
+    <select aria-label="电子曲风" value={electronicStyle} onChange={e=>{
+     setElectronicStyle(e.target.value as ElectronicStyle|'none');
+     setArrangement(null);setArrangementVariants([]);setVariantRequest(null);
+    }}>
+     <option value="none">不启用（原有编配）</option>
+     <option value="house">House</option>
+     <option value="synthwave">Synthwave</option>
+     <option value="techno">Techno</option>
+     <option value="trance">Trance</option>
+     <option value="drum_and_bass">Drum &amp; Bass</option>
+     <option value="ambient">Ambient</option>
+     <option value="chiptune">Chiptune</option>
+    </select>
+   </label>
+   {electronicStyle!=='none'&&<p>自动向 LLM 提供风格关键技法与不同种子变化；当前三轨接口不含独立鼓轨。</p>}
    <textarea aria-label="编配要求" rows={2} maxLength={2000} value={arrangePrompt} onChange={e=>{setArrangePrompt(e.target.value);setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/>   <div className="variant-controls" role="group" aria-label="编配随机种子与候选">
     <label>随机种子 <input type="number" aria-label="编配随机种子" min={0} max={4294967295} step={1} value={variantSeed}
      onChange={e=>{setVariantSeed(Number(e.target.value));setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}/></label>
