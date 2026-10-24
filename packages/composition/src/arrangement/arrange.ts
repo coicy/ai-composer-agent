@@ -4,7 +4,7 @@ import type {TonalProfile,ChordSuggestion} from '../analysis/tonality.js';
 import {evaluateArrangement} from '../evaluation/arrangement.js';
 import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js';
 import {recommendElectronicTechniques} from '../planning/electronic-techniques.js';
-import type {ElectronicStyle,TechniqueId,TechniquePlan} from '../planning/electronic-techniques.js';
+import type {ElectronicStyle,TechniqueId,TechniquePlan,TechniqueRequest} from '../planning/electronic-techniques.js';
 import type {HarmonyPlan,PlanFinding} from '../planning/harmony-plan.js';
 import type {ArrangementAssessment} from '../evaluation/arrangement.js';
 import {createArrangementEditingContext} from './editing-context.js';
@@ -38,6 +38,7 @@ export interface ArrangementContext {
  readonly plan?:HarmonyPlan;
  readonly seed?:number;
  readonly techniquePlan?:TechniquePlan;
+ readonly techniqueRequest?:TechniqueRequest;
  readonly editing?:ArrangementEditingContext;
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
@@ -117,11 +118,13 @@ export function prepareArrangementContext(request:ArrangementRequest):Arrangemen
   createArrangementEditingContext(project,sourceTrackId,request.editing,startTick,endTick);
  if(request.electronicStyle===undefined&&
   (request.disabledTechniques!==undefined||request.forcedTechniques!==undefined))throw new Error('electronic_style_required');
- const techniquePlan=request.electronicStyle===undefined?undefined:
-  recommendElectronicTechniques({style:request.electronicStyle,seed:request.seed??19501,
-   disabled:request.disabledTechniques,forced:request.forcedTechniques});
+ const techniqueRequest:TechniqueRequest|undefined=request.electronicStyle===undefined?undefined:
+  {style:request.electronicStyle,seed:request.seed??19501,
+   ...(request.disabledTechniques!==undefined?{disabled:request.disabledTechniques}:{}),
+   ...(request.forcedTechniques!==undefined?{forced:request.forcedTechniques}:{})};
+ const techniquePlan=techniqueRequest?recommendElectronicTechniques(techniqueRequest):undefined;
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
-  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing,techniquePlan};
+  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing,techniquePlan,techniqueRequest};
  return context;
 }
 
