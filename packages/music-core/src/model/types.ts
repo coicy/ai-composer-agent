@@ -1,5 +1,8 @@
 export interface MidiNote {readonly noteId:string;readonly pitch:number;readonly startTick:number;readonly durationTicks:number;readonly velocity:number;readonly locked?:boolean;}
-export interface MusicTrack {readonly trackId:string;readonly name:string;readonly locked:boolean;readonly notes:readonly MidiNote[];}
+export interface TrackInstrument {readonly kind:'melodic'|'drums';readonly program:number;readonly channel:number;}
+export interface TempoPoint {readonly tick:number;readonly bpm:number;}
+export interface MeterPoint {readonly tick:number;readonly numerator:number;readonly denominator:number;}
+export interface MusicTrack {readonly trackId:string;readonly name:string;readonly locked:boolean;readonly instrument?:TrackInstrument;readonly notes:readonly MidiNote[];}
 /** Historical provenance, not an automatically binding score rule. The JSON plan is validated by composition on reuse. */
 export interface GenerationRecord {
  readonly recordId:string;
@@ -19,7 +22,7 @@ export interface GenerationRecord {
  readonly maxLeapSemitones?:number;
  readonly planJson?:string;
 }
-export interface MusicProject {readonly generationHistory?:readonly GenerationRecord[];readonly projectId:string;readonly revision:number;readonly ppq:number;readonly tracks:readonly MusicTrack[];}
+export interface MusicProject {readonly generationHistory?:readonly GenerationRecord[];readonly projectId:string;readonly revision:number;readonly ppq:number;readonly tempoMap?:readonly TempoPoint[];readonly meterMap?:readonly MeterPoint[];readonly tracks:readonly MusicTrack[];}
 export type NoteOperation =
  |{readonly type:'add_track';readonly track:MusicTrack}
  |{readonly type:'add_note';readonly trackId:string;readonly note:MidiNote}
