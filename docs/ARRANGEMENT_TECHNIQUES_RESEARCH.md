@@ -2,7 +2,9 @@
 
 > 2026-10-24。**研究与设计提案，非已批准产品裁决，未实现新技法引擎。** 核验对象是功能分支 `feat/seeded-musical-inspiration` 的提交 `aefc79da78736088ed572b3ec0776e49e9fc86cc`，不是 `main` 当前已发布能力。独立文档 PR 不修改已批准的 D-005 / D-006 / D-007。
 
-**补充实施方案：** [基础技法词表、跨声部搭配、冲突矩阵与四小节琶音对照](ARRANGEMENT_TECHNIQUE_COMBINATIONS_V1.md)（约定 TechniquePlan/CombinationPlan 输入和可验证边界；尚未实现）。
+**补充实施方案：** [基础技法词表、跨声部搭配、冲突矩阵与四小节琶音对照](ARRANGEMENT_TECHNIQUE_COMBINATIONS_V1.md)
+
+**电子音乐专项：** [作曲能力 × 技法能力 × 制作能力三层调研与落地方案](ELECTRONIC_MUSIC_THREE_LAYER_RESEARCH.md)（附真实仓库检查、数据接口、House/Synthwave 验收与低成本 DAW 输出路径）。（约定 TechniquePlan/CombinationPlan 输入和可验证边界；尚未实现）。
 
 ## 1. 核心诊断：音高合规 ≠ 会编曲
 
