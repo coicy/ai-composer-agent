@@ -1,5 +1,5 @@
 import {useRef,useState,useEffect} from 'react';
-import {playProject} from '@ai-composer/audio-engine';
+import {playProject,suggestArrangementSoundPlan} from '@ai-composer/audio-engine';
 import {rectangleBetween,selectNotesInRect,timeRangeOfSelectedNotes,tickToX,xToQuantizedTick,pitchToY,yToPitch,makeMoveOperations,makeVelocityOperations} from '@ai-composer/piano-roll';
 import type {GridPoint,GridRect} from '@ai-composer/piano-roll';
 import {exportMidi,importMidi} from '@ai-composer/midi-io';
@@ -48,6 +48,7 @@ export function App(){
  const [arrangePrompt,setArrangePrompt]=useState('基于主旋律创作具有奇幻冒险感的和声、低音与节奏性伴奏，保留主旋律的主题动机。');
  const [genreChoice,setGenreChoice]=useState<'auto'|'disabled'|ElectronicGenre>('auto');
  const [arrangePending,setArrangePending]=useState(false);
+ const [electronicSoundPreview,setElectronicSoundPreview]=useState(true);
  // Scoped regeneration keeps its source independent of the actively displayed Piano Roll track.
  const [regionSource,setRegionSource]=useState('melody');
  const [regionTarget,setRegionTarget]=useState('');
@@ -280,7 +281,13 @@ export function App(){
   stop();
   try{
    const preview={...session.project,tracks:[...session.project.tracks,...arrangement.tracks]};
-   const handle=await playProject(preview);
+   const plan=electronicSoundPreview&&arrangement.techniquePlan?
+    suggestArrangementSoundPlan(preview,{
+     harmony:arrangement.tracks[0]!.trackId,
+     bass:arrangement.tracks[1]!.trackId,
+     accompaniment:arrangement.tracks[2]!.trackId
+    }):undefined;
+   const handle=await playProject(preview,undefined,plan);
    playback.current=handle;setPlaying(true);setError('');
   }catch(e){setError(e instanceof Error?e.message:'arrangement_preview_failed');}
  }
@@ -637,6 +644,8 @@ export function App(){
     <label>覆盖查看 <select aria-label="编配预览轨道" value={arrangementView} onChange={e=>setArrangementView(e.target.value as ArrangementRole)}>
      {ARRANGEMENT_ROLES.map((role,i)=><option key={role} value={role}>{arrangement.tracks[i]!.name}</option>)}
     </select></label>
+    <label><input type="checkbox" aria-label="电子合成器试听" checked={electronicSoundPreview}
+     onChange={e=>setElectronicSoundPreview(e.target.checked)}/>电子合成器试听（Pad / Bass / Pluck，仅预览，不改工程 MIDI）</label>
     <button disabled={arrangement.changes.baseRevision!==project.revision} onClick={()=>void previewMultiTrackAudio()}>试听原曲与编配候选</button>
     <button disabled={arrangement.changes.baseRevision!==project.revision} onClick={approveMultiTrack}>确认新增 3 轨</button>
     <button onClick={()=>{setArrangement(null);setArrangementVariants([]);setVariantRequest(null);}}>取消编配</button>

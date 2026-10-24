@@ -36,3 +36,7 @@ S0 MusicTimebase：将 tempoMap、meterMap 与显式 GM percussion/program 纳�
 ## S2 结构化全曲计划（功能分支，未合并）
 
 已形成带 seed、16 小节段落、共同动机标识、能量级和指定变化维度的 `CompositionBlueprint`。编配时从相同全曲块截取当前 1–4 小节，发送到通用 LLM 要求延续和再现同一主题。旧三轨编配仍不能据此变成真正 16 小节的单次提交；其他拍号的全曲计划通过独立纯函数验证，但完整编配窗口仍有旧 4/4 局限。见 [S2_COMPOSITION_BLUEPRINT.md](S2_COMPOSITION_BLUEPRINT.md)。
+
+## S3 电子试听音源（功能分支，未合并）
+
+`audio-engine` 加入程序化 Synth Bass、Synth Pluck、Synth Pad、Saw Lead 和 GM 鼓机的区分试听（只使用 Web Audio、无外部采样版权包）；音轨可通过只读的 `SoundDesignPlan` 配置临时音色、增益、声像和滤波范围。电子曲风三轨候选在 Browser 中可临时试听这些不同音色；未增加复杂插件、工程持久音色设置或自动化。见 [S3_ELECTRONIC_SOUND_PRESETS.md](S3_ELECTRONIC_SOUND_PRESETS.md)。
