@@ -2,6 +2,8 @@ import {applyChangeSet,validateNote,validateProject} from '@ai-composer/music-co
 import {analyzeTonality,suggestChords} from '../analysis/tonality.js';
 import type {TonalProfile,ChordSuggestion} from '../analysis/tonality.js';
 import {evaluateArrangement} from '../evaluation/arrangement.js';
+import {evaluateTechniqueEvidence} from '../evaluation/electronic-technique-evidence.js';
+import type {TechniqueEvidence} from '../evaluation/electronic-technique-evidence.js';
 import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js';
 import {recommendElectronicTechniques} from '../planning/electronic-techniques.js';
 import type {ElectronicStyle,TechniqueId,TechniquePlan,TechniqueRequest} from '../planning/electronic-techniques.js';
@@ -60,6 +62,7 @@ export interface ArrangementCandidate {
  readonly plan?:HarmonyPlan;
  readonly planFindings:readonly PlanFinding[];
  readonly techniquePlan?:TechniquePlan;
+ readonly techniqueEvidence?:readonly TechniqueEvidence[];
  readonly changes:ChangeSet;
 }
 const NAMES:Record<ArrangementRole,string>={harmony:'AI 和声',bass:'AI 低音',accompaniment:'AI 伴奏'};
@@ -143,5 +146,6 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  // The proposal does not write the project. Approval must still pass a revision check.
  const assessment=evaluateArrangement(selected,tracks,startTick,endTick,project.ppq);
- return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,techniquePlan:context.techniquePlan,changes};
+ return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,techniquePlan:context.techniquePlan,
+  techniqueEvidence:context.techniquePlan?evaluateTechniqueEvidence(context.techniquePlan,tracks,project.ppq):undefined,changes};
 }
