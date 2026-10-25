@@ -5,6 +5,8 @@ import {evaluateArrangement} from '../evaluation/arrangement.js';
 import {evaluateTechniqueEvidence} from '../evaluation/electronic-technique-evidence.js';
 import type {TechniqueEvidence} from '../evaluation/electronic-technique-evidence.js';
 import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js';
+import {validateMotifDevelopmentPlan} from '../planning/motif-development.js';
+import type {MotifDevelopmentPlan,DevelopmentWindow} from '../planning/motif-development.js';
 import {recommendElectronicTechniques} from '../planning/electronic-techniques.js';
 import {buildElectronicCompositionBlueprint,locateBlueprintSection} from '../planning/electronic-blueprint.js';
 import type {PlannedSongSection} from '../planning/electronic-blueprint.js';
@@ -30,6 +32,7 @@ export interface ArrangementRequest {
  readonly disabledTechniques?:readonly TechniqueId[];
  readonly forcedTechniques?:readonly TechniqueId[];
  readonly editing?:ArrangementEditingIntent;
+ readonly developmentPlan?:MotifDevelopmentPlan;
 }
 export interface ArrangementContext {
  readonly sourceTrackId:string;
@@ -45,6 +48,7 @@ export interface ArrangementContext {
  readonly techniqueRequest?:TechniqueRequest;
  readonly sectionGuidance?:Pick<PlannedSongSection,'kind'|'motifId'|'motifAction'|'energy'|'instruction'|'startTick'|'endTick'>;
  readonly editing?:ArrangementEditingContext;
+ readonly developmentGuidance?:DevelopmentWindow;
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
  readonly chordSuggestions?:readonly ChordSuggestion[];
@@ -147,8 +151,20 @@ export function prepareArrangementContext(request:ArrangementRequest):Arrangemen
    // Future segmentation may split this scope; never claim one section applies to two.
   }
  }
+ let developmentGuidance:DevelopmentWindow|undefined;
+ if(request.developmentPlan){
+  const d=request.developmentPlan;
+  validateMotifDevelopmentPlan(d);
+  if(d.ppq!==project.ppq||startTick<d.startTick||endTick>d.endTick)throw Error('development_timebase_mismatch');
+  for(const motif of d.motifs){
+   const track=project.tracks.find(t=>t.trackId===motif.sourceTrackId);
+   if(!track||motif.noteIds.some(id=>!track.notes.some(n=>n.noteId===id)))throw Error('development_motif_source_missing');
+  }
+  developmentGuidance=d.windows.find(w=>startTick>=w.startTick&&endTick<=w.endTick);
+  if(!developmentGuidance)throw Error('development_window_crosses_scope');
+ }
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
-  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing,techniquePlan,techniqueRequest,sectionGuidance};
+  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing,techniquePlan,techniqueRequest,sectionGuidance,developmentGuidance};
  return context;
 }
 
