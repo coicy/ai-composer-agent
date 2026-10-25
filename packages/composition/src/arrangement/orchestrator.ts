@@ -1,4 +1,3 @@
-import type {MidiNote,MusicProject} from '@ai-composer/music-core';
 import type {ArrangementCandidate,ArrangementProvider,ArrangementRequest} from './arrange.js';
 import {proposeArrangement} from './arrange.js';
 import type {MotifDevelopmentPlan,MotifIdentity} from '../planning/motif-development.js';
