@@ -34,14 +34,16 @@ def varlen(n: int) -> bytes:
         n >>= 7
     return bytes(data)
 
-def chunk(events: list[tuple[int, int, bytes]]) -> bytes:
+def chunk(events: list[tuple[int, int, bytes]], end_tick: int | None = None) -> bytes:
     data = bytearray()
     last = 0
     for tick, priority, message in sorted(events, key=lambda e: (e[0], e[1], e[2])):
         data.extend(varlen(tick - last))
         data.extend(message)
         last = tick
-    data.extend(b"\x00\xff\x2f\x00")
+    if end_tick is not None and end_tick < last:
+        raise ValueError("end_tick before last event")
+    data.extend(varlen((end_tick or last) - last) + b"\xff\x2f\x00")
     return b"MTrk" + pack(">I", len(data)) + data
 
 def make_track(notes: list[tuple[int, int, int]], channel: int, name: str) -> bytes:
@@ -67,7 +69,7 @@ def make_case(kind: str, order: list[int]) -> tuple[bytes, int]:
     meta = chunk([
         (0, 0, b"\xff\x51\x03" + tempo.to_bytes(3, "big")),
         (0, 1, b"\xff\x58\x04\x04\x02\x18\x08"),
-    ])
+    ], end_tick=24 * SECTION)
     header = b"MThd" + pack(">IHHH", 6, 1, 3, PPQ)
     return header + meta + make_track(melody, 0, "Lead") + make_track(bass, 1, "Bass"), len(melody)
 
