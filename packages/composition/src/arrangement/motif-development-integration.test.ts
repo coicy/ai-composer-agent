@@ -3,7 +3,7 @@ import {prepareArrangementContext} from './arrange.js';
 import {buildRuinsDevelopmentPlan,extractMotifIdentity} from '../planning/motif-development.js';
 import type {MusicProject} from '@ai-composer/music-core';
 const notes=[60,62,65,64].map((pitch,i)=>({noteId:'m'+i,pitch,startTick:i*480,durationTicks:480,velocity:80}));
-const project:MusicProject={projectId:'development-integration',revision:0,ppq:480,tracks:[{trackId:'lead',name:'Lead',locked:true,notes}]};
+const project:MusicProject={projectId:'development-integration',revision:0,ppq:480,tracks:[{trackId:'lead',name:'Lead',locked:true,notes:[...notes,{noteId:'later',pitch:67,startTick:7200,durationTicks:480,velocity:75}]}]};
 const plan=buildRuinsDevelopmentPlan(extractMotifIdentity('motif-a','lead',notes));
 describe('arrangement development context',()=>{
  it('transfers real motif operation and exact active window to the provider',()=>{
