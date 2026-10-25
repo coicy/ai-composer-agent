@@ -28,6 +28,6 @@ export function assessMotifRealization(motif:MotifIdentity,window:DevelopmentWin
   return {state:hit?'observed':'not_observed',operation:window.operation,testedWindows:noteCount,
    explanation:hit?'Matching directed-interval contour observed; transformation quality not proven.':'Expected directed interval contour not detected.'};
  }
- return {state:'not_evaluable',operation:window.operation,testedWindows:notes.length,
+ return {state:'not_evaluable',operation:window.operation,testedWindows:noteCount,
   explanation:'Rhythm shape or identifiable fragment requires a cross-window comparison and human hearing.'};
 }
