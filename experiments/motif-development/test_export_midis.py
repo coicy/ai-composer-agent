@@ -1,5 +1,7 @@
 """Format-level and counterfactual invariants for the generated, playable MIDI pack."""
 import hashlib
+import io
+from collections import Counter
 import json
 import tempfile
 import unittest
@@ -30,6 +32,20 @@ class MotifFixtureExportTests(unittest.TestCase):
                              "C and E must be exactly identical music")
             self.assertNotEqual(files[2].read_bytes(),files[3].read_bytes(),
                                 "D should reorder the same underlying material")
+            # Same multiset of per-track note pitches, velocities and local onsets.
+            # Only the global temporal order of the six sections may differ.
+            def note_inventory(blob):
+                midi=mido.MidiFile(file=io.BytesIO(blob))
+                events=[]
+                for index, track in enumerate(midi.tracks):
+                    tick=0
+                    for message in track:
+                        tick+=message.time
+                        if message.type=='note_on' and message.velocity>0:
+                            events.append((index,message.note,message.velocity,tick%7680))
+                return Counter(events)
+            self.assertEqual(note_inventory(files[2].read_bytes()),
+                             note_inventory(files[3].read_bytes()))
             self.assertEqual(manifest["cases"][0]["notes"],18)
             self.assertGreater(manifest["cases"][1]["notes"],18)
             self.assertTrue((root/"text_queries"/"ruins.txt").exists())
