@@ -1,0 +1,23 @@
+name: Motif reference ingestion
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'references/development/**'
+      - 'scripts/fetch_development_references.py'
+      - '.github/workflows/motif-reference.yml'
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch and attest source MIDI
+        run: python scripts/fetch_development_references.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: motif-development-reference-midi
+          path: references/development/local-midi/
+          retention-days: 14
