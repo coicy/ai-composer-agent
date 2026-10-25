@@ -1,0 +1,23 @@
+name: Arrangement orchestrator checks
+on:
+  pull_request:
+    branches:
+      - feat/motif-development-reference-gate
+    paths:
+      - 'packages/composition/**'
+      - '.github/workflows/arrangement-orchestrator-check.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @ai-composer/composition typecheck
+      - run: pnpm --filter @ai-composer/composition test
