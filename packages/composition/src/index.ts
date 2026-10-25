@@ -56,3 +56,6 @@ export type {DrumRetryResult} from './arrangement/drum-retry.js';
 
 export {extractMotifIdentity,validateMotifDevelopmentPlan,buildRuinsDevelopmentPlan} from './planning/motif-development.js';
 export type {MotifIdentity,DevelopmentWindow,MotifDevelopmentPlan,DevelopmentOperation} from './planning/motif-development.js';
+
+export {assessMotifRealization} from './evaluation/motif-realization.js';
+export type {MotifRealizationEvidence} from './evaluation/motif-realization.js';
