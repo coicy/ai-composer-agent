@@ -22,7 +22,7 @@ jobs:
       - name: Export actual MIDI counterfactuals (no ML weights)
         run: python3 experiments/motif-development/export_midis.py --out experiments/motif-development/generated
       - name: Install isolated scoring test dependency
-        run: python3 -m pip install 'numpy>=1.26,<3'
+        run: python3 -m pip install 'numpy>=1.26,<3' 'mido>=1.3,<2'
       - name: Verify MIDI pack and synthetic CLaMP score plumbing
         run: |
           python3 -m unittest discover -s experiments/motif-development -p 'test_*.py' -v
