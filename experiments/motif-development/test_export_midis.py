@@ -22,9 +22,9 @@ class MotifFixtureExportTests(unittest.TestCase):
                 self.assertEqual(int.from_bytes(data[10:12],"big"),3)
                 self.assertEqual(int.from_bytes(data[12:14],"big"),PPQ)
                 self.assertEqual(data.count(b"MTrk"),3)
-            parsed=mido.MidiFile(str(path))
-            self.assertEqual(parsed.ticks_per_beat,PPQ)
-            self.assertAlmostEqual(parsed.length,64,places=2)
+                parsed=mido.MidiFile(str(path))
+                self.assertEqual(parsed.ticks_per_beat,PPQ)
+                self.assertAlmostEqual(parsed.length,64,places=2)
                 self.assertEqual(hashlib.sha256(data).hexdigest(),case["sha256"])
             self.assertEqual(files[2].read_bytes(),files[4].read_bytes(),
                              "C and E must be exactly identical music")
