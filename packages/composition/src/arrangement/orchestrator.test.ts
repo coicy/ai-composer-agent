@@ -32,7 +32,7 @@ describe('automatic scoped arrangement orchestrator',()=>{
  it('does not retry on unverifiable evidence',async()=>{
   let n=0;
   const provider:ArrangementProvider={id:'mock-llm',async generate(){n++;return raw(true);}};
-  const w={...plan.windows[0]!,operation:'harmonic_recontextualization' as const};
+  const w={...plan.windows[0]!,preserve:'rhythm_shape' as const};
   const run=await orchestrateArrangement(provider,{...request,developmentPlan:{...plan,windows:[w,...plan.windows.slice(1)]}});
   expect(run.status).toBe('not_evaluable');
   expect(n).toBe(1);
