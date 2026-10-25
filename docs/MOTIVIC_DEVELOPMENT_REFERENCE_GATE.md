@@ -25,3 +25,9 @@ Create 24 bars at 72 BPM or less than 2 minutes. A: introduce 3–5 event sparse
 
 ## Current status
 Source catalog + downloader + specification submitted in this branch. External MIDI download, musical technique annotation, integration into LLM planning and actual before/after production are not completed in this slice.
+
+## Implementation update — scoped arranger bridge
+- `ArrangementRequest.developmentPlan` optionally carries a validated `MotifDevelopmentPlan`; its MIDI identity must refer to existing project note IDs and the requested four-bar composition window must lie within a single development window.
+- `ArrangementProvider.generate` now receives `context.developmentGuidance` and generated candidates contain advisory `developmentEvidence` (directed-interval contour only). A contour match is NOT confirmation of meaningful musical development; harmony and fragment assessments explicitly remain `not_evaluable`.
+- Development metadata has not yet been checked to pass through the remote LLM-specific API prompt serialization. Do not describe this as end-to-end LLM execution until the adapter is verified.
+- Vitest tests added for planning, provider context and limited realization evidence. CI currently tests reference ingestion; TypeScript/Vitest checks must still run on this stacked PR.
