@@ -1,0 +1,56 @@
+{
+  "version": "development-midi-reference-sources-v1",
+  "purpose": "motivic-development-and-counterpoint-study-not-style-certification",
+  "references": [
+    {
+      "id": "bach-invention-02-bwv773",
+      "title": "J.S. Bach Invention 2 BWV 773",
+      "source": "Mutopia Project",
+      "sourcePage": "https://www.mutopiaproject.org/cgibin/make-table.cgi?collection=bachis",
+      "url": "https://www.mutopiaproject.org/ftp/BachJS/BWV773/bach-invention-02/bach-invention-02.mid",
+      "license": "Public Domain",
+      "rightsStatus": "source-declared",
+      "techniqueHypotheses": [
+        "motif_repetition",
+        "voice_exchange",
+        "imitation"
+      ],
+      "verification": "not_yet_analysed"
+    },
+    {
+      "id": "bach-invention-04-bwv775",
+      "title": "J.S. Bach Invention 4 BWV 775",
+      "source": "Mutopia Project",
+      "sourcePage": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=67",
+      "url": "https://www.mutopiaproject.org/ftp/BachJS/BWV775/bach-invention-04/bach-invention-04.mid",
+      "license": "Public Domain",
+      "rightsStatus": "source-declared",
+      "techniqueHypotheses": [
+        "motif_sequence",
+        "rhythmic_variation",
+        "voice_exchange"
+      ],
+      "verification": "not_yet_analysed"
+    },
+    {
+      "id": "bach-invention-08-bwv779",
+      "title": "J.S. Bach Invention 8 BWV 779",
+      "source": "Mutopia Project",
+      "sourcePage": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=61",
+      "url": "https://www.mutopiaproject.org/ftp/BachJS/BWV779/bach-invention-08/bach-invention-08.mid",
+      "license": "Public Domain",
+      "rightsStatus": "source-declared",
+      "techniqueHypotheses": [
+        "sequential_development",
+        "imitation",
+        "return"
+      ],
+      "verification": "not_yet_analysed"
+    }
+  ],
+  "notes": [
+    "Reference MIDI content is not bundled until downloaded and verified; never present candidate labels as observed facts.",
+    "Do not transfer characteristic note sequences into game compositions; abstract intervals, rhythmic transformations and structural operations only.",
+    "These are counterpoint/development studies, not ambient/game soundtrack style examples."
+  ]
+}
