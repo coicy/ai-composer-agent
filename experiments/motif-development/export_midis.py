@@ -69,7 +69,7 @@ def make_case(kind: str, order: list[int]) -> tuple[bytes, int]:
     meta = chunk([
         (0, 0, b"\xff\x51\x03" + tempo.to_bytes(3, "big")),
         (0, 1, b"\xff\x58\x04\x04\x02\x18\x08"),
-    ], end_tick=24 * SECTION)
+    ], end_tick=6 * SECTION)
     header = b"MThd" + pack(">IHHH", 6, 1, 3, PPQ)
     return header + meta + make_track(melody, 0, "Lead") + make_track(bass, 1, "Bass"), len(melody)
 
