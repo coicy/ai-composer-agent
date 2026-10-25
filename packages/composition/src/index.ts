@@ -65,3 +65,6 @@ export type {OrchestrationRequest,ArrangementRun,MotifMemoryEntry} from './arran
 
 export {orchestrateSongArrangement} from './arrangement/song-orchestrator.js';
 export type {SongArrangementRequest,SongArrangementDraft} from './arrangement/song-orchestrator.js';
+
+export {composeRuinsThemeToSong} from './arrangement/theme-to-song.js';
+export type {ThemeToSongRequest,ThemeToSongDraft} from './arrangement/theme-to-song.js';
