@@ -60,11 +60,11 @@ export function validateMotifDevelopmentPlan(plan:MotifDevelopmentPlan):void{
   if(!m||typeof m.id!=='string'||!m.id||ids.has(m.id)||typeof m.sourceTrackId!=='string'||!m.sourceTrackId||
    !Array.isArray(m.noteIds)||m.noteIds.length<3||m.noteIds.length>16||
    new Set(m.noteIds).size!==m.noteIds.length||
-   m.noteIds.some(x=>typeof x!=='string'||!x)||
+   m.noteIds.some((x:unknown)=>typeof x!=='string'||!x)||
    !Array.isArray(m.anchorIntervals)||m.anchorIntervals.length!==m.noteIds.length-1||
-   m.anchorIntervals.some(x=>!integer(x)||Math.abs(x)>127)||
+   m.anchorIntervals.some((x:unknown)=>!integer(x)||Math.abs(x)>127)||
    !Array.isArray(m.rhythmRatios)||m.rhythmRatios.length!==m.noteIds.length||
-   m.rhythmRatios.some(x=>!Number.isFinite(x)||x<=0||x>64))throw Error('invalid_motif_identity');
+   m.rhythmRatios.some((x:unknown)=>typeof x!=='number'||!Number.isFinite(x)||x<=0||x>64))throw Error('invalid_motif_identity');
   ids.add(m.id);
  }
  let previousEnd=plan.startTick;
