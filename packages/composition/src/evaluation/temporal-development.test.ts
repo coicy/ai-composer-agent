@@ -65,8 +65,9 @@ describe('controlled MIDI-note temporal-development benchmark A–E',()=>{
  });
  it('D: time-shuffling the exact same sections loses plan-aligned evidence',()=>{
   const c=assessment('developed'),d=assessment('scrambled');
-  expect(d.observed).toBeLessThan(c.observed);
-  expect(d.notObserved).toBeGreaterThan(0);
+  expect(d.observed).toBe(3);
+  expect(d.notObserved).toBe(3);
+  expect(c.observed).toBe(6);
  });
  it('E: the same music with mismatched creative brief is indistinguishable structurally',()=>{
   const c=assessment('developed'),e=assessment('style_mismatch');
