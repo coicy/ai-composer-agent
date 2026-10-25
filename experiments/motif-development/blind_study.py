@@ -68,8 +68,6 @@ def summarize(key: Path, response_files: list[Path]) -> dict:
                 values = [row.get(m, '').strip() for m in METRICS]
                 if not person or clip not in mapping:
                     raise ValueError(f'Invalid participant or clip in {source}')
-                if (person, clip) in participants[person]:
-                    raise ValueError('Duplicate participant/clip response')
                 if any(not n.isdigit() or int(n) not in (1,2,3,4,5) for n in values):
                     raise ValueError(f'Ratings must be 1..5: {person}/{clip}')
                 if clip in participants[person]:
