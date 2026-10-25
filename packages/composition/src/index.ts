@@ -59,3 +59,6 @@ export type {MotifIdentity,DevelopmentWindow,MotifDevelopmentPlan,DevelopmentOpe
 
 export {assessMotifRealization} from './evaluation/motif-realization.js';
 export type {MotifRealizationEvidence} from './evaluation/motif-realization.js';
+
+export {orchestrateArrangement} from './arrangement/orchestrator.js';
+export type {OrchestrationRequest,ArrangementRun,MotifMemoryEntry} from './arrangement/orchestrator.js';
