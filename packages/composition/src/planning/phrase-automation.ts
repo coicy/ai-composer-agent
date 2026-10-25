@@ -54,7 +54,7 @@ export function planPhraseAutomation(r:AutomationRequest):AutomationPlan{
    if(penultimate>r.startTick)points.push({tick:penultimate,value:1});
    const dip=(hash(r.seed,r.style+'/'+role)%2===0);
    const boundary=Math.max(penultimate+1,end-Math.max(1,Math.floor(beatTicks/2)));
-   points.push({tick:boundary,value:Number((1+(dip?-unit:unit)).toFixed(3))});
+   points.push({tick:boundary,value:Number((1-(dip?unit:unit/2)).toFixed(3))});
    points.push({tick:end,value:1});
    const unique=points.filter((p,i)=>i===0||p.tick>points[i-1]!.tick);
    if(unique.length>=2){const curve:AutomationCurve={role,lane:'gain',points:unique,reason:'phrase-end energy contour with return'};bounds(curve,end);curves.push(curve);}
