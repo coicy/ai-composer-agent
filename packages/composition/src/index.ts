@@ -62,3 +62,6 @@ export type {MotifRealizationEvidence} from './evaluation/motif-realization.js';
 
 export {orchestrateArrangement} from './arrangement/orchestrator.js';
 export type {OrchestrationRequest,ArrangementRun,MotifMemoryEntry} from './arrangement/orchestrator.js';
+
+export {orchestrateSongArrangement} from './arrangement/song-orchestrator.js';
+export type {SongArrangementRequest,SongArrangementDraft} from './arrangement/song-orchestrator.js';
