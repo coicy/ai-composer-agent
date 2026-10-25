@@ -56,3 +56,23 @@ For A–D, randomize blinded clips with identical rendering, timbre, tempo and l
 - If CLaMP assigns C and D similar scores, its global embedding cannot be the only long-range structure judge.
 - If C/E produce similar text-to-MIDI similarity despite different briefs, it cannot be the only requirements judge.
 - No result may approve or write candidate MIDI automatically; existing authorization, locking and revision checks remain in force.
+
+## Real-audio blind listening protocol (added after initial benchmark)
+
+The benchmark MIDI is now explicitly 24 complete 4/4 bars at 90 BPM (64 seconds). Synthetic score tests do NOT constitute human listening evidence.
+
+Audio playback used the same software synthesizer, GM instruments and soundfont for all five examples, with a common gain across the set. The same MIDI in C/E yields byte-identical rendered MP3. No soundfont file is distributed.
+
+After rendering one labeled MP3 per condition as A_static_loop.mp3 etc., create a reviewer folder with an answer key stored OUTSIDE that folder:
+
+    python experiments/motif-development/blind_study.py prepare --audio /PATH/TO/MP3 --out /PATH/reviewer_pack --key /PRIVATE/key.json
+
+The reviewer pack contains randomly numbered clip_XX.mp3 files and a blank rating_form.csv. Each participant fills participantId and all five 1–5 rating fields, and saves a separate completed CSV. The hidden key must NOT be shared with listeners until all ratings have been submitted.
+
+To aggregate real participant responses:
+
+    python experiments/motif-development/blind_study.py summarize --key /PRIVATE/key.json --responses /RESPONSES/rater01.csv /RESPONSES/rater02.csv --out /PRIVATE/listening_summary.json
+
+The summary reports descriptive means by source/brief and the within-person C/ruins minus E/carnival task-fit difference. It cannot calculate a meaningful p-value or claim quality improvement without sufficient actual listeners and a preregistered sampling plan. The C condition appears twice with the same task brief as a repeat-listening consistency check. D is intentionally a six-section permutation, not a new composition.
+
+Tests of this aggregation code use named MOCK_PERSON data. They are NOT actual listening study results.
