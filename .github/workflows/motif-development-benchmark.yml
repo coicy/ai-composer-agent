@@ -21,7 +21,9 @@ jobs:
       - run: pnpm --filter @ai-composer/composition test
       - name: Export actual MIDI counterfactuals (no ML weights)
         run: python3 experiments/motif-development/export_midis.py --out experiments/motif-development/generated
-      - name: Verify deterministic MIDI pack and score-script syntax
+      - name: Install isolated scoring test dependency
+        run: python3 -m pip install 'numpy>=1.26,<3'
+      - name: Verify MIDI pack and synthetic CLaMP score plumbing
         run: |
           python3 -m unittest discover -s experiments/motif-development -p 'test_*.py' -v
           python3 -m py_compile experiments/motif-development/score_clamp3.py
