@@ -3,6 +3,8 @@ import {analyzeTonality,suggestChords} from '../analysis/tonality.js';
 import type {TonalProfile,ChordSuggestion} from '../analysis/tonality.js';
 import {evaluateArrangement} from '../evaluation/arrangement.js';
 import {evaluateTechniqueEvidence} from '../evaluation/electronic-technique-evidence.js';
+import {assessMotifRealization} from '../evaluation/motif-realization.js';
+import type {MotifRealizationEvidence} from '../evaluation/motif-realization.js';
 import type {TechniqueEvidence} from '../evaluation/electronic-technique-evidence.js';
 import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js';
 import {validateMotifDevelopmentPlan} from '../planning/motif-development.js';
@@ -70,6 +72,7 @@ export interface ArrangementCandidate {
  readonly planFindings:readonly PlanFinding[];
  readonly techniquePlan?:TechniquePlan;
  readonly techniqueEvidence?:readonly TechniqueEvidence[];
+ readonly developmentEvidence?:MotifRealizationEvidence;
  readonly changes:ChangeSet;
 }
 const NAMES:Record<ArrangementRole,string>={harmony:'AI 和声',bass:'AI 低音',accompaniment:'AI 伴奏'};
@@ -189,5 +192,7 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  // The proposal does not write the project. Approval must still pass a revision check.
  const assessment=evaluateArrangement(selected,tracks,startTick,endTick,project.ppq);
  return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,techniquePlan:context.techniquePlan,
-  techniqueEvidence:context.techniquePlan?evaluateTechniqueEvidence(context.techniquePlan,tracks,project.ppq):undefined,changes};
+  techniqueEvidence:context.techniquePlan?evaluateTechniqueEvidence(context.techniquePlan,tracks,project.ppq):undefined,
+  developmentEvidence:context.developmentGuidance&&request.developmentPlan?
+   assessMotifRealization(request.developmentPlan.motifs.find(m=>m.id===context.developmentGuidance!.motifId)!,context.developmentGuidance,tracks):undefined,changes};
 }
