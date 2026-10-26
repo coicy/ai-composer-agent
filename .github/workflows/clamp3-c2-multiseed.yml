@@ -51,7 +51,11 @@ jobs:
           from huggingface_hub import hf_hub_download
           name='weights_clamp3_c2_h_size_768_t_model_FacebookAI_xlm-roberta-base_t_length_128_a_size_768_a_layers_12_a_length_128_s_size_768_s_layers_12_p_size_64_p_length_512.pth'
           source=Path(hf_hub_download(repo_id='sander-wood/clamp3',filename=name))
-          digest=hashlib.file_digest(source.open('rb'),'sha256').hexdigest()
+          h=hashlib.sha256()
+          with source.open('rb') as weights:
+            for block in iter(lambda:weights.read(4*1024*1024),b''):
+              h.update(block)
+          digest=h.hexdigest()
           expected='e6fb0d139b24a1ec20836bb65bd652303d570ea9af2cddb20a1fc161421d64af'
           if digest!=expected:raise ValueError('C2 published checkpoint SHA256 mismatch')
           (Path('/tmp/clamp3/code')/name).symlink_to(source)
