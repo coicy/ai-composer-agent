@@ -1,0 +1,95 @@
+name: Real CLaMP 3 C2 multi-seed evaluation
+# One-shot experimental push trigger; heavy run is opt-in by branch.
+on:
+  push:
+    branches: [experiment/clamp3-c2-multiseed]
+    paths:
+      - .github/workflows/clamp3-c2-multiseed.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: real-clamp3-c2-multiseed
+  cancel-in-progress: true
+jobs:
+  real-embeddings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Inspect CPU and disk
+        run: |
+          free -h
+          df -h .
+      - name: Clone upstream pinned source
+        run: |
+          git clone -q --depth 1 https://github.com/sanderwood/clamp3.git /tmp/clamp3
+          test "$(git -C /tmp/clamp3 rev-parse HEAD)" = "9016d2b0c8d12d1aa79c2e0ab201e6822bdc83a8"
+          sed -i 's/weights_clamp3_saas/weights_clamp3_c2/' /tmp/clamp3/code/config.py
+      - name: Install runtime including CPU PyTorch
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'torch==2.5.1' --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r /tmp/clamp3/requirements.txt 'huggingface_hub>=0.23,<1.0' hf_xet
+      - name: Export and validate 72 matched synthetic MIDI fixtures
+        run: |
+          python experiments/motif-development/multiseed_export.py --out experiments/motif-development/clamp_cache/stimuli_multi
+          python -m unittest discover -s experiments/motif-development -p 'test_multiseed*.py' -v
+      - name: Retrieve official C2 weights and verify SHA256
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          name='weights_clamp3_c2_h_size_768_t_model_FacebookAI_xlm-roberta-base_t_length_128_a_size_768_a_layers_12_a_length_128_s_size_768_s_layers_12_p_size_64_p_length_512.pth'
+          source=Path(hf_hub_download(repo_id='sander-wood/clamp3',filename=name))
+          h=hashlib.sha256()
+          with source.open('rb') as weights:
+            for block in iter(lambda:weights.read(4*1024*1024),b''):
+              h.update(block)
+          digest=h.hexdigest()
+          expected='e6fb0d139b24a1ec20836bb65bd652303d570ea9af2cddb20a1fc161421d64af'
+          if digest!=expected:raise ValueError('C2 published checkpoint SHA256 mismatch')
+          (Path('/tmp/clamp3/code')/name).symlink_to(source)
+          print('OFFICIAL_C2_CHECKPOINT_VERIFIED',source.stat().st_size,digest)
+          PY
+      - name: Compute authentic MIDI-text embeddings and paired analysis
+        run: |
+          python experiments/motif-development/run_multiseed_c2.py \
+            --clamp3-root /tmp/clamp3 \
+            --stimuli experiments/motif-development/clamp_cache/stimuli_multi \
+            --out experiments/motif-development/clamp_cache/results_multi \
+            --execute
+      - name: Collect small reproducibility reports
+        if: always()
+        run: |
+          mkdir -p multiseed-report
+          for name in provenance.json score_multiseed.json; do
+            path="experiments/motif-development/clamp_cache/results_multi/$name"
+            if test -f "$path"; then cp "$path" "multiseed-report/$name"; fi
+          done
+          cp experiments/motif-development/clamp_cache/stimuli_multi/manifest.json multiseed-report/manifest.json || true
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          out=Path('multiseed-report')
+          (out/'run_status.json').write_text(json.dumps({
+            'realInferenceCompleted':(out/'score_multiseed.json').is_file(),
+            'containsModelWeights':False,
+            'containsHumanListenerRatings':False
+          },indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: clamp3-c2-multiseed-real-72
+          path: multiseed-report/
+          retention-days: 30
