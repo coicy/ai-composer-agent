@@ -4,6 +4,8 @@ on:
     branches: [experiment/clamp3-c2-multiseed]
     paths:
       - .github/workflows/multiseed-check.yml
+      - experiments/motif-development/test_multiseed*.py
+      - experiments/motif-development/multiseed_*.py
   workflow_dispatch:
 permissions:
   contents: read
