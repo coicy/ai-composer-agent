@@ -27,6 +27,7 @@ jobs:
         run: |
           python3 -m unittest discover -s experiments/motif-development -p 'test_*.py' -v
           python3 -m py_compile experiments/motif-development/score_clamp3.py
+          python3 experiments/motif-development/analyze_midis.py --stimuli experiments/motif-development/generated --out experiments/motif-development/generated/structure_report.json
       - uses: actions/upload-artifact@v4
         if: success()
         with:
