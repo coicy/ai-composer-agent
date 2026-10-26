@@ -26,8 +26,10 @@ class BlindMultiseedTests(unittest.TestCase):
    data=json.loads(key.read_text())
    self.assertEqual(len({e['seed'] for e in data['entries']}),12)
    for i in range(1,7):
-    first=list(csv.DictReader((review/f"rating_block_{i:02d}_order_01.csv").open(encoding="utf-8-sig")))
-    second=list(csv.DictReader((review/f"rating_block_{i:02d}_order_02.csv").open(encoding="utf-8-sig")))
+    with (review/f"rating_block_{i:02d}_order_01.csv").open(encoding="utf-8-sig") as src:
+     first=list(csv.DictReader(src))
+    with (review/f"rating_block_{i:02d}_order_02.csv").open(encoding="utf-8-sig") as src:
+     second=list(csv.DictReader(src))
     self.assertEqual(len(first),4)
     self.assertEqual([r["clip"] for r in first],list(reversed([r["clip"] for r in second])))
     self.assertTrue(all(r['task_brief'] in GENRE_BRIEFS.values() for r in first))
