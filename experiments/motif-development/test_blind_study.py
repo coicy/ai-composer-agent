@@ -16,6 +16,14 @@ class BlindStudyTests(unittest.TestCase):
             report=prepare(source,root/'review',root/'private/key.json')
             self.assertEqual(report['clips'],6)
             self.assertTrue((root/'review/rating_form.csv').exists())
+            order_files=sorted((root/'review').glob('rating_form_order_*.csv'))
+            self.assertEqual(len(order_files),6)
+            orders=[]
+            for form in order_files:
+                with form.open(encoding='utf-8-sig',newline='') as file:
+                    orders.append([row['clip'] for row in csv.DictReader(file)])
+            for position in range(6):
+                self.assertEqual(len({order[position] for order in orders}),6)
             self.assertFalse((root/'review/key.json').exists())
             self.assertEqual(len(list((root/'review').glob('clip_*.mp3'))),6)
             key=json.loads((root/'private/key.json').read_text())
