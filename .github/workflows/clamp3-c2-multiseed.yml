@@ -1,4 +1,5 @@
 name: Real CLaMP 3 C2 multi-seed evaluation
+# One-shot experimental push trigger; heavy run is opt-in by branch.
 on:
   push:
     branches: [experiment/clamp3-c2-multiseed]
