@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import runpy
 from pathlib import Path
 import subprocess
 import sys
@@ -36,6 +37,11 @@ def inspect(upstream: Path, stimuli: Path, minimum_checkpoint_bytes: int=100_000
     weights=sorted((upstream/"code").glob("weights_clamp3_c2*.pth"))
     if len(weights)!=1 or weights[0].stat().st_size < minimum_checkpoint_bytes:
         raise ValueError("Missing/ambiguous C2 checkpoint. Download it explicitly, verify the source, and place it under code/")
+    # The upstream extractor otherwise silently switches to SAAS if this exact
+    # configured filename is absent. Check the computed path, not just prefix.
+    configured=runpy.run_path(str(config)).get("CLAMP3_WEIGHTS_PATH")
+    if not isinstance(configured,str) or Path(configured).name != weights[0].name:
+        raise ValueError("C2 checkpoint filename differs from the path computed by upstream config")
     sha=digest(weights[0])
     if expected_checkpoint_sha256 and sha.lower()!=expected_checkpoint_sha256.lower():
         raise ValueError("Checkpoint SHA256 does not match the supplied expected digest")
