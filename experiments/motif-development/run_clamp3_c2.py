@@ -31,16 +31,17 @@ def inspect(upstream: Path, stimuli: Path, minimum_checkpoint_bytes: int=100_000
     manifest=stimuli/"manifest.json"
     if not config.is_file() or not extractor.is_file() or not manifest.is_file():
         raise ValueError("Missing official CLaMP repository or exported benchmark files")
-    text=config.read_text(encoding="utf-8")
-    if '"weights_clamp3_c2"' not in text:
+    # Evaluate the computed official config variable. A substring check of
+    # source text is unsafe, as comments may mention C2 while SAAS is selected.
+    configured=runpy.run_path(str(config)).get("CLAMP3_WEIGHTS_PATH")
+    if not isinstance(configured,str) or not Path(configured).name.startswith("weights_clamp3_c2"):
         raise ValueError("Expected code/config.py to use the C2 symbolic checkpoint, not SAAS")
     weights=sorted((upstream/"code").glob("weights_clamp3_c2*.pth"))
     if len(weights)!=1 or weights[0].stat().st_size < minimum_checkpoint_bytes:
         raise ValueError("Missing/ambiguous C2 checkpoint. Download it explicitly, verify the source, and place it under code/")
     # The upstream extractor otherwise silently switches to SAAS if this exact
     # configured filename is absent. Check the computed path, not just prefix.
-    configured=runpy.run_path(str(config)).get("CLAMP3_WEIGHTS_PATH")
-    if not isinstance(configured,str) or Path(configured).name != weights[0].name:
+    if Path(configured).name != weights[0].name:
         raise ValueError("C2 checkpoint filename differs from the path computed by upstream config")
     sha=digest(weights[0])
     if expected_checkpoint_sha256 and sha.lower()!=expected_checkpoint_sha256.lower():
