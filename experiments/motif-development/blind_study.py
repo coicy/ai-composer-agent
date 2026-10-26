@@ -73,38 +73,63 @@ def summarize(key: Path, response_files: list[Path]) -> dict:
                 if clip in participants[person]:
                     raise ValueError(f'Duplicate participant/clip: {person}/{clip}')
                 participants[person][clip] = [int(n) for n in values]
+    # Participant, rather than clip, is the independent sampling unit.
+    # The repeated C clip is averaged *within* each participant.
     outcomes = defaultdict(list)
+    clip_counts = defaultdict(int)
     paired = []
+    repeat_differences = []
+    completed = 0
+    incomplete = 0
     for person, ratings in participants.items():
-        grouped=defaultdict(list)
+        grouped = defaultdict(list)
         for clip, vals in ratings.items():
-            identity=mapping[clip]
-            grouped[(identity['source'],identity['brief'])].append(vals)
-            outcomes[identity['source'] + '/' + identity['brief']].append(vals)
-        # Same music C/E; only task descriptions differ. Require paired completions.
-        c=grouped.get(('C_developed','ruins'),[])
-        e=grouped.get(('E_style_mismatch','carnival'),[])
-        if c and e:
-            baseline=sum(x[3] for x in c)/len(c)
-            carnival=sum(x[3] for x in e)/len(e)
-            paired.append(round(baseline-carnival,4))
-    result={}
+            identity = mapping[clip]
+            grouped[(identity['source'], identity['brief'])].append(vals)
+        if len(ratings) == len(mapping):
+            completed += 1
+        else:
+            incomplete += 1
+        for (source, brief), observations in grouped.items():
+            person_mean = [sum(a[i] for a in observations)/len(observations)
+                           for i in range(len(METRICS))]
+            outcomes[source + '/' + brief].append(person_mean)
+            clip_counts[source + '/' + brief] += len(observations)
+        c = grouped.get(('C_developed','ruins'), [])
+        e = grouped.get(('E_style_mismatch','carnival'), [])
+        # A paired brief effect requires the full repeated-C control and E.
+        if len(c) == 2:
+            repeat_differences.append([abs(c[0][i]-c[1][i]) for i in range(len(METRICS))])
+        if len(c) == 2 and len(e) == 1:
+            paired.append(round((c[0][3] + c[1][3])/2 - e[0][3],4))
+    result = {}
     for group, values in sorted(outcomes.items()):
-        result[group]={
-            'count': len(values),
-            'meanByDimension': {metric: round(sum(v[i] for v in values)/len(values),4)
-                for i,metric in enumerate(METRICS)}
+        result[group] = {
+            'participantCount': len(values),
+            'clipRatingCount': clip_counts[group],
+            'meanByDimension': {metric:round(sum(v[i] for v in values)/len(values),4)
+                               for i,metric in enumerate(METRICS)},
+            'note':'Means are calculated per participant first; repeated trials do not add independent subjects.'
         }
+    repeat_means = ({metric:round(sum(v[i] for v in repeat_differences)/len(repeat_differences),4)
+                     for i,metric in enumerate(METRICS)} if repeat_differences else None)
     return {
-        'status': 'real-responses-aggregated',
-        'participants': len(participants),
-        'sourceRatingFiles': len(response_files),
-        'groups': result,
-        'sameMusicDifferentBrief': {
+        'status': 'submitted-responses-aggregated',
+        'participants':len(participants),
+        'completeParticipants':completed,
+        'incompleteParticipants':incomplete,
+        'sourceRatingFiles':len(response_files),
+        'groups':result,
+        'sameBriefRepeatedClip':{
+            'participantsWithBothRepeats':len(repeat_differences),
+            'meanAbsoluteDifferenceByDimension':repeat_means,
+            'note':'A repeat-consistency diagnostic, not inter-rater reliability.'
+        },
+        'sameMusicDifferentBrief':{
             'pairedParticipants':len(paired),
             'individualTaskFitDifferences':paired,
-            'meanDifference': round(sum(paired)/len(paired),4) if paired else None,
-            'note': 'Descriptive within-participant difference, not a music-quality metric or significance test.',
+            'meanDifference':round(sum(paired)/len(paired),4) if paired else None,
+            'note':'Descriptive within-person task-fit difference; no significance or causal inference.'
         }
     }
 
