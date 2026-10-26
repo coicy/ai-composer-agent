@@ -45,6 +45,13 @@ class BlindStudyTests(unittest.TestCase):
             self.assertEqual(result['sameMusicDifferentBrief']['pairedParticipants'],1)
             self.assertEqual(result['sameMusicDifferentBrief']['meanDifference'],3.0)
             self.assertIn('C_developed/ruins',result['groups'])
+            # One listener contributed two repeated C ratings but only one
+            # statistically independent C response.
+            self.assertEqual(result['groups']['C_developed/ruins']['participantCount'],1)
+            self.assertEqual(result['groups']['C_developed/ruins']['clipRatingCount'],2)
+            self.assertEqual(result['sameBriefRepeatedClip']['participantsWithBothRepeats'],1)
+            self.assertEqual(result['sameBriefRepeatedClip']['meanAbsoluteDifferenceByDimension']['overallRating_1to5'],0)
+            self.assertEqual(result['completeParticipants'],1)
     def test_missing_response_rejected_without_fabricating_data(self):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(ValueError):
@@ -59,6 +66,52 @@ class BlindStudyTests(unittest.TestCase):
                 w=csv.DictWriter(f,fieldnames=row.keys());w.writeheader();w.writerow(row)
             with self.assertRaises(ValueError):
                 summarize(root/'key.json',[root/'values.csv'])
+
+    def test_repeated_c_trials_average_within_participant(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            source=root/'audio';source.mkdir()
+            for kind,_ in DESIGNS:
+                (source/(kind+'.mp3')).write_bytes(('mock-'+kind).encode())
+            prepare(source,root/'review',root/'private/key.json')
+            mapping=json.loads((root/'private/key.json').read_text())['mapping']
+            responses=root/'mock-only.csv'
+            with responses.open('w',newline='',encoding='utf-8') as f:
+                writer=csv.DictWriter(f,fieldnames=['participantId','clip',*METRICS])
+                writer.writeheader()
+                # Participant ONE rates C twice: 1 and 5. Participant TWO
+                # only rates a single C: 4. Expected (3+4)/2 = 3.5, NOT
+                # raw-trial mean (1+5+4)/3 = 3.3333.
+                c=[row for row in mapping if row['source']=='C_developed']
+                for participant,clip,val in [('ONE',c[0],1),('ONE',c[1],5),('TWO',c[0],4)]:
+                    writer.writerow({'participantId':participant,'clip':clip['clip'],
+                                     **{metric:val for metric in METRICS}})
+            result=summarize(root/'private/key.json',[responses])
+            group=result['groups']['C_developed/ruins']
+            self.assertEqual(group['participantCount'],2)
+            self.assertEqual(group['clipRatingCount'],3)
+            self.assertEqual(group['meanByDimension']['overallRating_1to5'],3.5)
+            self.assertEqual(result['sameBriefRepeatedClip']['meanAbsoluteDifferenceByDimension']['overallRating_1to5'],4)
+            self.assertEqual(result['incompleteParticipants'],2)
+            self.assertEqual(result['sameMusicDifferentBrief']['pairedParticipants'],0)
+
+    def test_duplicate_participant_clip_in_two_files_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            key=root/'key.json'
+            key.write_text(json.dumps({'mapping':[{'clip':'clip_01.mp3',
+                'source':'C_developed','brief':'ruins'}]}))
+            paths=[]
+            for i in range(2):
+                path=root/f'answer_{i}.csv'
+                with path.open('w',newline='',encoding='utf-8') as f:
+                    writer=csv.DictWriter(f,fieldnames=['participantId','clip',*METRICS])
+                    writer.writeheader()
+                    writer.writerow({'participantId':'SAME','clip':'clip_01.mp3',
+                                     **{metric:4 for metric in METRICS}})
+                paths.append(path)
+            with self.assertRaisesRegex(ValueError,"Duplicate participant/clip"):
+                summarize(key,paths)
 
 if __name__=='__main__':
     unittest.main()
