@@ -76,3 +76,33 @@ To aggregate real participant responses:
 The summary reports descriptive means by source/brief and the within-person C/ruins minus E/carnival task-fit difference. It cannot calculate a meaningful p-value or claim quality improvement without sufficient actual listeners and a preregistered sampling plan. The C condition appears twice with the same task brief as a repeat-listening consistency check. D is intentionally a six-section permutation, not a new composition.
 
 Tests of this aggregation code use named MOCK_PERSON data. They are NOT actual listening study results.
+
+## October 26 follow-up: external inference reproducibility and bias controls
+
+**Do not claim CLaMP 3 C2 has been tested by running only a NumPy mock.** The current GitHub CI uses fabricated mathematical vectors only for code correctness. No real model weights or listener submissions are shipped.
+
+### Critical upstream failure mode
+
+At the inspected upstream revision, the CLaMP 3 feature-extraction script downloads a default SAAS checkpoint when the computed configured weight path does not exist. It can therefore produce plausible embeddings with the WRONG model variant. The new fail-closed runner verifies the exact C2 path computed by code/config.py before launching any extraction. If the checkpoint cannot be confirmed, nothing is scored.
+
+Obtain the authentic C2 weight from the official CLaMP 3 release; record its published checksum separately. In a local checkout with adequate resources, after exporting benchmark MIDI and selecting C2 in upstream config:
+
+    python experiments/motif-development/run_clamp3_c2.py --clamp3-root /ABS/clamp3 --stimuli experiments/motif-development/generated --out experiments/motif-development/clamp_cache/new_run --expected-checkpoint-sha256 YOUR_VERIFIED_SHA256
+
+The command above performs a preflight only; **no inference happens without --execute**. Only on a suitable machine and after verifying weights, add --execute. Never reuse a feature output directory: upstream silently skips feature extraction if the destination exists.
+
+The guarded run writes provenance.json (Git revision, config/checkpoint hashes, MIDI manifest and prompts) and score_matrix.json. Every MIDI is scored against **both ruins and carnival** prompts. Report positive-minus-negative prompt margins, not a made-up 0–100 artistic rating. If C/E were byte-identical in MIDI but diverge in feature embeddings, inference fails rather than producing misleading numbers.
+
+### Independent structural controls
+
+    python experiments/motif-development/analyze_midis.py --stimuli experiments/motif-development/generated --out experiments/motif-development/generated/structure_report.json
+
+This produces exact note-inventory and section-order results by parsing MIDI, independently from the planned-motif evaluator. C and D must contain the same bag of complete sections but differ by time order; C and E must contain identical sections. None of these observations demonstrate a musical aesthetic preference.
+
+40 additional synthetic motifs (varied starting notes, interval contours and rhythms) exercise the same rules under static-loop, correct, scrambled, near-miss and missing-bass conditions. This is a **controlled intervention/generalization sanity test**, NOT held-out human music; the current rule family remains hand-designed.
+
+### Blind-review independence
+
+The form pack now includes six cyclically counterbalanced presentation sheets: rating_form_order_01.csv ... rating_form_order_06.csv. Distribute one per participant in rotation, with the same six numbered clips. Keep the answer key inaccessible to raters.
+
+The aggregate first averages repeated C ratings *within* each listener, so C has one independent participant response regardless of how many times it was heard. It separately records repeated-clip disagreement and requires the paired C/C/E observations to report a task-brief difference. Incomplete forms are counted transparently. No inferential statistics or expert-listener claim is made without actual collected ratings.
