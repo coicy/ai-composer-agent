@@ -117,7 +117,10 @@ def midi_bytes(s:dict,order:list[int],density:bool=False)->bytes:
                             note=pitch,velocity=vel,time=at-last))
    last=at
   track.append(mido.MetaMessage("end_of_track",time=max(0,SECTION*SECTIONS-last)))
- return bytes(midi)
+ from io import BytesIO
+ out=BytesIO()
+ midi.save(file=out)
+ return out.getvalue()
 
 def note_inventory(blob:bytes,by_section=False):
  from io import BytesIO
