@@ -5,3 +5,8 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+
+# Optional research outputs (original samples regenerated on demand)
+experiments/motif-development/generated/
+experiments/motif-development/clamp_cache/
+**/__pycache__/

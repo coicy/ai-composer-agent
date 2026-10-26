@@ -68,3 +68,6 @@ export type {SongArrangementRequest,SongArrangementDraft} from './arrangement/so
 
 export {composeRuinsThemeToSong} from './arrangement/theme-to-song.js';
 export type {ThemeToSongRequest,ThemeToSongDraft} from './arrangement/theme-to-song.js';
+
+export {assessTemporalDevelopment} from './evaluation/temporal-development.js';
+export type {TemporalDevelopmentEvidence,TemporalWindowEvidence,EvidenceState} from './evaluation/temporal-development.js';
