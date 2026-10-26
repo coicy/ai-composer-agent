@@ -50,6 +50,16 @@ def prepare(audio: Path, dest: Path, key: Path, seed: int=20261026) -> dict:
         writer=DictWriter(file,fieldnames=rows[0].keys())
         writer.writeheader()
         writer.writerows(rows)
+    # Counterbalanced presentation without changing the hidden clip mapping:
+    # cyclic rotations place every clip in every serial position once.
+    # Assign successive consenting participants different order files.
+    for offset in range(len(rows)):
+        ordered=rows[offset:] + rows[:offset]
+        with (dest / f'rating_form_order_{offset+1:02d}.csv').open(
+            'w', newline='', encoding='utf-8-sig') as file:
+            writer=DictWriter(file,fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(ordered)
     key.parent.mkdir(parents=True, exist_ok=True)
     key.write_text(json.dumps({'version': 1, 'seed': seed, 'mapping': answer},
                               ensure_ascii=False, indent=2), encoding='utf-8')
