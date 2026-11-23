@@ -35,3 +35,6 @@ export {compareRegionCandidate} from './arrangement/compare-region.js';
 export type {RegionCandidateComparison} from './arrangement/compare-region.js';
 export {proposeRegionVariantBatch} from './arrangement/region-variants.js';
 export type {RegionVariantBatch,FailedRegionVariant} from './arrangement/region-variants.js';
+
+export {validateEnsemblePlan,buildEnsembleCues,assessEnsembleRelations} from './orchestration/ensemble.js';
+export type {EnsemblePlan,EnsembleVoice,EnsembleRelation,EnsembleCue,EnsembleAssessment,EnsembleFinding,EnsembleTrackRole,EnsembleVoiceFunction,EnsembleRelationKind} from './orchestration/ensemble.js';

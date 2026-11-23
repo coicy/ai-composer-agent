@@ -6,6 +6,8 @@ import {validateHarmonyPlan,checkHarmonyPlan} from '../planning/harmony-plan.js'
 import type {HarmonyPlan,PlanFinding} from '../planning/harmony-plan.js';
 import type {ArrangementAssessment} from '../evaluation/arrangement.js';
 import {createArrangementEditingContext} from './editing-context.js';
+import {validateEnsemblePlan,buildEnsembleCues,assessEnsembleRelations} from '../orchestration/ensemble.js';
+import type {EnsemblePlan,EnsembleCue,EnsembleAssessment} from '../orchestration/ensemble.js';
 import type {ArrangementEditingContext,ArrangementEditingIntent} from './editing-context.js';
 import type {ChangeSet,MidiNote,MusicProject,MusicTrack,NoteOperation} from '@ai-composer/music-core';
 
@@ -20,6 +22,8 @@ export interface ArrangementRequest {
  readonly plan?:HarmonyPlan;
  readonly seed?:number;
  readonly editing?:ArrangementEditingIntent;
+ /** Optional advisory voice relationships; never a model-controlled edit permission. */
+ readonly ensemblePlan?:EnsemblePlan;
 }
 export interface ArrangementContext {
  readonly sourceTrackId:string;
@@ -32,6 +36,8 @@ export interface ArrangementContext {
  readonly plan?:HarmonyPlan;
  readonly seed?:number;
  readonly editing?:ArrangementEditingContext;
+ readonly ensemblePlan?:EnsemblePlan;
+ readonly ensembleCues?:readonly EnsembleCue[];
  /** Hypotheses from source MIDI; never hard constraints or ground truth. */
  readonly tonalProfile?:TonalProfile;
  readonly chordSuggestions?:readonly ChordSuggestion[];
@@ -51,6 +57,7 @@ export interface ArrangementCandidate {
  readonly assessment:ArrangementAssessment;
  readonly plan?:HarmonyPlan;
  readonly planFindings:readonly PlanFinding[];
+ readonly ensembleAssessment?:EnsembleAssessment;
  readonly changes:ChangeSet;
 }
 const NAMES:Record<ArrangementRole,string>={harmony:'AI 和声',bass:'AI 低音',accompaniment:'AI 伴奏'};
@@ -91,6 +98,8 @@ export function prepareArrangementContext(request:ArrangementRequest):Arrangemen
  if(typeof instruction!=='string'||!instruction.trim()||instruction.length>2000)throw new Error('invalid_instruction');
  if(request.seed!==undefined&&(!Number.isSafeInteger(request.seed)||request.seed<0||request.seed>0xffffffff))throw new Error('invalid_arrangement_seed');
  // Validate before sending user-supplied planning data to any provider.
+ const ensemblePlan=request.ensemblePlan===undefined?undefined:validateEnsemblePlan(request.ensemblePlan,startTick,endTick);
+ if(ensemblePlan&&request.editing)throw new Error('ensemble_plan_scoped_not_supported');
  const barTicks=project.ppq*4;
  const barCount=Math.ceil((endTick-startTick)/barTicks);
  const plan=request.plan===undefined?undefined:validateHarmonyPlan(request.plan,barCount);
@@ -107,8 +116,9 @@ export function prepareArrangementContext(request:ArrangementRequest):Arrangemen
  const chordSuggestions=suggestChords(selected,startTick,endTick,project.ppq);
  const editing=request.editing===undefined?undefined:
   createArrangementEditingContext(project,sourceTrackId,request.editing,startTick,endTick);
+ const ensembleCues=ensemblePlan?buildEnsembleCues(ensemblePlan,selected,project.ppq):undefined;
  const context:ArrangementContext={sourceTrackId,ppq:project.ppq,startTick,endTick,instruction,
-  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing};
+  sourceNotes:selected.map(n=>({...n})),neighborNotes:neighborNotes.map(n=>({...n})),tonalProfile,chordSuggestions,plan,seed:request.seed,editing,ensemblePlan,ensembleCues};
  return context;
 }
 
@@ -127,5 +137,6 @@ export async function proposeArrangement(provider:ArrangementProvider,request:Ar
  if(!dryRun.ok)throw new Error(`candidate_rejected:${dryRun.reason}`);
  // The proposal does not write the project. Approval must still pass a revision check.
  const assessment=evaluateArrangement(selected,tracks,startTick,endTick,project.ppq);
- return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,changes};
+ const ensembleAssessment=context.ensemblePlan?assessEnsembleRelations(context.ensemblePlan,selected,tracks,project.ppq):undefined;
+ return {providerId:provider.id,label:`${provider.id} · 三轨编配候选`,sourceTrackId,startTick,endTick,seed:request.seed,tracks,assessment,plan,planFindings,ensembleAssessment,changes};
 }
