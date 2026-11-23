@@ -66,7 +66,7 @@ describe('ensemble voice design: advisory relationship contract', () => {
     expect(result.findings.map(f => [f.code, f.count, f.inspected])).toEqual([
       ['missing_response', 3, 4], ['foreground_conflict', 3, 3], ['onset_collision', 3, 3]
     ]);
-    expect(result.disclaimer).toContain('不是');
+    expect(result.disclaimer).toContain('不代表');
   });
   it('does not change note data or mistake deliberate interlocking for an error', () => {
     const good = [
