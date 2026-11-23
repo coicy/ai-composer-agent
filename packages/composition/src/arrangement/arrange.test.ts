@@ -90,3 +90,47 @@ describe('atomic three-track arrangement candidate',()=>{
   await expect(proposeArrangement(fake(tracks()),{...request,project:colliding})).rejects.toThrow('arrangement_track_collision');
  });
 });
+
+
+describe('optional ensemble relationship planning', () => {
+ const ensemblePlan = {
+  version: 1,
+  voices: [
+   {id:'guzheng',trackRole:'source',purpose:'lead',instrumentHint:'古筝'},
+   {id:'dizi',trackRole:'harmony',purpose:'answer',instrumentHint:'竹笛'}
+  ],
+  relations: [{id:'answer01',fromVoiceId:'guzheng',toVoiceId:'dizi',kind:'call_response',
+   startTick:0,endTick:1920}]
+ } as const;
+ it('provides time-aware cues to provider and returns soft findings without editing the project',async()=>{
+  let cueCount=-1;
+  const provider:ArrangementProvider={id:'spy-ensemble',async generate(context){
+   cueCount=context.ensembleCues?.[0]?.availableWindows.length??-1;
+   return tracks();
+  }};
+  const before=JSON.stringify(original);
+  const candidate=await proposeArrangement(provider,{...request,ensemblePlan});
+  expect(cueCount).toBe(1);
+  expect(candidate.ensembleAssessment?.findings).toEqual([
+   expect.objectContaining({relationId:'answer01',code:'missing_response',count:1,inspected:1})
+  ]);
+  expect(JSON.stringify(original)).toBe(before);
+  expect(candidate.changes.baseRevision).toBe(original.revision);
+ });
+ it('validates relation scope before invoking an external provider',async()=>{
+  let called=0;
+  const spy:ArrangementProvider={id:'spy',async generate(){called++;return tracks();}};
+  await expect(proposeArrangement(spy,{...request,ensemblePlan:{
+   ...ensemblePlan,relations:[{...ensemblePlan.relations[0],endTick:3000}]
+  }})).rejects.toThrow('invalid_ensemble_relation');
+  expect(called).toBe(0);
+ });
+ it('does not silently apply a whole-ensemble relation plan to one-role scoped edits',async()=>{
+  let called=0;
+  const spy:ArrangementProvider={id:'spy',async generate(){called++;return tracks();}};
+  await expect(proposeArrangement(spy,{...request,ensemblePlan,
+   editing:{targetTrackId:'future',targetRole:'harmony'}
+  })).rejects.toThrow('ensemble_plan_scoped_not_supported');
+  expect(called).toBe(0);
+ });
+});
